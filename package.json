@@ -2,7 +2,7 @@
   "name": "draborneagle_drabornstyle",
   "version": "0.1.0",
   "private": true,
-  "main": "App.tsx",
+  "main": "index.js",
   "scripts": {
     "drabornstyle_start": "expo start",
     "drabornstyle_android": "expo start --android",
