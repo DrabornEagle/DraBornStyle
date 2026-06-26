@@ -12,6 +12,9 @@ const dkd_async_storage = dkd_async_storage_module.default;
 export const dkd_supabase_url = process.env.EXPO_PUBLIC_DKD_SUPABASE_URL ?? '';
 export const dkd_supabase_publishable_key = process.env.EXPO_PUBLIC_DKD_SUPABASE_PUBLISHABLE_KEY ?? '';
 
+export const dkd_is_supabase_env_ready =
+  dkd_supabase_url.includes('supabase.co') && dkd_supabase_publishable_key.length > 20;
+
 export const dkd_supabase_client = dkd_create_client(dkd_supabase_url, dkd_supabase_publishable_key, {
   auth: {
     storage: dkd_async_storage,
