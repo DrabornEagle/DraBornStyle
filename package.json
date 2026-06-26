@@ -1,21 +1,21 @@
 {
-  "name": "dkd_drabornstyle",
+  "name": "draborneagle_drabornstyle",
   "version": "0.1.0",
   "private": true,
   "main": "App.tsx",
   "scripts": {
-    "dkd_start": "expo start",
-    "dkd_android": "expo start --android",
-    "dkd_web": "expo start --web",
-    "dkd_typecheck": "tsc --noEmit"
+    "drabornstyle_start": "expo start",
+    "drabornstyle_android": "expo start --android",
+    "drabornstyle_web": "expo start --web",
+    "drabornstyle_typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "latest",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@supabase/supabase-js": "latest",
     "expo": "~54.0.0",
     "expo-status-bar": "~3.0.8",
     "react": "19.1.0",
-    "react-native": "0.81.0",
+    "react-native": "0.81.5",
     "react-native-url-polyfill": "latest"
   },
   "devDependencies": {
