@@ -1,1 +1,3 @@
-// dkd_app_entry
+export default function dkd_DraBornStyleApp() {
+  return null;
+}
