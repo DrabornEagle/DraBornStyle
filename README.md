@@ -114,17 +114,19 @@ Python yok, patch yok, JDK yok, Perl yok, `/tmp` yok. Sadece zip tabanlı kurulu
 ```bash
 pkg update -y
 pkg install -y nodejs-lts curl unzip
-mkdir -p $HOME/dkd_projects $HOME/dkd_archives
+mkdir -p $HOME/DrabornEagle $HOME/dkd_archives
 cd $HOME/dkd_archives
 curl -L -o dkd_drabornstyle_main.zip https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip
-rm -rf $HOME/dkd_projects/DraBornStyle
-unzip -q dkd_drabornstyle_main.zip -d $HOME/dkd_projects
-mv $HOME/dkd_projects/DraBornStyle-main $HOME/dkd_projects/DraBornStyle
-cd $HOME/dkd_projects/DraBornStyle
+rm -rf $HOME/DrabornEagle/DraBornStyle
+unzip -q dkd_drabornstyle_main.zip -d $HOME/DrabornEagle
+mv $HOME/DrabornEagle/DraBornStyle-main $HOME/DrabornEagle/DraBornStyle
+cd $HOME/DrabornEagle/DraBornStyle
 cp .env.example .env
 npm install
-npm run dkd_start -- --tunnel
+npm run dkd_start -- --lan
 ```
+
+Not: Termux üzerinde `--tunnel` ngrok kurulumu isteyebilir ve bazı cihazlarda hata verebilir. İlk test için `--lan` kullanılacak.
 
 ## dkd_komutlar
 
