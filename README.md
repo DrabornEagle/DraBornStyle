@@ -29,30 +29,42 @@ DraBornStyle v0.1, berber / kuaför / salon işletmeleri için mobil uygulama ba
 | ✅ | v0.0.21 | Usta / çalışan ekleme ekranı eklendi |
 | ✅ | v0.0.22 | Hizmet ekleme, hizmet fiyatı ve hizmet süresi ekranı eklendi |
 | ✅ | v0.0.23 | Performans için kategori / akordeon salon paneli eklendi |
-| 🟡 | v0.0.24 | Barber Studio UI, hesap tipiyle giriş/kayıt ve rol bazlı yetki özeti eklendi |
+| 🟡 | v0.0.24 | Tek giriş/kayıt, işletme başvurusu, usta başvurusu ve admin rol onay sistemi eklendi |
 | ⬜ | v0.0.25 | v0.1 mobil test ve düzeltme turu tamamlanacak |
 | ⬜ | v0.1 | v0.1 final tamamlanacak ve v0.2 hazırlığına geçilecek |
 
 ## dkd_v0_0_24_guncel_karar
 
-v0.0.24 içinde giriş akışı değiştirildi:
+v0.0.24 içinde giriş ve rol mantığı değiştirildi.
 
-- Giriş/kayıt öncesinde kullanıcıya `Müşteri` veya `İşletme Sahibi` olarak devam etme seçeneği gösterilir.
-- Giriş/kayıt tamamlanınca seçilen hesap tipi Supabase `dkd_user_profiles.dkd_role` alanına otomatik kaydedilir.
-- Giriş yaptıktan sonra tekrar ayrı `Rolünü Seç / Panel Seçimi` ekranı gösterilmez.
-- Panel kartlarındaki M / İ / U / A harfleri yerine uygun ikon/badge görünümü kullanılır.
-- Halka açık girişte yalnızca `Müşteri` ve `İşletme Sahibi` seçenekleri gösterilir.
-- `Usta` ve `Admin` rolleri v0.1 altyapısında korunur; davet/yönetim akışları sonraki sürümlerde netleşir.
+- Login/kayıt ekranında artık müşteri/işletme seçimi yoktur.
+- Her kullanıcı tek hesapla giriş yapar veya kayıt olur.
+- Yeni kullanıcı ilk açılışta otomatik `Müşteri` rolüyle başlar.
+- İşletme olmak isteyen kullanıcı uygulama içinden `İşletme Başvurusu` gönderir.
+- Admin başvuruyu onaylarsa kullanıcı `İşletme Sahibi` rolüne geçer ve işletme paneli açılır.
+- Usta olmak isteyen kayıtlı kullanıcı için başvuru işletme paneli içinden admin onayına gönderilir.
+- Admin paneli kayıtlı kullanıcıları `İşletme Sahibi` veya `Usta` olarak işaretleyebilir.
+- Admin paneli işletme/usta başvurularını onaylayabilir veya reddedebilir.
 
-## dkd_v0_0_24_ui
+## dkd_v0_0_24_supabase
 
-Barber Studio OS tasarımı korunur fakat renkler daha modern ve daha dengeli hale getirilir.
+Yeni tablo:
 
-- Koyu neon Miami görünümü kaldırıldı.
-- Aşırı krem/beyaz görünüm kaldırıldı.
-- Sage / petrol / teal / amber barber studio renkleri kullanıldı.
-- Login metni sadece işletmelere değil, müşteri + işletme ortak kullanımına göre değiştirildi.
-- Ana mesaj: `Müşteri ile salonu aynı panelde buluştur.`
+- `dkd_role_applications`
+
+Bu tablo işletme ve usta rol başvurularını saklar.
+
+Başvuru durumları:
+
+- `pending`
+- `approved`
+- `rejected`
+
+RLS mantığı:
+
+- Kullanıcı kendi başvurusunu görebilir.
+- İşletme sahibi kendi işletmesinden gönderilen usta başvurularını görebilir.
+- Admin tüm başvuruları ve kayıtlı kullanıcıları görebilir/güncelleyebilir.
 
 ## dkd_v0_1_kilitli_kapsam
 
@@ -62,7 +74,10 @@ v0.1 finalde eksiksiz yapılacaklar:
 - İşletme hesabı
 - Usta hesabı
 - Admin hesabı
-- Rol bazlı giriş sistemi
+- Tek giriş/kayıt sistemi
+- İşletme başvuru sistemi
+- Usta başvuru sistemi
+- Admin rol onay sistemi
 - İşletme oluşturma
 - İşletme profili
 - İşletme adı, logo, kapak görseli altyapısı
