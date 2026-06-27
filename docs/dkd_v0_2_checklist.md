@@ -1,8 +1,12 @@
 # DraBornStyle v0.2 Checklist
 
+## Güncel Sürüm
+
+**v0.2.14 Final Test Adayı**
+
 ## v0.2 Ana Hedef
 
-DraBornStyle'ı randevu + salon yönetimi seviyesinden profesyonel işletme ödeme, platform gelir takibi, QR kaynak, usta indirimi ve işlem raporları sistemine büyütmek.
+DraBornStyle'ı v0.1 final login/panel yapısını bozmadan; işletme ödeme, platform gelir takibi, işlem başlat/bitir, QR kaynak, usta indirimi ve admin ödeme onayı olan profesyonel salon yönetim sistemine büyütmek.
 
 ## Durum
 
@@ -17,12 +21,48 @@ DraBornStyle'ı randevu + salon yönetimi seviyesinden profesyonel işletme öde
 | ✅ | v0.2.7 | Usta/işletme indirim kodu tablosu kuruldu |
 | ✅ | v0.2.8 | İşletme ödeme rapor view'i kuruldu |
 | ✅ | v0.2.9 | v0.2 migration GitHub'a yüklendi |
-| ⬜ | v0.2.10 | Uygulama içinde işlem başlat/bitir + son fiyat düzenleme ekranı bağlanacak |
-| ⬜ | v0.2.11 | Business panel ödeme/borç raporu ekranı bağlanacak |
-| ⬜ | v0.2.12 | Admin panel ödeme onay ekranı bağlanacak |
-| ⬜ | v0.2.13 | Usta indirim kodu oluşturma/kullanma ekranı bağlanacak |
-| ⬜ | v0.2.14 | QR kaynaklı müşteri/randevu akışı bağlanacak |
-| ⬜ | v0.2.15 | Müşteri randevu geçmişi/favori işletme/favori usta ekranları bağlanacak |
+| ✅ | v0.2.10 | İşlem başlat/bitir + son fiyat düzenleme component'i eklendi |
+| ✅ | v0.2.11 | Business panel ödeme/borç raporu altyapısı eklendi |
+| ✅ | v0.2.12 | Admin ödeme onay API/panel altyapısı eklendi |
+| ✅ | v0.2.13 | v0.2 modülleri tek import noktasına toplandı |
+| ✅ | v0.2.14 | v0.1 final App.tsx korunarak v0.2 İşlem & Ödeme bölümü patch script ile bağlandı |
+| 🟡 | v0.2.14-final-test | Telefonda final test bekleniyor |
+
+## v0.2 Dosyaları
+
+- `src/dkd_v0_2/dkd_transaction_panel.tsx`
+- `src/dkd_v0_2/dkd_transaction_api.ts`
+- `src/dkd_v0_2/use_dkd_transactions.ts`
+- `src/dkd_v0_2/dkd_admin_payment_api.ts`
+- `src/dkd_v0_2/dkd_admin_payment_panel.tsx`
+- `src/dkd_v0_2/index.ts`
+- `scripts/dkd_apply_v02_to_app.js`
+- `scripts/dkd_fix_login_layout.js`
+
+## Korunan v0.1 Alanları
+
+- `index.js -> App.tsx` ana giriş korunur.
+- Login PNG mockup sistemi korunur.
+- E-posta/şifre imleçleri App.tsx içinde şeffaf overlay olarak kalır.
+- Müşteri / İşletme / Usta / Admin panel kategorileri korunur.
+
+## Final Test Akışı
+
+1. Uygulama login mockup ile açılır.
+2. E-posta ve şifre kutuları görseldeki alanlara hizalı olur.
+3. Giriş yapılır.
+4. Panel kategorileri görünür.
+5. İşletme Paneli açılır.
+6. Salon bilgisi kaydedilir.
+7. Usta eklenir.
+8. Hizmet eklenir.
+9. İşlem & Ödeme bölümü açılır.
+10. İşleme Başla yapılır.
+11. Aktif işlem seçilir.
+12. Ek fiyat / indirim / not girilir.
+13. İşlem Bitti yapılır.
+14. Son işlemler listesinde completed görünür.
+15. Platform borcu 20 TL artar.
 
 ## Supabase v0.2 Tabloları
 
@@ -42,13 +82,3 @@ DraBornStyle'ı randevu + salon yönetimi seviyesinden profesyonel işletme öde
 `dkd_service_transactions.status` alanı `completed` olduğunda `dkd_business_platform_fees` içine otomatik platform hizmet bedeli kaydı oluşturulur.
 
 Varsayılan platform hizmet bedeli: **20 TL**.
-
-## Sonraki Kod Adımı
-
-Uygulama tarafında önce şu akış bağlanacak:
-
-1. İşleme Başla
-2. Son fiyatı düzenle
-3. İşlem Bitti
-4. Platform ücreti otomatik oluşsun
-5. Business panelde bekleyen borç görünsün
