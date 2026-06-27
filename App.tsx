@@ -16,7 +16,9 @@ import {
   ShieldCheck,
   Sparkles,
   Store,
-  UserRound
+  UserPlus,
+  UserRound,
+  UsersRound
 } from 'lucide-react-native';
 
 import { dkd_is_supabase_env_ready, dkd_supabase_client } from './src/dkd_config/dkd_supabase_client';
@@ -30,6 +32,14 @@ type Dkd_RoleOption = {
   dkd_title: string;
   dkd_caption: string;
   dkd_icon: Dkd_IconComponent;
+};
+
+type Dkd_MasterItem = {
+  dkd_master_id: string;
+  dkd_master_name: string;
+  dkd_master_specialty?: string | null;
+  dkd_master_phone?: string | null;
+  dkd_bio?: string | null;
 };
 
 const dkd_role_options: Dkd_RoleOption[] = [
@@ -73,9 +83,35 @@ export default function Dkd_DraBornStyleApp() {
   const [dkd_business_hours, dkd_set_business_hours] = React.useState('Hafta içi 09:00 - 20:00');
   const [dkd_business_loading, dkd_set_business_loading] = React.useState(false);
 
+  const [dkd_master_team, dkd_set_master_team] = React.useState<Dkd_MasterItem[]>([]);
+  const [dkd_master_name, dkd_set_master_name] = React.useState('');
+  const [dkd_master_specialty, dkd_set_master_specialty] = React.useState('');
+  const [dkd_master_phone, dkd_set_master_phone] = React.useState('');
+  const [dkd_master_bio, dkd_set_master_bio] = React.useState('');
+  const [dkd_master_loading, dkd_set_master_loading] = React.useState(false);
+
+  async function dkd_load_master_team(dkd_next_business_id: string | null) {
+    if (!dkd_next_business_id) {
+      dkd_set_master_team([]);
+      return;
+    }
+
+    const dkd_master_response = await dkd_supabase_client
+      .from('dkd_master_profiles')
+      .select('dkd_master_id, dkd_master_name, dkd_master_specialty, dkd_master_phone, dkd_bio')
+      .eq('dkd_business_id', dkd_next_business_id)
+      .eq('dkd_is_active', true)
+      .order('dkd_created_at', { ascending: false });
+
+    if (!dkd_master_response.error) {
+      dkd_set_master_team((dkd_master_response.data ?? []) as Dkd_MasterItem[]);
+    }
+  }
+
   async function dkd_load_business_profile(dkd_next_user_id: string | null) {
     if (!dkd_next_user_id) {
       dkd_set_business_id(null);
+      dkd_set_master_team([]);
       return;
     }
 
@@ -88,12 +124,17 @@ export default function Dkd_DraBornStyleApp() {
       .maybeSingle();
 
     if (dkd_business_response.data) {
-      dkd_set_business_id(dkd_business_response.data.dkd_business_id ?? null);
+      const dkd_loaded_business_id = dkd_business_response.data.dkd_business_id ?? null;
+      dkd_set_business_id(dkd_loaded_business_id);
       dkd_set_business_name(dkd_business_response.data.dkd_business_name ?? '');
       dkd_set_business_description(dkd_business_response.data.dkd_business_description ?? '');
       dkd_set_business_phone(dkd_business_response.data.dkd_business_phone ?? '');
       dkd_set_business_address(dkd_business_response.data.dkd_address_text ?? '');
       dkd_set_business_hours(dkd_business_response.data.dkd_working_hours?.dkd_summary ?? 'Hafta içi 09:00 - 20:00');
+      dkd_load_master_team(dkd_loaded_business_id);
+    } else {
+      dkd_set_business_id(null);
+      dkd_set_master_team([]);
     }
   }
 
@@ -173,6 +214,7 @@ export default function Dkd_DraBornStyleApp() {
     await dkd_supabase_client.auth.signOut();
     dkd_set_saved_role(null);
     dkd_set_business_id(null);
+    dkd_set_master_team([]);
     dkd_set_status_text('Çıkış yapıldı.');
   }
 
@@ -238,7 +280,51 @@ export default function Dkd_DraBornStyleApp() {
     }
 
     dkd_set_business_id(dkd_business_response.data.dkd_business_id);
-    dkd_set_status_text('İşletme profili kaydedildi. Sıradaki adım logo, kapak, konum ve çalışma saatlerini detaylandırmak.');
+    dkd_load_master_team(dkd_business_response.data.dkd_business_id);
+    dkd_set_status_text('İşletme profili kaydedildi. Şimdi usta/çalışan ekleyebilirsin.');
+  }
+
+  async function dkd_save_master_profile() {
+    if (!dkd_business_id) {
+      dkd_set_status_text('Usta eklemek için önce işletme profilini kaydet.');
+      return;
+    }
+
+    const dkd_clean_master_name = dkd_master_name.trim();
+    if (dkd_clean_master_name.length < 2) {
+      dkd_set_status_text('Usta adı en az 2 karakter olmalı.');
+      return;
+    }
+
+    dkd_set_master_loading(true);
+    dkd_set_status_text('Usta / çalışan kaydediliyor...');
+
+    const dkd_master_response = await dkd_supabase_client
+      .from('dkd_master_profiles')
+      .insert({
+        dkd_business_id,
+        dkd_master_name: dkd_clean_master_name,
+        dkd_master_specialty: dkd_master_specialty.trim(),
+        dkd_master_phone: dkd_master_phone.trim(),
+        dkd_bio: dkd_master_bio.trim(),
+        dkd_is_active: true
+      })
+      .select('dkd_master_id')
+      .single();
+
+    dkd_set_master_loading(false);
+
+    if (dkd_master_response.error) {
+      dkd_set_status_text(dkd_master_response.error.message);
+      return;
+    }
+
+    dkd_set_master_name('');
+    dkd_set_master_specialty('');
+    dkd_set_master_phone('');
+    dkd_set_master_bio('');
+    dkd_load_master_team(dkd_business_id);
+    dkd_set_status_text('Usta / çalışan kaydedildi. Sıradaki adım hizmet fiyat ve süre ekranı.');
   }
 
   const dkd_saved_role_title = dkd_role_options.find((dkd_role) => dkd_role.dkd_key === dkd_saved_role)?.dkd_title;
@@ -299,14 +385,8 @@ export default function Dkd_DraBornStyleApp() {
                     </TouchableOpacity>
                   </View>
 
-                  <View style={dkd_styles.dkd_input_shell}>
-                    <Mail color="#06B6D4" size={19} strokeWidth={2.6} />
-                    <TextInput value={dkd_email} onChangeText={dkd_set_email} placeholder="E-posta" placeholderTextColor="#64748B" autoCapitalize="none" keyboardType="email-address" style={dkd_styles.dkd_input} />
-                  </View>
-                  <View style={dkd_styles.dkd_input_shell}>
-                    <LockKeyhole color="#06B6D4" size={19} strokeWidth={2.6} />
-                    <TextInput value={dkd_password} onChangeText={dkd_set_password} placeholder="Şifre" placeholderTextColor="#64748B" secureTextEntry style={dkd_styles.dkd_input} />
-                  </View>
+                  <View style={dkd_styles.dkd_input_shell}><Mail color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_email} onChangeText={dkd_set_email} placeholder="E-posta" placeholderTextColor="#64748B" autoCapitalize="none" keyboardType="email-address" style={dkd_styles.dkd_input} /></View>
+                  <View style={dkd_styles.dkd_input_shell}><LockKeyhole color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_password} onChangeText={dkd_set_password} placeholder="Şifre" placeholderTextColor="#64748B" secureTextEntry style={dkd_styles.dkd_input} /></View>
 
                   <TouchableOpacity style={dkd_styles.dkd_primary_button} onPress={dkd_handle_auth} disabled={dkd_loading}>
                     <Text style={dkd_styles.dkd_primary_button_text}>{dkd_loading ? 'Bekle...' : dkd_auth_mode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}</Text>
@@ -338,45 +418,75 @@ export default function Dkd_DraBornStyleApp() {
             ) : null}
 
             {dkd_user_email && dkd_saved_role === 'business' ? (
-              <View style={dkd_styles.dkd_card}>
-                <View style={dkd_styles.dkd_form_header_row}>
-                  <View style={dkd_styles.dkd_logo_bubble_small}>
-                    <Store color="#EC4899" size={22} strokeWidth={2.7} />
+              <View>
+                <View style={dkd_styles.dkd_card}>
+                  <View style={dkd_styles.dkd_form_header_row}>
+                    <View style={dkd_styles.dkd_logo_bubble_small}><Store color="#EC4899" size={22} strokeWidth={2.7} /></View>
+                    <View style={dkd_styles.dkd_role_content}>
+                      <Text style={dkd_styles.dkd_section_title}>İşletme profili</Text>
+                      <Text style={dkd_styles.dkd_status_text_dark}>Salonunu Miami vitrini gibi hazırla.</Text>
+                    </View>
                   </View>
-                  <View style={dkd_styles.dkd_role_content}>
-                    <Text style={dkd_styles.dkd_section_title}>İşletme profili</Text>
-                    <Text style={dkd_styles.dkd_status_text_dark}>Salonunu Miami vitrini gibi hazırla.</Text>
+
+                  <View style={dkd_styles.dkd_upload_row}>
+                    <View style={dkd_styles.dkd_upload_box}><ImagePlus color="#EC4899" size={26} strokeWidth={2.7} /><Text style={dkd_styles.dkd_upload_text}>Logo</Text></View>
+                    <View style={dkd_styles.dkd_upload_box_wide}><ImagePlus color="#06B6D4" size={26} strokeWidth={2.7} /><Text style={dkd_styles.dkd_upload_text}>Kapak görseli</Text></View>
                   </View>
+
+                  <TextInput value={dkd_business_name} onChangeText={dkd_set_business_name} placeholder="İşletme adı" placeholderTextColor="#64748B" style={dkd_styles.dkd_plain_input} />
+                  <TextInput value={dkd_business_description} onChangeText={dkd_set_business_description} placeholder="Kısa açıklama" placeholderTextColor="#64748B" multiline style={dkd_styles.dkd_plain_input_tall} />
+                  <View style={dkd_styles.dkd_input_shell}><Phone color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_business_phone} onChangeText={dkd_set_business_phone} placeholder="Telefon" placeholderTextColor="#64748B" keyboardType="phone-pad" style={dkd_styles.dkd_input} /></View>
+                  <View style={dkd_styles.dkd_input_shell}><MapPin color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_business_address} onChangeText={dkd_set_business_address} placeholder="Adres ve konum bilgisi" placeholderTextColor="#64748B" style={dkd_styles.dkd_input} /></View>
+                  <View style={dkd_styles.dkd_input_shell}><Clock3 color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_business_hours} onChangeText={dkd_set_business_hours} placeholder="Çalışma saatleri" placeholderTextColor="#64748B" style={dkd_styles.dkd_input} /></View>
+
+                  <TouchableOpacity style={dkd_styles.dkd_primary_button} onPress={dkd_save_business_profile} disabled={dkd_business_loading}>
+                    <Save color="#0F172A" size={18} strokeWidth={2.8} />
+                    <Text style={dkd_styles.dkd_primary_button_text}>{dkd_business_loading ? 'Kaydediliyor...' : dkd_business_id ? 'İşletmeyi Güncelle' : 'İşletmeyi Oluştur'}</Text>
+                  </TouchableOpacity>
                 </View>
 
-                <View style={dkd_styles.dkd_upload_row}>
-                  <View style={dkd_styles.dkd_upload_box}>
-                    <ImagePlus color="#EC4899" size={26} strokeWidth={2.7} />
-                    <Text style={dkd_styles.dkd_upload_text}>Logo</Text>
+                <View style={dkd_styles.dkd_card}>
+                  <View style={dkd_styles.dkd_form_header_row}>
+                    <View style={dkd_styles.dkd_logo_bubble_small}><UsersRound color="#06B6D4" size={22} strokeWidth={2.7} /></View>
+                    <View style={dkd_styles.dkd_role_content}>
+                      <Text style={dkd_styles.dkd_section_title}>Usta / çalışan ekle</Text>
+                      <Text style={dkd_styles.dkd_status_text_dark}>Takvim ve hizmet ataması için ekibini oluştur.</Text>
+                    </View>
                   </View>
-                  <View style={dkd_styles.dkd_upload_box_wide}>
-                    <ImagePlus color="#06B6D4" size={26} strokeWidth={2.7} />
-                    <Text style={dkd_styles.dkd_upload_text}>Kapak görseli</Text>
-                  </View>
+
+                  {!dkd_business_id ? <Text style={dkd_styles.dkd_warning_note}>Önce işletme profilini kaydet, sonra usta ekleyebilirsin.</Text> : null}
+
+                  <TextInput value={dkd_master_name} onChangeText={dkd_set_master_name} placeholder="Usta adı soyadı" placeholderTextColor="#64748B" style={dkd_styles.dkd_plain_input} />
+                  <View style={dkd_styles.dkd_input_shell}><Scissors color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_master_specialty} onChangeText={dkd_set_master_specialty} placeholder="Uzmanlık: saç kesim, sakal, boya..." placeholderTextColor="#64748B" style={dkd_styles.dkd_input} /></View>
+                  <View style={dkd_styles.dkd_input_shell}><Phone color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_master_phone} onChangeText={dkd_set_master_phone} placeholder="Telefon" placeholderTextColor="#64748B" keyboardType="phone-pad" style={dkd_styles.dkd_input} /></View>
+                  <TextInput value={dkd_master_bio} onChangeText={dkd_set_master_bio} placeholder="Kısa not / bio" placeholderTextColor="#64748B" multiline style={dkd_styles.dkd_plain_input_tall} />
+
+                  <TouchableOpacity style={dkd_styles.dkd_primary_button} onPress={dkd_save_master_profile} disabled={dkd_master_loading}>
+                    <UserPlus color="#0F172A" size={18} strokeWidth={2.8} />
+                    <Text style={dkd_styles.dkd_primary_button_text}>{dkd_master_loading ? 'Kaydediliyor...' : 'Usta / Çalışan Ekle'}</Text>
+                  </TouchableOpacity>
+
+                  {dkd_master_team.length > 0 ? (
+                    <View style={dkd_styles.dkd_team_list}>
+                      <Text style={dkd_styles.dkd_team_title}>Ekibin</Text>
+                      {dkd_master_team.map((dkd_master_item) => (
+                        <View key={dkd_master_item.dkd_master_id} style={dkd_styles.dkd_team_card}>
+                          <View style={dkd_styles.dkd_icon_tile}><Scissors color="#06B6D4" size={21} strokeWidth={2.7} /></View>
+                          <View style={dkd_styles.dkd_role_content}>
+                            <Text style={dkd_styles.dkd_role_title}>{dkd_master_item.dkd_master_name}</Text>
+                            <Text style={dkd_styles.dkd_role_caption}>{dkd_master_item.dkd_master_specialty || 'Uzmanlık eklenmedi'}{dkd_master_item.dkd_master_phone ? ` • ${dkd_master_item.dkd_master_phone}` : ''}</Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  ) : null}
                 </View>
-
-                <TextInput value={dkd_business_name} onChangeText={dkd_set_business_name} placeholder="İşletme adı" placeholderTextColor="#64748B" style={dkd_styles.dkd_plain_input} />
-                <TextInput value={dkd_business_description} onChangeText={dkd_set_business_description} placeholder="Kısa açıklama" placeholderTextColor="#64748B" multiline style={dkd_styles.dkd_plain_input_tall} />
-
-                <View style={dkd_styles.dkd_input_shell}><Phone color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_business_phone} onChangeText={dkd_set_business_phone} placeholder="Telefon" placeholderTextColor="#64748B" keyboardType="phone-pad" style={dkd_styles.dkd_input} /></View>
-                <View style={dkd_styles.dkd_input_shell}><MapPin color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_business_address} onChangeText={dkd_set_business_address} placeholder="Adres ve konum bilgisi" placeholderTextColor="#64748B" style={dkd_styles.dkd_input} /></View>
-                <View style={dkd_styles.dkd_input_shell}><Clock3 color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_business_hours} onChangeText={dkd_set_business_hours} placeholder="Çalışma saatleri" placeholderTextColor="#64748B" style={dkd_styles.dkd_input} /></View>
-
-                <TouchableOpacity style={dkd_styles.dkd_primary_button} onPress={dkd_save_business_profile} disabled={dkd_business_loading}>
-                  <Save color="#0F172A" size={18} strokeWidth={2.8} />
-                  <Text style={dkd_styles.dkd_primary_button_text}>{dkd_business_loading ? 'Kaydediliyor...' : dkd_business_id ? 'İşletmeyi Güncelle' : 'İşletmeyi Oluştur'}</Text>
-                </TouchableOpacity>
               </View>
             ) : null}
 
             <View style={dkd_styles.dkd_footer_card}>
               <Text style={dkd_styles.dkd_status_text_dark}>{dkd_status_text}</Text>
-              <Text style={dkd_styles.dkd_next}>Sıradaki adım: logo, kapak, konum ve çalışma saatlerini detaylı bağlama.</Text>
+              <Text style={dkd_styles.dkd_next}>Sıradaki adım: hizmet ekleme, hizmet fiyatı ve hizmet süresi ekranı.</Text>
             </View>
           </ScrollView>
         </LinearGradient>
@@ -408,6 +518,7 @@ const dkd_styles = StyleSheet.create({
   dkd_label_dark: { color: '#64748B', fontSize: 14, fontWeight: '900', marginBottom: 6 },
   dkd_success: { color: '#059669', fontSize: 17, fontWeight: '900' },
   dkd_warning: { color: '#B45309', fontSize: 17, fontWeight: '900' },
+  dkd_warning_note: { color: '#B45309', fontSize: 14, lineHeight: 20, fontWeight: '800', marginBottom: 12 },
   dkd_section_title: { color: '#0F172A', fontSize: 25, fontWeight: '900', marginBottom: 7 },
   dkd_account_text: { color: '#0891B2', fontSize: 19, fontWeight: '900', marginBottom: 10 },
   dkd_text_dark: { color: '#334155', fontSize: 16, lineHeight: 24 },
@@ -437,5 +548,8 @@ const dkd_styles = StyleSheet.create({
   dkd_upload_box: { width: 104, height: 94, borderRadius: 24, backgroundColor: '#FFF1F2', borderWidth: 1, borderColor: '#FDA4AF', alignItems: 'center', justifyContent: 'center' },
   dkd_upload_box_wide: { flex: 1, height: 94, borderRadius: 24, backgroundColor: '#ECFEFF', borderWidth: 1, borderColor: '#67E8F9', alignItems: 'center', justifyContent: 'center' },
   dkd_upload_text: { marginTop: 8, color: '#334155', fontSize: 13, fontWeight: '900' },
+  dkd_team_list: { marginTop: 18 },
+  dkd_team_title: { color: '#0F172A', fontSize: 18, fontWeight: '900', marginBottom: 10 },
+  dkd_team_card: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 20, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 10 },
   dkd_next: { marginTop: 12, color: '#0E7490', fontSize: 15, lineHeight: 22, fontWeight: '900' }
 });
