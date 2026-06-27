@@ -1,180 +1,73 @@
 # DraBornStyle
 
-DraBornStyle v0.1, berber / kuaför / salon işletmeleri için mobil uygulama başlangıç sürümüdür.
+DraBornStyle; berber, kuaför ve salon işletmeleri için akıllı randevu, usta takvimi, müşteri akışı, işlem/ödeme ve işletme yönetimi uygulamasıdır.
 
-## dkd_v0_1_tam_liste
+## Güncel Durum
 
-| Durum | Sürüm | İş |
+| Durum | Sürüm | Not |
 | --- | --- | --- |
-| ✅ | v0.0.1 | GitHub repo temiz başlangıç için kontrol edildi |
-| ✅ | v0.0.2 | Supabase DraBornStyle projesi bulundu |
-| ✅ | v0.0.3 | Supabase çekirdek tabloları kuruldu |
-| ✅ | v0.0.4 | Supabase RLS güvenlik altyapısı açıldı |
-| ✅ | v0.0.5 | Kullanıcı profil / rol policy'leri kuruldu |
-| ✅ | v0.0.6 | İşletme profil policy'leri kuruldu |
-| ✅ | v0.0.7 | Usta / çalışan policy'leri kuruldu |
-| ✅ | v0.0.8 | Hizmet / fiyat / süre policy'leri kuruldu |
-| ✅ | v0.0.9 | Randevu veri tabanı ve policy'leri kuruldu |
-| ✅ | v0.0.10 | İşletme ödeme raporu ve admin onay altyapısı kuruldu |
-| ✅ | v0.0.11 | Logo / kapak / kullanıcı dosyaları için storage bucket kuruldu |
-| ✅ | v0.0.12 | Expo / React Native v0.1 proje iskeleti eklendi |
-| ✅ | v0.0.13 | Sade başlangıç ekranı eklendi |
-| ✅ | v0.0.14 | Termux zip kurulumla telefonda ilk açılış testi yapıldı |
-| ✅ | v0.0.15 | Supabase publishable key `.env` içine girildi ve uygulamada doğrulandı |
-| ✅ | v0.0.16 | Gerçek auth ekranı bağlandı ve test edildi |
-| ✅ | v0.0.17 | Rol seçimi ekranı eklendi |
-| ✅ | v0.0.18 | Super Admin ayrımı kaldırıldı; Admin tek yönetim rolü olarak kilitlendi |
-| ✅ | v0.0.19 | UI altyapısı ve işletme profili formu eklendi |
-| ✅ | v0.0.20 | İşletme profil detay ekranı çalıştı |
-| ✅ | v0.0.21 | Usta / çalışan ekleme ekranı eklendi |
-| ✅ | v0.0.22 | Hizmet ekleme, hizmet fiyatı ve hizmet süresi ekranı eklendi |
-| ✅ | v0.0.23 | Performans için kategori / akordeon salon paneli eklendi |
-| ✅ | v0.0.24 | Tek giriş/kayıt, işletme başvurusu, usta başvurusu, admin rol onay sistemi ve mockup login ekranı eklendi |
-| 🟡 | v0.0.25 | Çoklu rol/yetki altyapısı eklendi, v0.1 mobil test ve düzeltme turu devam ediyor |
-| ⬜ | v0.1 | v0.1 final tamamlanacak ve v0.2 hazırlığına geçilecek |
+| ✅ | v0.1 Final | Login, tek hesap sistemi, müşteri/işletme/usta/admin panelleri, çoklu rol yetkisi korundu. |
+| ✅ | v0.2.17 Final | İşlem, ödeme, QR, indirim, platform ücret takibi ve admin başvuru/onay sistemi korundu. |
+| ✅ | v0.3.0 | Randevu + Takvim + Müşteri Akışı başlatıldı ve ilk çalışan modül eklendi. |
 
-## dkd_v0_0_25_coklu_rol_karari
+## v0.3 Hedefi
 
-v0.0.25 içinde rol mantığı tek rol sisteminden çoklu yetki sistemine genişletildi.
+v0.3 ana hedefi: müşteri tarafında randevu oluşturma, işletme tarafında takvimden randevu yönetme, usta tarafında günlük akışı görme ve müşterinin geliş durumunu takip etme.
 
-Yeni kararlar:
+## v0.3.0 Tamamlananlar
 
-- Her kullanıcı kayıt olduktan sonra standart `Müşteri` hesabıyla başlar.
-- Bir kullanıcı ayrıca `İşletme Sahibi` başvurusu yapabilir.
-- Bir kullanıcı ayrıca `Usta` başvurusu yapabilir.
-- İşletme ve Usta başvuruları Admin onayına gider.
-- Admin onayladıktan sonra kullanıcı ilgili panele erişebilir.
-- Bir kullanıcı aynı anda hem `Müşteri`, hem `İşletme Sahibi`, hem de `Usta` yetkisine sahip olabilir.
-- Admin kullanıcı listesinden seçtiği kullanıcıya `İşletme Sahibi` veya `Usta` yetkisi verebilir.
-- Admin test amacıyla hem işletme sahibi hem de usta yetkilerine sahip kabul edilir.
-- Eski `dkd_user_profiles.dkd_role` alanı geriye uyumluluk için korunur.
-- Yeni gerçek yetki kaynağı `dkd_user_role_access` tablosudur.
+| Durum | İş |
+| --- | --- |
+| ✅ | `dkd_appointments` tablosu silinmeden genişletildi. |
+| ✅ | Randevu kodu, müşteri adı, müşteri telefonu ve müşteri geliş durumu alanları eklendi. |
+| ✅ | Müşteri akışı için `not_started`, `on_the_way`, `arrived`, `checked_in`, `late`, `no_show`, `cancelled`, `completed` durumları hazırlandı. |
+| ✅ | Randevu akış geçmişi için `dkd_appointment_flow_events` tablosu eklendi. |
+| ✅ | Takvim bloklama / meşgul zaman altyapısı için `dkd_appointment_availability_blocks` tablosu eklendi. |
+| ✅ | RLS policy yapısı aktif edildi. |
+| ✅ | Müşteri paneline “Randevu Oluştur” ekranı eklendi. |
+| ✅ | İşletme paneline “Randevu & Takvim” bölümü eklendi. |
+| ✅ | Usta paneline “Bugünkü Akış” randevu görünümü eklendi. |
+| ✅ | `package.json` sürümü `0.3.0` yapıldı. |
+| ✅ | `postinstall` sırası `v0.2` patch sonrası `v0.3` patch çalışacak şekilde güncellendi. |
 
-Yeni Supabase tablosu:
+## Korunan Kilit Yapılar
 
-- `dkd_user_role_access`
+- v0.1 tek login/kayıt sistemi korunur.
+- Müşteri otomatik varsayılan rol olarak kalır.
+- İşletme ve usta yetkileri admin onaylı kalır.
+- Çoklu rol kaynağı `dkd_user_role_access` olarak kalır.
+- Admin test hesabı ve panel ayrımı bozulmaz.
+- v0.2 işlem, ödeme, QR, indirim, admin ödeme/onay ve platform ücret sistemi korunur.
 
-Bu tablo kullanıcının sahip olduğu aktif rolleri ayrı ayrı tutar.
+## v0.3 Test Listesi
 
-Örnek:
+| Durum | Test |
+| --- | --- |
+| ⬜ | Müşteri hesabıyla salon listesi görünüyor mu? |
+| ⬜ | Müşteri salon + usta + hizmet seçip randevu talebi oluşturabiliyor mu? |
+| ⬜ | Randevu işletme takviminde görünüyor mu? |
+| ⬜ | İşletme randevuyu onaylayabiliyor mu? |
+| ⬜ | Müşteri “Yoldayım” ve “Geldim” akışlarını güncelleyebiliyor mu? |
+| ⬜ | İşletme “Geldi”, “İşlemde”, “Tamamlandı”, “Gelmedi” durumlarını işleyebiliyor mu? |
+| ⬜ | Usta panelinde ustaya bağlı randevular görünüyor mu? |
+| ⬜ | v0.2 İşlem & Ödeme ekranı hâlâ çalışıyor mu? |
+| ⬜ | Çıkış/giriş sonrası roller ve paneller doğru yükleniyor mu? |
 
-```text
-user@example.com
-- customer ✅
-- business ✅
-- master ✅
+## Termux ZIP Kurulum
+
+Bu projede Termux tarafında ZIP yöntemi kullanılacak. Python patch, JDK, Perl ve `/tmp` yöntemi kullanılmaz.
+
+```bash
+cd $HOME
+rm -rf DraBornStyle DraBornStyle-main DraBornStyle-main.zip
+pkg update -y
+pkg install -y nodejs git unzip
+curl -L -o DraBornStyle-main.zip https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip
+unzip -o DraBornStyle-main.zip
+mv DraBornStyle-main DraBornStyle
+cd DraBornStyle
+npm install
+npm run drabornstyle_start
 ```
 
-Admin için kural:
-
-```text
-admin ✅
-Business panel test erişimi ✅
-Master panel test erişimi ✅
-```
-
-## dkd_v0_0_25_final_test_turu
-
-v0.0.25 yeni büyük özellik ekleme sürümü değildir. Bu adım v0.1 final öncesi son mobil test, hata düzeltme ve temizlik turudur. Ancak çoklu rol kararı v0.1 güvenliği için gerekli olduğu için bu turda backend altyapısına eklendi.
-
-Test edilecekler:
-
-- Login mockup ekranı gerçek PNG asset ile net görünüyor mu?
-- E-posta ve şifre görünmez input alanları doğru kutuların içine denk geliyor mu?
-- `Giriş Yap` ve `Kayıt Ol` görünmez tıklama alanları doğru çalışıyor mu?
-- Yeni kullanıcı otomatik `Müşteri` rolüyle açılıyor mu?
-- Müşteri işletme başvurusu gönderebiliyor mu?
-- Müşteri usta başvurusu gönderebiliyor mu?
-- Başvuru durumu `pending / approved / rejected` olarak görünüyor mu?
-- Admin başvuruları görebiliyor, onaylayabiliyor ve reddedebiliyor mu?
-- Admin kayıtlı kullanıcıya `İşletme Sahibi` veya `Usta` yetkisi verebiliyor mu?
-- Kullanıcı hem işletme paneline hem usta paneline ayrı ayrı erişebiliyor mu?
-- Admin kendi hesabında işletme ve usta test panellerine erişebiliyor mu?
-- İşletme Sahibi panelinde salon bilgisi, usta listesi, hizmet fiyatı ve hizmet süresi çalışıyor mu?
-- İşletme panelinden usta yetki başvurusu admin onayına gönderilebiliyor mu?
-- Usta rolü onaylandıktan sonra Usta Paneli açılıyor mu?
-- Çıkış / tekrar giriş sonrası rol ve panel doğru geri geliyor mu?
-- Ekranlarda taşma, okunmama, yanlış hizalama veya ciddi performans sorunu var mı?
-
-v0.0.25 temiz geçerse `v0.1 final` kapatılacak ve sonra v0.2 yol haritasına geçilecek.
-
-## dkd_v0_0_24_mockup_login
-
-Login ekranı artık Barber Studio OS mockup görselini tam ekran arka plan olarak kullanır.
-
-- Doğru kalite için gerçek PNG asset kullanılmalıdır: `src/dkd_assets/login_barber_miami.png`
-- Base64/JPEG gömme yöntemi kaliteyi bozduğu için final kullanımda tercih edilmez.
-- Giriş yapılmamış durumda eski kart tabanlı login ekranı yerine tam ekran mockup gösterilir.
-- E-posta ve şifre alanlarının üzerine görünmez `TextInput` kutuları yerleştirildi.
-- Kullanıcı yazı yazınca metin mockup üzerindeki boş kutucuklarda görünür.
-- `Giriş Yap` ve `Kayıt Ol` butonlarının üzerine görünmez tıklama alanları yerleştirildi.
-- `Giriş Yap` mevcut kullanıcı girişini çalıştırır.
-- `Kayıt Ol` yeni kullanıcı kaydını çalıştırır.
-- Giriş/kayıt yine tek tiptir; yeni kullanıcı otomatik `Müşteri` rolüyle başlar.
-
-## dkd_v0_0_24_guncel_karar
-
-v0.0.24 içinde giriş ve rol mantığı değiştirildi.
-
-- Login/kayıt ekranında artık müşteri/işletme seçimi yoktur.
-- Her kullanıcı tek hesapla giriş yapar veya kayıt olur.
-- Yeni kullanıcı ilk açılışta otomatik `Müşteri` rolüyle başlar.
-- İşletme olmak isteyen kullanıcı uygulama içinden `İşletme Başvurusu` gönderir.
-- Admin başvuruyu onaylarsa kullanıcı `İşletme Sahibi` rolüne geçer ve işletme paneli açılır.
-- Usta olmak isteyen kayıtlı kullanıcı için başvuru işletme paneli içinden admin onayına gönderilir.
-- Admin paneli kayıtlı kullanıcıları `İşletme Sahibi` veya `Usta` olarak işaretleyebilir.
-- Admin paneli işletme/usta başvurularını onaylayabilir veya reddedebilir.
-
-## dkd_v0_0_24_supabase
-
-Yeni tablo:
-
-- `dkd_role_applications`
-
-Bu tablo işletme ve usta rol başvurularını saklar.
-
-Başvuru durumları:
-
-- `pending`
-- `approved`
-- `rejected`
-
-RLS mantığı:
-
-- Kullanıcı kendi başvurusunu görebilir.
-- İşletme sahibi kendi işletmesinden gönderilen usta başvurularını görebilir.
-- Admin tüm başvuruları ve kayıtlı kullanıcıları görebilir/güncelleyebilir.
-
-## dkd_v0_1_kilitli_kapsam
-
-v0.1 finalde eksiksiz yapılacaklar:
-
-- Müşteri hesabı
-- İşletme hesabı
-- Usta hesabı
-- Admin hesabı
-- Tek giriş/kayıt sistemi
-- İşletme başvuru sistemi
-- Usta başvuru sistemi
-- Admin rol onay sistemi
-- Çoklu rol/yetki sistemi
-- İşletme oluşturma
-- İşletme profili
-- İşletme adı, logo, kapak görseli altyapısı
-- Adres ve konum bilgisi altyapısı
-- Çalışma saatleri
-- Usta / çalışan ekleme
-- Hizmet ekleme
-- Hizmet fiyatı
-- Hizmet süresi
-- Temel Supabase / backend yapısı
-- Rol bazlı yetki sistemi
-
-v0.1 rolleri:
-
-- Admin
-- İşletme Sahibi
-- Usta
-- Müşteri
-
-Not: v0.1 MVP içinde Super Admin ayrımı yoktur. Tüm yönetim yetkileri tek Admin panelinde toplanır.
+Expo açıldıktan sonra uygulamayı telefonda Expo Go ile test et.
