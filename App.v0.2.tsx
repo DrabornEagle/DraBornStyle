@@ -2,7 +2,6 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-import App from './App';
 import { dkd_supabase_client } from './src/dkd_config/dkd_supabase_client';
 import { DkdTransactionPanel, useDkdTransactions } from './src/dkd_v0_2';
 
@@ -18,7 +17,6 @@ type MasterItem = {
 };
 
 export default function DkdV02App() {
-  const [mode, setMode] = React.useState<'main' | 'v02'>('v02');
   const [status, setStatus] = React.useState('v0.2 test ekranı hazır.');
   const [businessId, setBusinessId] = React.useState<string | null>(null);
   const [services, setServices] = React.useState<ServiceItem[]>([]);
@@ -31,7 +29,7 @@ export default function DkdV02App() {
     const userId = sessionResult.data.session?.user?.id;
 
     if (!userId) {
-      setStatus('Önce ana ekrandan giriş yap.');
+      setStatus('Önce ana uygulamadan giriş yapılmış oturum gerekli.');
       return;
     }
 
@@ -74,8 +72,6 @@ export default function DkdV02App() {
     loadV02Data().catch((error) => setStatus(error.message));
   }, []);
 
-  if (mode === 'main') return <App />;
-
   return (
     <SafeAreaProvider>
       <SafeAreaView style={styles.safe}>
@@ -84,10 +80,6 @@ export default function DkdV02App() {
             <Text style={styles.brand}>DraBornStyle v0.2</Text>
             <Text style={styles.text}>İşlem başlat / bitir test ekranı</Text>
           </View>
-
-          <TouchableOpacity style={styles.button} onPress={() => setMode('main')}>
-            <Text style={styles.buttonText}>Ana Uygulamaya Dön</Text>
-          </TouchableOpacity>
 
           <TouchableOpacity style={styles.buttonGhost} onPress={() => loadV02Data().catch((error) => setStatus(error.message))}>
             <Text style={styles.buttonGhostText}>Verileri Yenile</Text>
@@ -116,8 +108,6 @@ const styles = StyleSheet.create({
   header: { backgroundColor: '#304944', borderRadius: 24, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: '#82978E' },
   brand: { color: '#FFF2DD', fontSize: 26, fontWeight: '900' },
   text: { color: '#DDEBE4', fontSize: 15, marginTop: 6, fontWeight: '700' },
-  button: { backgroundColor: '#F0C766', borderRadius: 16, padding: 14, alignItems: 'center', marginBottom: 10 },
-  buttonText: { color: '#243835', fontSize: 15, fontWeight: '900' },
   buttonGhost: { backgroundColor: '#243835', borderRadius: 16, padding: 14, alignItems: 'center', marginBottom: 12, borderWidth: 1, borderColor: '#82978E' },
   buttonGhostText: { color: '#FFF2DD', fontSize: 15, fontWeight: '900' },
   status: { color: '#FFF2DD', fontSize: 14, fontWeight: '800', marginTop: 8, backgroundColor: '#243835', padding: 12, borderRadius: 14 }
