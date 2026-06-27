@@ -67,7 +67,6 @@ export default function DkdV02App() {
 
     setServices((servicesResult.data ?? []) as ServiceItem[]);
     setMasters((mastersResult.data ?? []) as MasterItem[]);
-    await tx.refreshTransactions();
     setStatus('v0.2 verileri yüklendi.');
   }
 
