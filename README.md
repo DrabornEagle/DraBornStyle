@@ -29,15 +29,38 @@ DraBornStyle v0.1, berber / kuaför / salon işletmeleri için mobil uygulama ba
 | ✅ | v0.0.21 | Usta / çalışan ekleme ekranı eklendi |
 | ✅ | v0.0.22 | Hizmet ekleme, hizmet fiyatı ve hizmet süresi ekranı eklendi |
 | ✅ | v0.0.23 | Performans için kategori / akordeon salon paneli eklendi |
-| 🟡 | v0.0.24 | Tek giriş/kayıt, işletme başvurusu, usta başvurusu, admin rol onay sistemi ve mockup login ekranı eklendi |
-| ⬜ | v0.0.25 | v0.1 mobil test ve düzeltme turu tamamlanacak |
+| ✅ | v0.0.24 | Tek giriş/kayıt, işletme başvurusu, usta başvurusu, admin rol onay sistemi ve mockup login ekranı eklendi |
+| 🟡 | v0.0.25 | v0.1 mobil test ve düzeltme turu başladı |
 | ⬜ | v0.1 | v0.1 final tamamlanacak ve v0.2 hazırlığına geçilecek |
+
+## dkd_v0_0_25_final_test_turu
+
+v0.0.25 yeni büyük özellik ekleme sürümü değildir. Bu adım v0.1 final öncesi son mobil test, hata düzeltme ve temizlik turudur.
+
+Test edilecekler:
+
+- Login mockup ekranı gerçek PNG asset ile net görünüyor mu?
+- E-posta ve şifre görünmez input alanları doğru kutuların içine denk geliyor mu?
+- `Giriş Yap` ve `Kayıt Ol` görünmez tıklama alanları doğru çalışıyor mu?
+- Yeni kullanıcı otomatik `Müşteri` rolüyle açılıyor mu?
+- Müşteri işletme başvurusu gönderebiliyor mu?
+- Başvuru durumu `pending / approved / rejected` olarak görünüyor mu?
+- Admin başvuruları görebiliyor, onaylayabiliyor ve reddedebiliyor mu?
+- Admin kayıtlı kullanıcıyı `İşletme Sahibi` veya `Usta` olarak işaretleyebiliyor mu?
+- İşletme Sahibi panelinde salon bilgisi, usta listesi, hizmet fiyatı ve hizmet süresi çalışıyor mu?
+- İşletme panelinden usta yetki başvurusu admin onayına gönderilebiliyor mu?
+- Usta rolü onaylandıktan sonra Usta Paneli açılıyor mu?
+- Çıkış / tekrar giriş sonrası rol ve panel doğru geri geliyor mu?
+- Ekranlarda taşma, okunmama, yanlış hizalama veya ciddi performans sorunu var mı?
+
+v0.0.25 temiz geçerse `v0.1 final` kapatılacak ve sonra v0.2 yol haritasına geçilecek.
 
 ## dkd_v0_0_24_mockup_login
 
-Login ekranı artık üretilen Barber Studio OS mockup görselini tam ekran arka plan olarak kullanır.
+Login ekranı artık Barber Studio OS mockup görselini tam ekran arka plan olarak kullanır.
 
-- Mockup görseli uygulamaya gömülü base64 asset olarak eklendi: `src/dkd_assets/dkd_login_mockup_base64.ts`
+- Doğru kalite için gerçek PNG asset kullanılmalıdır: `src/dkd_assets/login_barber_miami.png`
+- Base64/JPEG gömme yöntemi kaliteyi bozduğu için final kullanımda tercih edilmez.
 - Giriş yapılmamış durumda eski kart tabanlı login ekranı yerine tam ekran mockup gösterilir.
 - E-posta ve şifre alanlarının üzerine görünmez `TextInput` kutuları yerleştirildi.
 - Kullanıcı yazı yazınca metin mockup üzerindeki boş kutucuklarda görünür.
