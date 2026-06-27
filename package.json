@@ -2,7 +2,7 @@
   "name": "draborneagle_drabornstyle",
   "version": "0.2.14",
   "private": true,
-  "main": "index.v0.2.js",
+  "main": "index.integrated.js",
   "scripts": {
     "drabornstyle_start": "expo start",
     "drabornstyle_android": "expo start --android",
