@@ -1,8 +1,8 @@
 {
   "name": "draborneagle_drabornstyle",
-  "version": "0.1.0",
+  "version": "0.2.13",
   "private": true,
-  "main": "index.js",
+  "main": "index.v0.2.js",
   "scripts": {
     "drabornstyle_start": "expo start",
     "drabornstyle_android": "expo start --android",
