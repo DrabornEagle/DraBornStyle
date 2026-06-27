@@ -29,9 +29,22 @@ DraBornStyle v0.1, berber / kuaför / salon işletmeleri için mobil uygulama ba
 | ✅ | v0.0.21 | Usta / çalışan ekleme ekranı eklendi |
 | ✅ | v0.0.22 | Hizmet ekleme, hizmet fiyatı ve hizmet süresi ekranı eklendi |
 | ✅ | v0.0.23 | Performans için kategori / akordeon salon paneli eklendi |
-| 🟡 | v0.0.24 | Tek giriş/kayıt, işletme başvurusu, usta başvurusu ve admin rol onay sistemi eklendi |
+| 🟡 | v0.0.24 | Tek giriş/kayıt, işletme başvurusu, usta başvurusu, admin rol onay sistemi ve mockup login ekranı eklendi |
 | ⬜ | v0.0.25 | v0.1 mobil test ve düzeltme turu tamamlanacak |
 | ⬜ | v0.1 | v0.1 final tamamlanacak ve v0.2 hazırlığına geçilecek |
+
+## dkd_v0_0_24_mockup_login
+
+Login ekranı artık üretilen Barber Studio OS mockup görselini tam ekran arka plan olarak kullanır.
+
+- Mockup görseli uygulamaya gömülü base64 asset olarak eklendi: `src/dkd_assets/dkd_login_mockup_base64.ts`
+- Giriş yapılmamış durumda eski kart tabanlı login ekranı yerine tam ekran mockup gösterilir.
+- E-posta ve şifre alanlarının üzerine görünmez `TextInput` kutuları yerleştirildi.
+- Kullanıcı yazı yazınca metin mockup üzerindeki boş kutucuklarda görünür.
+- `Giriş Yap` ve `Kayıt Ol` butonlarının üzerine görünmez tıklama alanları yerleştirildi.
+- `Giriş Yap` mevcut kullanıcı girişini çalıştırır.
+- `Kayıt Ol` yeni kullanıcı kaydını çalıştırır.
+- Giriş/kayıt yine tek tiptir; yeni kullanıcı otomatik `Müşteri` rolüyle başlar.
 
 ## dkd_v0_0_24_guncel_karar
 
