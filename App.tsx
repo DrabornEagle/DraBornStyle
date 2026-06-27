@@ -2,40 +2,18 @@ import React from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import {
-  BadgeDollarSign,
-  Building2,
-  ChevronDown,
-  ChevronRight,
-  Clock3,
-  LockKeyhole,
-  LogOut,
-  Mail,
-  MapPin,
-  Phone,
-  Save,
-  Scissors,
-  ShieldCheck,
-  Sparkles,
-  Store,
-  Timer,
-  UserPlus,
-  UserRound,
-  UsersRound
-} from 'lucide-react-native';
 
 import { dkd_is_supabase_env_ready, dkd_supabase_client } from './src/dkd_config/dkd_supabase_client';
 
 type Dkd_AuthMode = 'login' | 'signup';
 type Dkd_RoleKey = 'customer' | 'business' | 'master' | 'admin';
 type Dkd_SetupSection = 'business' | 'team' | 'services';
-type Dkd_Icon = React.ComponentType<{ color?: string; size?: number; strokeWidth?: number }>;
 
 type Dkd_RoleOption = {
   key: Dkd_RoleKey;
   title: string;
   caption: string;
-  icon: Dkd_Icon;
+  icon: string;
 };
 
 type Dkd_MasterItem = {
@@ -53,16 +31,16 @@ type Dkd_ServiceItem = {
 };
 
 const dkd_role_options: Dkd_RoleOption[] = [
-  { key: 'customer', title: 'Müşteri', caption: 'Randevu ve salon keşfi.', icon: UserRound },
-  { key: 'business', title: 'İşletme Sahibi', caption: 'Salon, ekip, hizmet ve fiyat yönetimi.', icon: Building2 },
-  { key: 'master', title: 'Usta', caption: 'Kendi çalışma akışı ve takvimi.', icon: Scissors },
-  { key: 'admin', title: 'Admin', caption: 'Platform yönetimi ve kontrol.', icon: ShieldCheck }
+  { key: 'customer', title: 'Müşteri', caption: 'Randevu ve salon keşfi.', icon: '👤' },
+  { key: 'business', title: 'İşletme Sahibi', caption: 'Salon, ekip, hizmet ve fiyat yönetimi.', icon: '🏪' },
+  { key: 'master', title: 'Usta', caption: 'Kendi çalışma akışı ve takvimi.', icon: '✂️' },
+  { key: 'admin', title: 'Admin', caption: 'Platform yönetimi ve kontrol.', icon: '🛡️' }
 ];
 
-const dkd_section_titles: Record<Dkd_SetupSection, string> = {
-  business: 'Salon Bilgileri',
-  team: 'Ekip / Ustalar',
-  services: 'Hizmetler ve Fiyatlar'
+const dkd_section_meta: Record<Dkd_SetupSection, { title: string; icon: string }> = {
+  business: { title: 'Salon Bilgileri', icon: '🏪' },
+  team: { title: 'Ekip / Ustalar', icon: '✂️' },
+  services: { title: 'Hizmetler ve Fiyatlar', icon: '₺' }
 };
 
 function dkd_create_slug(dkd_value: string) {
@@ -96,7 +74,7 @@ export default function Dkd_DraBornStyleApp() {
   const [dkd_user_email, dkd_set_user_email] = React.useState<string | null>(null);
   const [dkd_user_id, dkd_set_user_id] = React.useState<string | null>(null);
   const [dkd_role, dkd_set_role] = React.useState<Dkd_RoleKey | null>(null);
-  const [dkd_status, dkd_set_status] = React.useState('Hazır. Hızlı ve sade salon akışı başladı.');
+  const [dkd_status, dkd_set_status] = React.useState('Hazır. Sade salon paneli açıldı.');
   const [dkd_loading, dkd_set_loading] = React.useState(false);
   const [dkd_active_section, dkd_set_active_section] = React.useState<Dkd_SetupSection | null>('business');
 
@@ -203,9 +181,10 @@ export default function Dkd_DraBornStyleApp() {
       return;
     }
     dkd_set_loading(true);
-    const dkd_response = dkd_auth_mode === 'login'
-      ? await dkd_supabase_client.auth.signInWithPassword({ email: dkd_clean_email, password: dkd_password })
-      : await dkd_supabase_client.auth.signUp({ email: dkd_clean_email, password: dkd_password });
+    const dkd_response =
+      dkd_auth_mode === 'login'
+        ? await dkd_supabase_client.auth.signInWithPassword({ email: dkd_clean_email, password: dkd_password })
+        : await dkd_supabase_client.auth.signUp({ email: dkd_clean_email, password: dkd_password });
     dkd_set_loading(false);
     dkd_set_status(dkd_response.error ? dkd_response.error.message : 'Hesap hazır. Salon akışını seç.');
   }
@@ -221,7 +200,8 @@ export default function Dkd_DraBornStyleApp() {
     const dkd_response = await dkd_supabase_client
       .from('dkd_user_profiles')
       .upsert({ dkd_user_id, dkd_role: dkd_next_role, dkd_display_name: dkd_user_email ?? '', dkd_is_active: true }, { onConflict: 'dkd_user_id' });
-    dkd_set_status(dkd_response.error ? dkd_response.error.message : `${dkd_role_options.find((item) => item.key === dkd_next_role)?.title} akışı açıldı.`);
+    const dkd_role_title = dkd_role_options.find((item) => item.key === dkd_next_role)?.title;
+    dkd_set_status(dkd_response.error ? dkd_response.error.message : `${dkd_role_title} akışı açıldı.`);
   }
 
   async function dkd_save_business() {
@@ -308,11 +288,11 @@ export default function Dkd_DraBornStyleApp() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={dkd_styles.safe}>
-        <LinearGradient colors={['#E0F7FA', '#FFF1E6', '#FFE4F0']} style={dkd_styles.bg}>
+        <LinearGradient colors={['#F8EEE2', '#F4D6C8', '#DDF4F2']} style={dkd_styles.bg}>
           <ScrollView contentContainerStyle={dkd_styles.screen} keyboardShouldPersistTaps="handled">
-            <LinearGradient colors={['#00BCD4', '#FF4FA3', '#FF9F45']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={dkd_styles.hero}>
+            <LinearGradient colors={['#334155', '#0F766E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={dkd_styles.hero}>
               <View style={dkd_styles.heroTop}>
-                <View style={dkd_styles.logo}><Sparkles color="#00A6B8" size={26} strokeWidth={2.8} /></View>
+                <DkdIconBadge label="✂️" tone="light" />
                 <Text style={dkd_styles.heroTag}>BERBER • KUAFÖR • SALON</Text>
               </View>
               <Text style={dkd_styles.heroTitle}>DraBornStyle</Text>
@@ -320,7 +300,7 @@ export default function Dkd_DraBornStyleApp() {
             </LinearGradient>
 
             <View style={dkd_styles.statusCard}>
-              <ShieldCheck color="#00A6B8" size={24} strokeWidth={2.7} />
+              <DkdIconBadge label="✓" />
               <View style={dkd_styles.flex}>
                 <Text style={dkd_styles.muted}>Supabase bağlantısı</Text>
                 <Text style={dkd_is_supabase_env_ready ? dkd_styles.good : dkd_styles.warn}>{dkd_is_supabase_env_ready ? 'Hazır' : 'Key eksik'}</Text>
@@ -334,7 +314,7 @@ export default function Dkd_DraBornStyleApp() {
                   <Text style={dkd_styles.accent}>{dkd_user_email}</Text>
                   <Text style={dkd_styles.body}>{dkd_role ? `Aktif akış: ${dkd_role_options.find((item) => item.key === dkd_role)?.title}` : 'Henüz akış seçilmedi.'}</Text>
                   <TouchableOpacity style={dkd_styles.softButton} onPress={dkd_logout}>
-                    <LogOut color="#111827" size={18} strokeWidth={2.7} />
+                    <Text style={dkd_styles.buttonIcon}>↗</Text>
                     <Text style={dkd_styles.softButtonText}>Çıkış Yap</Text>
                   </TouchableOpacity>
                 </View>
@@ -345,8 +325,8 @@ export default function Dkd_DraBornStyleApp() {
                     <TouchableOpacity style={dkd_auth_mode === 'login' ? dkd_styles.tabActive : dkd_styles.tab} onPress={() => dkd_set_auth_mode('login')}><Text style={dkd_auth_mode === 'login' ? dkd_styles.tabTextActive : dkd_styles.tabText}>Giriş</Text></TouchableOpacity>
                     <TouchableOpacity style={dkd_auth_mode === 'signup' ? dkd_styles.tabActive : dkd_styles.tab} onPress={() => dkd_set_auth_mode('signup')}><Text style={dkd_auth_mode === 'signup' ? dkd_styles.tabTextActive : dkd_styles.tabText}>Kayıt</Text></TouchableOpacity>
                   </View>
-                  <DkdInput icon={Mail} value={dkd_email} onChangeText={dkd_set_email} placeholder="E-posta" />
-                  <DkdInput icon={LockKeyhole} value={dkd_password} onChangeText={dkd_set_password} placeholder="Şifre" secureTextEntry />
+                  <DkdInput label="@" value={dkd_email} onChangeText={dkd_set_email} placeholder="E-posta" />
+                  <DkdInput label="•" value={dkd_password} onChangeText={dkd_set_password} placeholder="Şifre" secureTextEntry />
                   <TouchableOpacity style={dkd_styles.primaryButton} onPress={dkd_auth} disabled={dkd_loading}><Text style={dkd_styles.primaryText}>{dkd_loading ? 'Bekle...' : 'Devam Et'}</Text></TouchableOpacity>
                 </View>
               )}
@@ -357,11 +337,10 @@ export default function Dkd_DraBornStyleApp() {
                 <Text style={dkd_styles.title}>Salon Akışını Seç</Text>
                 <Text style={dkd_styles.body}>DraBornStyle’ı nasıl kullanacağını seç. Detaylar sadece ihtiyaç olduğunda açılır.</Text>
                 {dkd_role_options.map((dkd_item) => {
-                  const DkdIcon = dkd_item.icon;
                   const dkd_selected = dkd_role === dkd_item.key;
                   return (
                     <TouchableOpacity key={dkd_item.key} style={dkd_selected ? dkd_styles.listItemActive : dkd_styles.listItem} onPress={() => dkd_save_role(dkd_item.key)}>
-                      <View style={dkd_styles.iconBox}><DkdIcon color="#00A6B8" size={23} strokeWidth={2.6} /></View>
+                      <DkdIconBadge label={dkd_item.icon} />
                       <View style={dkd_styles.flex}>
                         <Text style={dkd_styles.itemTitle}>{dkd_item.title}</Text>
                         <Text style={dkd_styles.itemText}>{dkd_item.caption}</Text>
@@ -375,37 +354,38 @@ export default function Dkd_DraBornStyleApp() {
             {dkd_user_email && dkd_role === 'business' ? (
               <View style={dkd_styles.card}>
                 <Text style={dkd_styles.title}>Salon Kurulum Menüsü</Text>
-                <Text style={dkd_styles.body}>Ekranı sade tuttuk. Bir kategoriye dokun, detayını aç.</Text>
-                <DkdSectionButton icon={Store} title={dkd_section_titles.business} subtitle={dkd_business_id ? 'Salon bilgileri kayıtlı' : 'Salon profilini oluştur'} active={dkd_active_section === 'business'} onPress={() => dkd_toggle_section('business')} />
+                <Text style={dkd_styles.body}>Bir kategoriye dokun, sadece ihtiyacın olan form açılsın.</Text>
+
+                <DkdSectionButton meta={dkd_section_meta.business} subtitle={dkd_business_id ? 'Salon bilgileri kayıtlı' : 'Salon profilini oluştur'} active={dkd_active_section === 'business'} onPress={() => dkd_toggle_section('business')} />
                 {dkd_active_section === 'business' ? (
                   <View style={dkd_styles.detailBox}>
                     <DkdPlainInput value={dkd_business_name} onChangeText={dkd_set_business_name} placeholder="Salon / işletme adı" />
                     <DkdPlainInput value={dkd_business_description} onChangeText={dkd_set_business_description} placeholder="Kısa açıklama" />
-                    <DkdInput icon={Phone} value={dkd_business_phone} onChangeText={dkd_set_business_phone} placeholder="Telefon" keyboardType="phone-pad" />
-                    <DkdInput icon={MapPin} value={dkd_business_address} onChangeText={dkd_set_business_address} placeholder="Adres" />
-                    <DkdInput icon={Clock3} value={dkd_business_hours} onChangeText={dkd_set_business_hours} placeholder="Çalışma saatleri" />
-                    <TouchableOpacity style={dkd_styles.primaryButton} onPress={dkd_save_business}><Save color="#111827" size={18} strokeWidth={2.8} /><Text style={dkd_styles.primaryText}>Salon Bilgilerini Kaydet</Text></TouchableOpacity>
+                    <DkdInput label="☎" value={dkd_business_phone} onChangeText={dkd_set_business_phone} placeholder="Telefon" keyboardType="phone-pad" />
+                    <DkdInput label="⌖" value={dkd_business_address} onChangeText={dkd_set_business_address} placeholder="Adres" />
+                    <DkdInput label="◷" value={dkd_business_hours} onChangeText={dkd_set_business_hours} placeholder="Çalışma saatleri" />
+                    <TouchableOpacity style={dkd_styles.primaryButton} onPress={dkd_save_business}><Text style={dkd_styles.primaryText}>Salon Bilgilerini Kaydet</Text></TouchableOpacity>
                   </View>
                 ) : null}
 
-                <DkdSectionButton icon={UsersRound} title={dkd_section_titles.team} subtitle={`${dkd_masters.length} usta / çalışan`} active={dkd_active_section === 'team'} onPress={() => dkd_toggle_section('team')} />
+                <DkdSectionButton meta={dkd_section_meta.team} subtitle={`${dkd_masters.length} usta / çalışan`} active={dkd_active_section === 'team'} onPress={() => dkd_toggle_section('team')} />
                 {dkd_active_section === 'team' ? (
                   <View style={dkd_styles.detailBox}>
                     <DkdPlainInput value={dkd_master_name} onChangeText={dkd_set_master_name} placeholder="Usta adı soyadı" />
-                    <DkdInput icon={Scissors} value={dkd_master_specialty} onChangeText={dkd_set_master_specialty} placeholder="Uzmanlık" />
-                    <DkdInput icon={Phone} value={dkd_master_phone} onChangeText={dkd_set_master_phone} placeholder="Telefon" keyboardType="phone-pad" />
-                    <TouchableOpacity style={dkd_styles.primaryButton} onPress={dkd_save_master}><UserPlus color="#111827" size={18} strokeWidth={2.8} /><Text style={dkd_styles.primaryText}>Usta Ekle</Text></TouchableOpacity>
+                    <DkdInput label="✂" value={dkd_master_specialty} onChangeText={dkd_set_master_specialty} placeholder="Uzmanlık" />
+                    <DkdInput label="☎" value={dkd_master_phone} onChangeText={dkd_set_master_phone} placeholder="Telefon" keyboardType="phone-pad" />
+                    <TouchableOpacity style={dkd_styles.primaryButton} onPress={dkd_save_master}><Text style={dkd_styles.primaryText}>Usta Ekle</Text></TouchableOpacity>
                     {dkd_masters.map((item) => <DkdMiniRow key={item.dkd_master_id} title={item.dkd_master_name} subtitle={item.dkd_master_specialty || 'Uzmanlık eklenmedi'} />)}
                   </View>
                 ) : null}
 
-                <DkdSectionButton icon={BadgeDollarSign} title={dkd_section_titles.services} subtitle={`${dkd_services.length} hizmet`} active={dkd_active_section === 'services'} onPress={() => dkd_toggle_section('services')} />
+                <DkdSectionButton meta={dkd_section_meta.services} subtitle={`${dkd_services.length} hizmet`} active={dkd_active_section === 'services'} onPress={() => dkd_toggle_section('services')} />
                 {dkd_active_section === 'services' ? (
                   <View style={dkd_styles.detailBox}>
                     <DkdPlainInput value={dkd_service_title} onChangeText={dkd_set_service_title} placeholder="Hizmet adı" />
-                    <DkdInput icon={BadgeDollarSign} value={dkd_service_price} onChangeText={dkd_set_service_price} placeholder="Fiyat TL" keyboardType="numeric" />
-                    <DkdInput icon={Timer} value={dkd_service_duration} onChangeText={dkd_set_service_duration} placeholder="Süre dakika" keyboardType="numeric" />
-                    <TouchableOpacity style={dkd_styles.primaryButton} onPress={dkd_save_service}><ListPlus color="#111827" size={18} strokeWidth={2.8} /><Text style={dkd_styles.primaryText}>Hizmet Ekle</Text></TouchableOpacity>
+                    <DkdInput label="₺" value={dkd_service_price} onChangeText={dkd_set_service_price} placeholder="Fiyat TL" keyboardType="numeric" />
+                    <DkdInput label="dk" value={dkd_service_duration} onChangeText={dkd_set_service_duration} placeholder="Süre dakika" keyboardType="numeric" />
+                    <TouchableOpacity style={dkd_styles.primaryButton} onPress={dkd_save_service}><Text style={dkd_styles.primaryText}>Hizmet Ekle</Text></TouchableOpacity>
                     {dkd_services.map((item) => <DkdMiniRow key={item.dkd_service_id} title={item.dkd_service_title} subtitle={`${dkd_format_price(item.dkd_price_cents)} • ${item.dkd_duration_minutes} dk`} />)}
                   </View>
                 ) : null}
@@ -427,30 +407,37 @@ export default function Dkd_DraBornStyleApp() {
   );
 }
 
+function DkdIconBadge(dkd_props: { label: string; tone?: 'light' }) {
+  return (
+    <View style={dkd_props.tone === 'light' ? dkd_styles.iconLight : dkd_styles.iconBox}>
+      <Text style={dkd_styles.iconText}>{dkd_props.label}</Text>
+    </View>
+  );
+}
+
 function DkdInput(dkd_props: any) {
-  const Icon = dkd_props.icon;
+  const { label, ...dkd_input_props } = dkd_props;
   return (
     <View style={dkd_styles.inputShell}>
-      <Icon color="#00A6B8" size={18} strokeWidth={2.6} />
-      <TextInput {...dkd_props} icon={undefined} placeholderTextColor="#8A94A6" style={dkd_styles.input} />
+      <Text style={dkd_styles.inputLabel}>{label}</Text>
+      <TextInput {...dkd_input_props} placeholderTextColor="#8A7D74" style={dkd_styles.input} />
     </View>
   );
 }
 
 function DkdPlainInput(dkd_props: any) {
-  return <TextInput {...dkd_props} placeholderTextColor="#8A94A6" style={dkd_styles.plainInput} />;
+  return <TextInput {...dkd_props} placeholderTextColor="#8A7D74" style={dkd_styles.plainInput} />;
 }
 
-function DkdSectionButton(dkd_props: { icon: Dkd_Icon; title: string; subtitle: string; active: boolean; onPress: () => void }) {
-  const Icon = dkd_props.icon;
+function DkdSectionButton(dkd_props: { meta: { title: string; icon: string }; subtitle: string; active: boolean; onPress: () => void }) {
   return (
     <TouchableOpacity style={dkd_props.active ? dkd_styles.sectionActive : dkd_styles.section} onPress={dkd_props.onPress}>
-      <View style={dkd_styles.iconBox}><Icon color="#00A6B8" size={23} strokeWidth={2.6} /></View>
+      <DkdIconBadge label={dkd_props.meta.icon} />
       <View style={dkd_styles.flex}>
-        <Text style={dkd_styles.itemTitle}>{dkd_props.title}</Text>
+        <Text style={dkd_styles.itemTitle}>{dkd_props.meta.title}</Text>
         <Text style={dkd_styles.itemText}>{dkd_props.subtitle}</Text>
       </View>
-      {dkd_props.active ? <ChevronDown color="#111827" size={20} /> : <ChevronRight color="#64748B" size={20} />}
+      <Text style={dkd_styles.chevron}>{dkd_props.active ? '⌄' : '›'}</Text>
     </TouchableOpacity>
   );
 }
@@ -465,46 +452,50 @@ function DkdMiniRow(dkd_props: { title: string; subtitle: string }) {
 }
 
 const dkd_styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#E0F7FA' },
+  safe: { flex: 1, backgroundColor: '#F8EEE2' },
   bg: { flex: 1 },
   screen: { padding: 18, paddingTop: 24, paddingBottom: 44 },
-  hero: { borderRadius: 30, padding: 22, marginBottom: 14 },
+  hero: { borderRadius: 28, padding: 22, marginBottom: 14 },
   heroTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
-  logo: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
-  heroTag: { color: 'white', fontSize: 12, fontWeight: '900', letterSpacing: 1.4, flex: 1 },
-  heroTitle: { color: 'white', fontSize: 39, fontWeight: '900', marginBottom: 8 },
-  heroText: { color: 'white', fontSize: 17, lineHeight: 25, fontWeight: '700' },
-  card: { backgroundColor: 'rgba(255,255,255,0.94)', borderRadius: 26, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)' },
-  statusCard: { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.88)', borderRadius: 24, padding: 14, marginBottom: 14 },
-  footer: { backgroundColor: 'rgba(255,255,255,0.82)', borderRadius: 22, padding: 14 },
-  title: { color: '#111827', fontSize: 24, fontWeight: '900', marginBottom: 8 },
-  body: { color: '#475569', fontSize: 15, lineHeight: 22 },
-  muted: { color: '#64748B', fontSize: 13, fontWeight: '800' },
-  good: { color: '#059669', fontSize: 16, fontWeight: '900' },
+  heroTag: { color: '#F8FAFC', fontSize: 12, fontWeight: '900', letterSpacing: 1.2, flex: 1 },
+  heroTitle: { color: '#FFFFFF', fontSize: 38, fontWeight: '900', marginBottom: 8 },
+  heroText: { color: '#F8FAFC', fontSize: 16, lineHeight: 24, fontWeight: '700' },
+  card: { backgroundColor: 'rgba(255, 250, 245, 0.94)', borderRadius: 24, padding: 17, marginBottom: 13, borderWidth: 1, borderColor: 'rgba(137, 111, 94, 0.16)' },
+  statusCard: { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: 'rgba(255, 250, 245, 0.88)', borderRadius: 22, padding: 14, marginBottom: 13 },
+  footer: { backgroundColor: 'rgba(255, 250, 245, 0.84)', borderRadius: 20, padding: 14 },
+  title: { color: '#222222', fontSize: 23, fontWeight: '900', marginBottom: 8 },
+  body: { color: '#5F514B', fontSize: 15, lineHeight: 22 },
+  muted: { color: '#8A7D74', fontSize: 13, fontWeight: '800' },
+  good: { color: '#047857', fontSize: 16, fontWeight: '900' },
   warn: { color: '#B45309', fontSize: 16, fontWeight: '900' },
-  accent: { color: '#00A6B8', fontSize: 18, fontWeight: '900', marginBottom: 6 },
+  accent: { color: '#0F766E', fontSize: 18, fontWeight: '900', marginBottom: 6 },
   flex: { flex: 1 },
   tabs: { flexDirection: 'row', gap: 8, marginVertical: 12 },
-  tab: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 16, backgroundColor: '#F8FAFC' },
-  tabActive: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 16, backgroundColor: '#00B8D4' },
-  tabText: { color: '#475569', fontWeight: '900' },
+  tab: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 15, backgroundColor: '#FFF7ED' },
+  tabActive: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 15, backgroundColor: '#0F766E' },
+  tabText: { color: '#5F514B', fontWeight: '900' },
   tabTextActive: { color: 'white', fontWeight: '900' },
-  inputShell: { flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: '#F8FAFC', borderRadius: 17, paddingHorizontal: 13, marginBottom: 10, borderWidth: 1, borderColor: '#E2E8F0' },
-  input: { flex: 1, color: '#111827', fontSize: 16, paddingVertical: 13 },
-  plainInput: { backgroundColor: '#F8FAFC', borderRadius: 17, paddingHorizontal: 14, paddingVertical: 13, marginBottom: 10, color: '#111827', borderWidth: 1, borderColor: '#E2E8F0', fontSize: 16 },
-  primaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#8BE9FF', borderRadius: 18, padding: 15, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  primaryText: { color: '#111827', fontSize: 15, fontWeight: '900' },
-  softButton: { flexDirection: 'row', gap: 8, backgroundColor: '#E0F2FE', borderRadius: 18, padding: 14, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
+  inputShell: { flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: '#FFF7ED', borderRadius: 16, paddingHorizontal: 13, marginBottom: 10, borderWidth: 1, borderColor: '#EAD7C8' },
+  inputLabel: { minWidth: 24, color: '#0F766E', fontSize: 15, fontWeight: '900', textAlign: 'center' },
+  input: { flex: 1, color: '#222222', fontSize: 16, paddingVertical: 13 },
+  plainInput: { backgroundColor: '#FFF7ED', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 13, marginBottom: 10, color: '#222222', borderWidth: 1, borderColor: '#EAD7C8', fontSize: 16 },
+  primaryButton: { backgroundColor: '#FBBF24', borderRadius: 16, padding: 15, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  primaryText: { color: '#222222', fontSize: 15, fontWeight: '900' },
+  softButton: { flexDirection: 'row', gap: 8, backgroundColor: '#E6FFFA', borderRadius: 16, padding: 14, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
+  buttonIcon: { color: '#111827', fontSize: 17, fontWeight: '900' },
   softButtonText: { color: '#111827', fontWeight: '900' },
-  listItem: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14, borderRadius: 20, backgroundColor: 'white', borderWidth: 1, borderColor: '#E2E8F0', marginTop: 10 },
-  listItemActive: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14, borderRadius: 20, backgroundColor: '#E0FDFB', borderWidth: 2, borderColor: '#00B8D4', marginTop: 10 },
-  section: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14, borderRadius: 20, backgroundColor: 'white', borderWidth: 1, borderColor: '#E2E8F0', marginTop: 10 },
-  sectionActive: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14, borderRadius: 20, backgroundColor: '#FFF7ED', borderWidth: 2, borderColor: '#FB923C', marginTop: 10 },
-  iconBox: { width: 44, height: 44, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ECFEFF' },
-  itemTitle: { color: '#111827', fontSize: 17, fontWeight: '900' },
-  itemText: { color: '#64748B', fontSize: 13, lineHeight: 18, marginTop: 2 },
-  detailBox: { marginTop: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#E2E8F0' },
-  miniRow: { padding: 12, borderRadius: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#E2E8F0', marginTop: 8 },
-  miniTitle: { color: '#111827', fontSize: 15, fontWeight: '900' },
-  miniSub: { color: '#64748B', marginTop: 2 }
+  listItem: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 18, backgroundColor: '#FFFDF9', borderWidth: 1, borderColor: '#EAD7C8', marginTop: 9 },
+  listItemActive: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 18, backgroundColor: '#E6FFFA', borderWidth: 2, borderColor: '#0F766E', marginTop: 9 },
+  section: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 18, backgroundColor: '#FFFDF9', borderWidth: 1, borderColor: '#EAD7C8', marginTop: 9 },
+  sectionActive: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 18, backgroundColor: '#FEF3C7', borderWidth: 2, borderColor: '#F59E0B', marginTop: 9 },
+  iconBox: { width: 42, height: 42, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E6FFFA' },
+  iconLight: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
+  iconText: { fontSize: 18, fontWeight: '900', color: '#0F766E' },
+  itemTitle: { color: '#222222', fontSize: 16, fontWeight: '900' },
+  itemText: { color: '#6B5F57', fontSize: 13, lineHeight: 18, marginTop: 2 },
+  chevron: { color: '#6B5F57', fontSize: 25, fontWeight: '900' },
+  detailBox: { marginTop: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#EAD7C8' },
+  miniRow: { padding: 12, borderRadius: 15, backgroundColor: '#FFFDF9', borderWidth: 1, borderColor: '#EAD7C8', marginTop: 8 },
+  miniTitle: { color: '#222222', fontSize: 15, fontWeight: '900' },
+  miniSub: { color: '#6B5F57', marginTop: 2 }
 });
