@@ -43,6 +43,13 @@ const dkd_section_meta: Record<Dkd_SetupSection, { title: string; icon: string }
   services: { title: 'Hizmetler ve Fiyatlar', icon: '₺' }
 };
 
+const dkd_permission_map: Record<Dkd_RoleKey, string[]> = {
+  customer: ['Salonları görüntüleme', 'Randevu akışına hazırlık', 'Profil oturumu'],
+  business: ['Salon profili yönetimi', 'Usta / çalışan ekleme', 'Hizmet, fiyat ve süre yönetimi'],
+  master: ['Usta hesabı doğrulama', 'Kendi paneline yönlendirme', 'v0.2 takvim hazırlığı'],
+  admin: ['Tek admin yönetim rolü', 'Platform kontrol hazırlığı', 'Ödeme/onay paneli hazırlığı']
+};
+
 function dkd_create_slug(dkd_value: string) {
   return dkd_value
     .toLowerCase()
@@ -74,7 +81,7 @@ export default function Dkd_DraBornStyleApp() {
   const [dkd_user_email, dkd_set_user_email] = React.useState<string | null>(null);
   const [dkd_user_id, dkd_set_user_id] = React.useState<string | null>(null);
   const [dkd_role, dkd_set_role] = React.useState<Dkd_RoleKey | null>(null);
-  const [dkd_status, dkd_set_status] = React.useState('Hazır. Sade salon paneli açıldı.');
+  const [dkd_status, dkd_set_status] = React.useState('Hazır. Miami Style panel açıldı.');
   const [dkd_loading, dkd_set_loading] = React.useState(false);
   const [dkd_active_section, dkd_set_active_section] = React.useState<Dkd_SetupSection | null>('business');
 
@@ -288,15 +295,17 @@ export default function Dkd_DraBornStyleApp() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={dkd_styles.safe}>
-        <LinearGradient colors={['#F8EEE2', '#F4D6C8', '#DDF4F2']} style={dkd_styles.bg}>
+        <LinearGradient colors={['#0B1026', '#14225A', '#0E7490']} style={dkd_styles.bg}>
+          <View style={dkd_styles.glowPink} />
+          <View style={dkd_styles.glowBlue} />
           <ScrollView contentContainerStyle={dkd_styles.screen} keyboardShouldPersistTaps="handled">
-            <LinearGradient colors={['#334155', '#0F766E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={dkd_styles.hero}>
+            <LinearGradient colors={['#06B6D4', '#EC4899', '#F97316']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={dkd_styles.hero}>
               <View style={dkd_styles.heroTop}>
                 <DkdIconBadge label="✂️" tone="light" />
-                <Text style={dkd_styles.heroTag}>BERBER • KUAFÖR • SALON</Text>
+                <Text style={dkd_styles.heroTag}>MIAMI STYLE • SALON PANEL</Text>
               </View>
               <Text style={dkd_styles.heroTitle}>DraBornStyle</Text>
-              <Text style={dkd_styles.heroText}>Randevu, ekip ve hizmet yönetimini sade bir salon panelinde topla.</Text>
+              <Text style={dkd_styles.heroText}>Berber ve kuaförler için hızlı, sade ve dikkat çeken randevu yönetimi.</Text>
             </LinearGradient>
 
             <View style={dkd_styles.statusCard}>
@@ -335,7 +344,7 @@ export default function Dkd_DraBornStyleApp() {
             {dkd_user_email ? (
               <View style={dkd_styles.card}>
                 <Text style={dkd_styles.title}>Salon Akışını Seç</Text>
-                <Text style={dkd_styles.body}>DraBornStyle’ı nasıl kullanacağını seç. Detaylar sadece ihtiyaç olduğunda açılır.</Text>
+                <Text style={dkd_styles.body}>Rolünü seç; detaylar sadece ihtiyaç olduğunda açılır.</Text>
                 {dkd_role_options.map((dkd_item) => {
                   const dkd_selected = dkd_role === dkd_item.key;
                   return (
@@ -348,6 +357,14 @@ export default function Dkd_DraBornStyleApp() {
                     </TouchableOpacity>
                   );
                 })}
+              </View>
+            ) : null}
+
+            {dkd_user_email && dkd_role ? (
+              <View style={dkd_styles.card}>
+                <Text style={dkd_styles.title}>Yetki Özeti</Text>
+                <Text style={dkd_styles.body}>v0.0.24 rol bazlı ekran kontrolü.</Text>
+                {dkd_permission_map[dkd_role].map((item) => <DkdMiniRow key={item} title="✓ Yetki" subtitle={item} />)}
               </View>
             ) : null}
 
@@ -420,13 +437,13 @@ function DkdInput(dkd_props: any) {
   return (
     <View style={dkd_styles.inputShell}>
       <Text style={dkd_styles.inputLabel}>{label}</Text>
-      <TextInput {...dkd_input_props} placeholderTextColor="#8A7D74" style={dkd_styles.input} />
+      <TextInput {...dkd_input_props} placeholderTextColor="#8BA4C8" style={dkd_styles.input} />
     </View>
   );
 }
 
 function DkdPlainInput(dkd_props: any) {
-  return <TextInput {...dkd_props} placeholderTextColor="#8A7D74" style={dkd_styles.plainInput} />;
+  return <TextInput {...dkd_props} placeholderTextColor="#8BA4C8" style={dkd_styles.plainInput} />;
 }
 
 function DkdSectionButton(dkd_props: { meta: { title: string; icon: string }; subtitle: string; active: boolean; onPress: () => void }) {
@@ -452,50 +469,52 @@ function DkdMiniRow(dkd_props: { title: string; subtitle: string }) {
 }
 
 const dkd_styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#F8EEE2' },
+  safe: { flex: 1, backgroundColor: '#0B1026' },
   bg: { flex: 1 },
+  glowPink: { position: 'absolute', top: 42, right: -60, width: 190, height: 190, borderRadius: 95, backgroundColor: 'rgba(236, 72, 153, 0.28)' },
+  glowBlue: { position: 'absolute', top: 260, left: -80, width: 210, height: 210, borderRadius: 105, backgroundColor: 'rgba(6, 182, 212, 0.24)' },
   screen: { padding: 18, paddingTop: 24, paddingBottom: 44 },
-  hero: { borderRadius: 28, padding: 22, marginBottom: 14 },
+  hero: { borderRadius: 30, padding: 22, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.22)' },
   heroTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
   heroTag: { color: '#F8FAFC', fontSize: 12, fontWeight: '900', letterSpacing: 1.2, flex: 1 },
   heroTitle: { color: '#FFFFFF', fontSize: 38, fontWeight: '900', marginBottom: 8 },
   heroText: { color: '#F8FAFC', fontSize: 16, lineHeight: 24, fontWeight: '700' },
-  card: { backgroundColor: 'rgba(255, 250, 245, 0.94)', borderRadius: 24, padding: 17, marginBottom: 13, borderWidth: 1, borderColor: 'rgba(137, 111, 94, 0.16)' },
-  statusCard: { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: 'rgba(255, 250, 245, 0.88)', borderRadius: 22, padding: 14, marginBottom: 13 },
-  footer: { backgroundColor: 'rgba(255, 250, 245, 0.84)', borderRadius: 20, padding: 14 },
-  title: { color: '#222222', fontSize: 23, fontWeight: '900', marginBottom: 8 },
-  body: { color: '#5F514B', fontSize: 15, lineHeight: 22 },
-  muted: { color: '#8A7D74', fontSize: 13, fontWeight: '800' },
-  good: { color: '#047857', fontSize: 16, fontWeight: '900' },
-  warn: { color: '#B45309', fontSize: 16, fontWeight: '900' },
-  accent: { color: '#0F766E', fontSize: 18, fontWeight: '900', marginBottom: 6 },
+  card: { backgroundColor: 'rgba(15, 23, 42, 0.86)', borderRadius: 24, padding: 17, marginBottom: 13, borderWidth: 1, borderColor: 'rgba(103, 232, 249, 0.24)' },
+  statusCard: { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: 'rgba(15, 23, 42, 0.78)', borderRadius: 22, padding: 14, marginBottom: 13, borderWidth: 1, borderColor: 'rgba(103, 232, 249, 0.18)' },
+  footer: { backgroundColor: 'rgba(15, 23, 42, 0.78)', borderRadius: 20, padding: 14, borderWidth: 1, borderColor: 'rgba(103, 232, 249, 0.16)' },
+  title: { color: '#F8FAFC', fontSize: 23, fontWeight: '900', marginBottom: 8 },
+  body: { color: '#CBD5E1', fontSize: 15, lineHeight: 22 },
+  muted: { color: '#94A3B8', fontSize: 13, fontWeight: '800' },
+  good: { color: '#86EFAC', fontSize: 16, fontWeight: '900' },
+  warn: { color: '#FBBF24', fontSize: 16, fontWeight: '900' },
+  accent: { color: '#67E8F9', fontSize: 18, fontWeight: '900', marginBottom: 6 },
   flex: { flex: 1 },
   tabs: { flexDirection: 'row', gap: 8, marginVertical: 12 },
-  tab: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 15, backgroundColor: '#FFF7ED' },
-  tabActive: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 15, backgroundColor: '#0F766E' },
-  tabText: { color: '#5F514B', fontWeight: '900' },
-  tabTextActive: { color: 'white', fontWeight: '900' },
-  inputShell: { flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: '#FFF7ED', borderRadius: 16, paddingHorizontal: 13, marginBottom: 10, borderWidth: 1, borderColor: '#EAD7C8' },
-  inputLabel: { minWidth: 24, color: '#0F766E', fontSize: 15, fontWeight: '900', textAlign: 'center' },
-  input: { flex: 1, color: '#222222', fontSize: 16, paddingVertical: 13 },
-  plainInput: { backgroundColor: '#FFF7ED', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 13, marginBottom: 10, color: '#222222', borderWidth: 1, borderColor: '#EAD7C8', fontSize: 16 },
-  primaryButton: { backgroundColor: '#FBBF24', borderRadius: 16, padding: 15, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  primaryText: { color: '#222222', fontSize: 15, fontWeight: '900' },
-  softButton: { flexDirection: 'row', gap: 8, backgroundColor: '#E6FFFA', borderRadius: 16, padding: 14, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
-  buttonIcon: { color: '#111827', fontSize: 17, fontWeight: '900' },
-  softButtonText: { color: '#111827', fontWeight: '900' },
-  listItem: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 18, backgroundColor: '#FFFDF9', borderWidth: 1, borderColor: '#EAD7C8', marginTop: 9 },
-  listItemActive: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 18, backgroundColor: '#E6FFFA', borderWidth: 2, borderColor: '#0F766E', marginTop: 9 },
-  section: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 18, backgroundColor: '#FFFDF9', borderWidth: 1, borderColor: '#EAD7C8', marginTop: 9 },
-  sectionActive: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 18, backgroundColor: '#FEF3C7', borderWidth: 2, borderColor: '#F59E0B', marginTop: 9 },
-  iconBox: { width: 42, height: 42, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: '#E6FFFA' },
-  iconLight: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: '#FFFFFF' },
-  iconText: { fontSize: 18, fontWeight: '900', color: '#0F766E' },
-  itemTitle: { color: '#222222', fontSize: 16, fontWeight: '900' },
-  itemText: { color: '#6B5F57', fontSize: 13, lineHeight: 18, marginTop: 2 },
-  chevron: { color: '#6B5F57', fontSize: 25, fontWeight: '900' },
-  detailBox: { marginTop: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#EAD7C8' },
-  miniRow: { padding: 12, borderRadius: 15, backgroundColor: '#FFFDF9', borderWidth: 1, borderColor: '#EAD7C8', marginTop: 8 },
-  miniTitle: { color: '#222222', fontSize: 15, fontWeight: '900' },
-  miniSub: { color: '#6B5F57', marginTop: 2 }
+  tab: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 15, backgroundColor: 'rgba(30, 41, 59, 0.88)' },
+  tabActive: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 15, backgroundColor: '#06B6D4' },
+  tabText: { color: '#CBD5E1', fontWeight: '900' },
+  tabTextActive: { color: '#0B1026', fontWeight: '900' },
+  inputShell: { flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: 'rgba(30, 41, 59, 0.88)', borderRadius: 16, paddingHorizontal: 13, marginBottom: 10, borderWidth: 1, borderColor: 'rgba(148, 163, 184, 0.28)' },
+  inputLabel: { minWidth: 24, color: '#67E8F9', fontSize: 15, fontWeight: '900', textAlign: 'center' },
+  input: { flex: 1, color: '#F8FAFC', fontSize: 16, paddingVertical: 13 },
+  plainInput: { backgroundColor: 'rgba(30, 41, 59, 0.88)', borderRadius: 16, paddingHorizontal: 14, paddingVertical: 13, marginBottom: 10, color: '#F8FAFC', borderWidth: 1, borderColor: 'rgba(148, 163, 184, 0.28)', fontSize: 16 },
+  primaryButton: { backgroundColor: '#67E8F9', borderRadius: 16, padding: 15, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  primaryText: { color: '#0B1026', fontSize: 15, fontWeight: '900' },
+  softButton: { flexDirection: 'row', gap: 8, backgroundColor: 'rgba(14, 165, 233, 0.22)', borderRadius: 16, padding: 14, alignItems: 'center', justifyContent: 'center', marginTop: 12, borderWidth: 1, borderColor: 'rgba(103, 232, 249, 0.26)' },
+  buttonIcon: { color: '#F8FAFC', fontSize: 17, fontWeight: '900' },
+  softButtonText: { color: '#F8FAFC', fontWeight: '900' },
+  listItem: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 18, backgroundColor: 'rgba(30, 41, 59, 0.72)', borderWidth: 1, borderColor: 'rgba(148, 163, 184, 0.20)', marginTop: 9 },
+  listItemActive: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 18, backgroundColor: 'rgba(6, 182, 212, 0.20)', borderWidth: 2, borderColor: '#67E8F9', marginTop: 9 },
+  section: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 18, backgroundColor: 'rgba(30, 41, 59, 0.72)', borderWidth: 1, borderColor: 'rgba(148, 163, 184, 0.20)', marginTop: 9 },
+  sectionActive: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 18, backgroundColor: 'rgba(236, 72, 153, 0.18)', borderWidth: 2, borderColor: '#F472B6', marginTop: 9 },
+  iconBox: { width: 42, height: 42, borderRadius: 15, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(6, 182, 212, 0.16)', borderWidth: 1, borderColor: 'rgba(103, 232, 249, 0.24)' },
+  iconLight: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.92)' },
+  iconText: { fontSize: 18, fontWeight: '900', color: '#F8FAFC' },
+  itemTitle: { color: '#F8FAFC', fontSize: 16, fontWeight: '900' },
+  itemText: { color: '#CBD5E1', fontSize: 13, lineHeight: 18, marginTop: 2 },
+  chevron: { color: '#CBD5E1', fontSize: 25, fontWeight: '900' },
+  detailBox: { marginTop: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: 'rgba(148, 163, 184, 0.22)' },
+  miniRow: { padding: 12, borderRadius: 15, backgroundColor: 'rgba(30, 41, 59, 0.66)', borderWidth: 1, borderColor: 'rgba(148, 163, 184, 0.18)', marginTop: 8 },
+  miniTitle: { color: '#F8FAFC', fontSize: 15, fontWeight: '900' },
+  miniSub: { color: '#CBD5E1', marginTop: 2 }
 });
