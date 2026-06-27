@@ -7,6 +7,7 @@ import { dkd_is_supabase_env_ready, dkd_supabase_client } from './src/dkd_config
 
 type DkdAuthMode = 'login' | 'signup';
 type DkdRole = 'customer' | 'business' | 'master' | 'admin';
+type DkdPublicRole = 'customer' | 'business';
 type DkdSection = 'business' | 'team' | 'services';
 
 type DkdMaster = {
@@ -23,12 +24,14 @@ type DkdService = {
   dkd_duration_minutes: number;
 };
 
-const dkd_roles: { key: DkdRole; title: string; caption: string; code: string }[] = [
-  { key: 'customer', title: 'Müşteri', caption: 'Randevu ve salon keşfi', code: 'M' },
-  { key: 'business', title: 'İşletme Sahibi', caption: 'Salon, ekip ve fiyat yönetimi', code: 'İ' },
-  { key: 'master', title: 'Usta', caption: 'Kendi iş akışı ve takvim', code: 'U' },
-  { key: 'admin', title: 'Admin', caption: 'Platform kontrol paneli', code: 'A' }
-];
+const dkd_roles: Record<DkdRole, { title: string; caption: string; icon: string }> = {
+  customer: { title: 'Müşteri', caption: 'Randevu al, salon keşfet', icon: '👤' },
+  business: { title: 'İşletme Sahibi', caption: 'Salonunu ve ekibini yönet', icon: '🏪' },
+  master: { title: 'Usta', caption: 'Takvim ve işlem akışı', icon: '✂️' },
+  admin: { title: 'Admin', caption: 'Platform yönetimi', icon: '🛡️' }
+};
+
+const dkd_public_roles: DkdPublicRole[] = ['customer', 'business'];
 
 const dkd_sections: { key: DkdSection; title: string; caption: string; code: string }[] = [
   { key: 'business', title: 'Salon Bilgileri', caption: 'Ad, adres, telefon, çalışma saati', code: '01' },
@@ -38,7 +41,7 @@ const dkd_sections: { key: DkdSection; title: string; caption: string; code: str
 
 const dkd_permissions: Record<DkdRole, string[]> = {
   customer: ['Müşteri hesabı doğrulandı', 'Randevu akışına hazır', 'Salon keşfi v0.2 için hazır'],
-  business: ['Salon profili yönetimi', 'Ekip / usta yönetimi', 'Hizmet, fiyat ve süre yönetimi'],
+  business: ['Salon profil yönetimi', 'Ekip / usta yönetimi', 'Hizmet, fiyat ve süre yönetimi'],
   master: ['Usta hesabı doğrulandı', 'Takvim altyapısına hazır', 'v0.2 işlem akışına hazır'],
   admin: ['Tek admin rolü aktif', 'Platform kontrolüne hazır', 'Ödeme/onay altyapısı hazır']
 };
@@ -69,6 +72,7 @@ function dkd_price(cents: number) {
 
 export default function DkdDraBornStyleApp() {
   const [authMode, setAuthMode] = React.useState<DkdAuthMode>('login');
+  const [authRole, setAuthRole] = React.useState<DkdPublicRole>('customer');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
   const [userEmail, setUserEmail] = React.useState<string | null>(null);
@@ -168,6 +172,16 @@ export default function DkdDraBornStyleApp() {
     setServices((res.data ?? []) as DkdService[]);
   }
 
+  async function saveProfileRole(nextUserId: string, nextRole: DkdRole, nextEmail: string | null) {
+    const res = await dkd_supabase_client
+      .from('dkd_user_profiles')
+      .upsert({ dkd_user_id: nextUserId, dkd_role: nextRole, dkd_display_name: nextEmail ?? '', dkd_is_active: true }, { onConflict: 'dkd_user_id' });
+    if (!res.error) {
+      setRole(nextRole);
+    }
+    return res;
+  }
+
   async function loginOrSignup() {
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || password.length < 6) {
@@ -179,21 +193,24 @@ export default function DkdDraBornStyleApp() {
       ? await dkd_supabase_client.auth.signInWithPassword({ email: cleanEmail, password })
       : await dkd_supabase_client.auth.signUp({ email: cleanEmail, password });
     setLoading(false);
-    setStatus(res.error ? res.error.message : 'Hesap hazır. Panel tipini seç.');
+
+    if (res.error) {
+      setStatus(res.error.message);
+      return;
+    }
+
+    const nextUser = res.data.user ?? res.data.session?.user ?? null;
+    if (nextUser?.id) {
+      const roleRes = await saveProfileRole(nextUser.id, authRole, nextUser.email ?? cleanEmail);
+      setStatus(roleRes.error ? roleRes.error.message : `${dkd_roles[authRole].title} hesabı açıldı.`);
+    } else {
+      setStatus('Hesap oluşturuldu. E-posta doğrulaması açıksa gelen kutunu kontrol et.');
+    }
   }
 
   async function logout() {
     await dkd_supabase_client.auth.signOut();
     setStatus('Çıkış yapıldı.');
-  }
-
-  async function saveRole(nextRole: DkdRole) {
-    if (!userId) return;
-    setRole(nextRole);
-    const res = await dkd_supabase_client
-      .from('dkd_user_profiles')
-      .upsert({ dkd_user_id: userId, dkd_role: nextRole, dkd_display_name: userEmail ?? '', dkd_is_active: true }, { onConflict: 'dkd_user_id' });
-    setStatus(res.error ? res.error.message : `${dkd_roles.find((item) => item.key === nextRole)?.title} paneli açıldı.`);
   }
 
   async function saveBusiness() {
@@ -270,56 +287,66 @@ export default function DkdDraBornStyleApp() {
     setStatus('Hizmet eklendi.');
   }
 
-  const activeRole = dkd_roles.find((item) => item.key === role);
+  const activeRole = role ? dkd_roles[role] : null;
 
   return (
     <SafeAreaProvider>
       <SafeAreaView style={dkd_styles.safe}>
-        <LinearGradient colors={['#63706B', '#3F514D', '#2E3A38']} style={dkd_styles.bg}>
+        <LinearGradient colors={['#71857E', '#465E58', '#2D3B39']} style={dkd_styles.bg}>
           <ScrollView contentContainerStyle={dkd_styles.screen} keyboardShouldPersistTaps="handled">
             <View style={dkd_styles.topBar}>
               <View>
                 <Text style={dkd_styles.brand}>DraBornStyle</Text>
-                <Text style={dkd_styles.brandSub}>Barber Studio OS</Text>
+                <Text style={dkd_styles.brandSub}>Barber & Booking Studio</Text>
               </View>
               <View style={dkd_styles.onlinePill}><Text style={dkd_styles.onlineText}>{dkd_is_supabase_env_ready ? 'ONLINE' : 'ENV'}</Text></View>
             </View>
 
             <View style={dkd_styles.heroCard}>
               <View style={dkd_styles.poleRow}><View style={dkd_styles.poleRed} /><View style={dkd_styles.poleCream} /><View style={dkd_styles.poleBlue} /></View>
-              <Text style={dkd_styles.heroLabel}>PROFESYONEL BERBER PANELİ</Text>
-              <Text style={dkd_styles.heroTitle}>Salonunu tek ekrandan yönet.</Text>
-              <Text style={dkd_styles.heroText}>Randevu, ekip, hizmet ve fiyat sistemi için sade stüdyo arayüzü.</Text>
+              <Text style={dkd_styles.heroLabel}>AKILLI SALON RANDEVU SİSTEMİ</Text>
+              <Text style={dkd_styles.heroTitle}>Müşteri ile salonu aynı panelde buluştur.</Text>
+              <Text style={dkd_styles.heroText}>Müşteri randevu alır, işletme salonunu yönetir. DraBornStyle v0.1 temel akışı hazır.</Text>
               <View style={dkd_styles.statRow}>
                 <DkdStat value={masters.length.toString()} label="Usta" />
                 <DkdStat value={services.length.toString()} label="Hizmet" />
-                <DkdStat value={activeRole?.code ?? '-'} label="Rol" />
+                <DkdStat value={activeRole?.icon ?? '•'} label="Hesap" />
               </View>
             </View>
 
             <View style={dkd_styles.card}>
               {userEmail ? (
                 <View>
-                  <View style={dkd_styles.cardTitleRow}><Text style={dkd_styles.title}>Hesap Merkezi</Text><Text style={dkd_styles.badge}>{activeRole?.title ?? 'Rol yok'}</Text></View>
+                  <View style={dkd_styles.cardTitleRow}><Text style={dkd_styles.title}>Hesap Merkezi</Text><Text style={dkd_styles.badge}>{activeRole?.icon} {activeRole?.title ?? 'Rol yok'}</Text></View>
                   <Text style={dkd_styles.accent}>{userEmail}</Text>
-                  <Text style={dkd_styles.body}>Aktif panel: {activeRole?.title ?? 'Henüz seçilmedi'}</Text>
+                  <Text style={dkd_styles.body}>Bu hesap {activeRole?.title ?? 'seçilmemiş'} paneliyle açıldı. Hesap tipini değiştirmek için çıkış yapıp giriş ekranından seçim yap.</Text>
                   <TouchableOpacity style={dkd_styles.secondaryButton} onPress={logout}><Text style={dkd_styles.secondaryText}>Çıkış Yap</Text></TouchableOpacity>
                 </View>
               ) : (
                 <View>
-                  <Text style={dkd_styles.title}>Hesabınla Devam Et</Text>
+                  <Text style={dkd_styles.title}>Nasıl devam edeceksin?</Text>
+                  <Text style={dkd_styles.body}>Giriş veya kayıt öncesi hesap tipini seç. Sonradan tekrar rol seçimi çıkmaz.</Text>
+                  <View style={dkd_styles.authRoleRow}>
+                    {dkd_public_roles.map((item) => (
+                      <TouchableOpacity key={item} style={authRole === item ? dkd_styles.authRoleActive : dkd_styles.authRoleCard} onPress={() => setAuthRole(item)}>
+                        <Text style={dkd_styles.authRoleIcon}>{dkd_roles[item].icon}</Text>
+                        <Text style={dkd_styles.authRoleTitle}>{dkd_roles[item].title}</Text>
+                        <Text style={dkd_styles.authRoleText}>{item === 'customer' ? 'Randevu almak istiyorum' : 'Salonumu yönetmek istiyorum'}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
                   <View style={dkd_styles.tabs}>
                     <TouchableOpacity style={authMode === 'login' ? dkd_styles.tabActive : dkd_styles.tab} onPress={() => setAuthMode('login')}><Text style={authMode === 'login' ? dkd_styles.tabActiveText : dkd_styles.tabText}>Giriş</Text></TouchableOpacity>
                     <TouchableOpacity style={authMode === 'signup' ? dkd_styles.tabActive : dkd_styles.tab} onPress={() => setAuthMode('signup')}><Text style={authMode === 'signup' ? dkd_styles.tabActiveText : dkd_styles.tabText}>Kayıt</Text></TouchableOpacity>
                   </View>
                   <DkdInput label="E-posta" value={email} onChangeText={setEmail} placeholder="ornek@mail.com" />
                   <DkdInput label="Şifre" value={password} onChangeText={setPassword} placeholder="En az 6 karakter" secureTextEntry />
-                  <TouchableOpacity style={dkd_styles.primaryButton} onPress={loginOrSignup} disabled={loading}><Text style={dkd_styles.primaryText}>{loading ? 'Bekle...' : 'Devam Et'}</Text></TouchableOpacity>
+                  <TouchableOpacity style={dkd_styles.primaryButton} onPress={loginOrSignup} disabled={loading}><Text style={dkd_styles.primaryText}>{loading ? 'Bekle...' : `${dkd_roles[authRole].title} Olarak Devam Et`}</Text></TouchableOpacity>
+                  <Text style={dkd_styles.smallNote}>Usta ve Admin hesapları v0.1 içinde yönetim/davet akışına hazırlanır; halka açık girişte müşteri ve işletme seçimi gösterilir.</Text>
                 </View>
               )}
             </View>
-
-            {userEmail ? <View style={dkd_styles.card}><Text style={dkd_styles.title}>Panel Seçimi</Text><Text style={dkd_styles.body}>Kart seç; sadece ilgili salon menüsü açılır.</Text><View style={dkd_styles.roleGrid}>{dkd_roles.map((item) => <TouchableOpacity key={item.key} style={role === item.key ? dkd_styles.roleCardActive : dkd_styles.roleCard} onPress={() => saveRole(item.key)}><Text style={dkd_styles.roleCode}>{item.code}</Text><Text style={dkd_styles.roleTitle}>{item.title}</Text><Text style={dkd_styles.roleText}>{item.caption}</Text></TouchableOpacity>)}</View></View> : null}
 
             {userEmail && role ? <View style={dkd_styles.cardCompact}><Text style={dkd_styles.sectionHeading}>Yetki Özeti</Text>{dkd_permissions[role].map((item) => <DkdMiniRow key={item} title="Aktif" subtitle={item} />)}</View> : null}
 
@@ -331,7 +358,8 @@ export default function DkdDraBornStyleApp() {
               </View>
             ) : null}
 
-            {userEmail && role && role !== 'business' ? <View style={dkd_styles.card}><Text style={dkd_styles.title}>{activeRole?.title} Paneli</Text><Text style={dkd_styles.body}>Bu rolün temel hesap akışı çalışıyor. Detaylı panel v0.2+ adımlarında açılacak.</Text></View> : null}
+            {userEmail && role === 'customer' ? <View style={dkd_styles.card}><Text style={dkd_styles.title}>Müşteri Paneli</Text><Text style={dkd_styles.body}>Müşteri hesabı hazır. Salon keşfi, hizmet seçimi ve randevu alma ekranı v0.2 adımlarında açılacak.</Text></View> : null}
+            {userEmail && role && role !== 'business' && role !== 'customer' ? <View style={dkd_styles.card}><Text style={dkd_styles.title}>{activeRole?.title} Paneli</Text><Text style={dkd_styles.body}>Bu rolün temel hesap akışı çalışıyor. Detaylı panel v0.2+ adımlarında açılacak.</Text></View> : null}
             <View style={dkd_styles.footer}><Text style={dkd_styles.body}>{status}</Text></View>
           </ScrollView>
         </LinearGradient>
@@ -358,62 +386,63 @@ function DkdMiniRow(props: { title: string; subtitle: string }) {
 }
 
 const dkd_styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: '#63706B' },
+  safe: { flex: 1, backgroundColor: '#71857E' },
   bg: { flex: 1 },
   screen: { padding: 18, paddingTop: 24, paddingBottom: 44 },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  brand: { color: '#F2E6D4', fontSize: 24, fontWeight: '900' },
-  brandSub: { color: '#D8E5DF', fontSize: 13, fontWeight: '800', marginTop: 2 },
-  onlinePill: { backgroundColor: '#263432', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: '#71847D' },
-  onlineText: { color: '#D9B45A', fontSize: 12, fontWeight: '900' },
-  heroCard: { backgroundColor: '#263432', borderRadius: 28, padding: 20, marginBottom: 14, borderWidth: 1, borderColor: '#71847D' },
+  brand: { color: '#FFF2DD', fontSize: 24, fontWeight: '900' },
+  brandSub: { color: '#DDEBE4', fontSize: 13, fontWeight: '800', marginTop: 2 },
+  onlinePill: { backgroundColor: '#213432', borderRadius: 999, paddingHorizontal: 12, paddingVertical: 8, borderWidth: 1, borderColor: '#82978E' },
+  onlineText: { color: '#F0C766', fontSize: 12, fontWeight: '900' },
+  heroCard: { backgroundColor: '#243835', borderRadius: 28, padding: 20, marginBottom: 14, borderWidth: 1, borderColor: '#82978E' },
   poleRow: { flexDirection: 'row', height: 8, borderRadius: 999, overflow: 'hidden', marginBottom: 18 },
-  poleRed: { flex: 1, backgroundColor: '#A6493D' },
-  poleCream: { flex: 1, backgroundColor: '#F2E6D4' },
-  poleBlue: { flex: 1, backgroundColor: '#3B8790' },
-  heroLabel: { color: '#D9B45A', fontSize: 12, fontWeight: '900', letterSpacing: 1.2, marginBottom: 10 },
-  heroTitle: { color: '#F2E6D4', fontSize: 32, fontWeight: '900', lineHeight: 38, marginBottom: 8 },
-  heroText: { color: '#D8E5DF', fontSize: 16, lineHeight: 23, fontWeight: '700' },
+  poleRed: { flex: 1, backgroundColor: '#C65B4D' },
+  poleCream: { flex: 1, backgroundColor: '#FFF2DD' },
+  poleBlue: { flex: 1, backgroundColor: '#43A0A8' },
+  heroLabel: { color: '#F0C766', fontSize: 12, fontWeight: '900', letterSpacing: 1.2, marginBottom: 10 },
+  heroTitle: { color: '#FFF2DD', fontSize: 30, fontWeight: '900', lineHeight: 36, marginBottom: 8 },
+  heroText: { color: '#DDEBE4', fontSize: 16, lineHeight: 23, fontWeight: '700' },
   statRow: { flexDirection: 'row', gap: 10, marginTop: 18 },
-  statBox: { flex: 1, backgroundColor: '#334641', borderRadius: 18, padding: 12, borderWidth: 1, borderColor: '#526A62' },
-  statValue: { color: '#D9B45A', fontSize: 22, fontWeight: '900' },
-  statLabel: { color: '#D8E5DF', fontSize: 12, fontWeight: '800', marginTop: 2 },
-  card: { backgroundColor: '#30423E', borderRadius: 24, padding: 17, marginBottom: 13, borderWidth: 1, borderColor: '#71847D' },
-  cardCompact: { backgroundColor: '#30423E', borderRadius: 22, padding: 15, marginBottom: 13, borderWidth: 1, borderColor: '#71847D' },
+  statBox: { flex: 1, backgroundColor: '#334B46', borderRadius: 18, padding: 12, borderWidth: 1, borderColor: '#5F786F' },
+  statValue: { color: '#F0C766', fontSize: 22, fontWeight: '900' },
+  statLabel: { color: '#DDEBE4', fontSize: 12, fontWeight: '800', marginTop: 2 },
+  card: { backgroundColor: '#304944', borderRadius: 24, padding: 17, marginBottom: 13, borderWidth: 1, borderColor: '#82978E' },
+  cardCompact: { backgroundColor: '#304944', borderRadius: 22, padding: 15, marginBottom: 13, borderWidth: 1, borderColor: '#82978E' },
   cardTitleRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 },
-  title: { color: '#F2E6D4', fontSize: 22, fontWeight: '900', marginBottom: 8 },
-  body: { color: '#D8E5DF', fontSize: 15, lineHeight: 22 },
-  accent: { color: '#8EDFD3', fontSize: 18, fontWeight: '900', marginBottom: 6 },
-  badge: { color: '#263432', backgroundColor: '#D9B45A', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, fontSize: 12, fontWeight: '900', overflow: 'hidden' },
+  title: { color: '#FFF2DD', fontSize: 22, fontWeight: '900', marginBottom: 8 },
+  body: { color: '#DDEBE4', fontSize: 15, lineHeight: 22 },
+  accent: { color: '#9CF2E3', fontSize: 18, fontWeight: '900', marginBottom: 6 },
+  badge: { color: '#243835', backgroundColor: '#F0C766', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, fontSize: 12, fontWeight: '900', overflow: 'hidden' },
   flex: { flex: 1 },
+  authRoleRow: { flexDirection: 'row', gap: 10, marginTop: 14, marginBottom: 12 },
+  authRoleCard: { flex: 1, backgroundColor: '#243835', borderRadius: 20, padding: 14, borderWidth: 1, borderColor: '#5F786F', minHeight: 134 },
+  authRoleActive: { flex: 1, backgroundColor: '#3B5E58', borderRadius: 20, padding: 14, borderWidth: 2, borderColor: '#F0C766', minHeight: 134 },
+  authRoleIcon: { fontSize: 26, marginBottom: 10 },
+  authRoleTitle: { color: '#FFF2DD', fontSize: 16, fontWeight: '900', marginBottom: 5 },
+  authRoleText: { color: '#DDEBE4', fontSize: 13, lineHeight: 18 },
   tabs: { flexDirection: 'row', gap: 8, marginVertical: 12 },
-  tab: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 15, backgroundColor: '#3B514B' },
-  tabActive: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 15, backgroundColor: '#D9B45A' },
-  tabText: { color: '#D8E5DF', fontWeight: '900' },
-  tabActiveText: { color: '#263432', fontWeight: '900' },
-  inputWrap: { backgroundColor: '#263432', borderRadius: 16, paddingHorizontal: 13, paddingVertical: 9, marginBottom: 10, borderWidth: 1, borderColor: '#526A62' },
-  inputLabel: { color: '#D9B45A', fontSize: 12, fontWeight: '900', marginBottom: 3 },
-  input: { color: '#F2E6D4', fontSize: 16, paddingVertical: 5 },
-  primaryButton: { backgroundColor: '#D9B45A', borderRadius: 16, padding: 15, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  primaryText: { color: '#263432', fontSize: 15, fontWeight: '900' },
-  secondaryButton: { backgroundColor: '#3B514B', borderRadius: 16, padding: 14, alignItems: 'center', justifyContent: 'center', marginTop: 12, borderWidth: 1, borderColor: '#526A62' },
-  secondaryText: { color: '#F2E6D4', fontWeight: '900' },
-  roleGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 12 },
-  roleCard: { width: '48%', minHeight: 124, backgroundColor: '#263432', borderRadius: 20, padding: 14, borderWidth: 1, borderColor: '#526A62' },
-  roleCardActive: { width: '48%', minHeight: 124, backgroundColor: '#3D5C56', borderRadius: 20, padding: 14, borderWidth: 2, borderColor: '#D9B45A' },
-  roleCode: { color: '#D9B45A', fontSize: 22, fontWeight: '900', marginBottom: 10 },
-  roleTitle: { color: '#F2E6D4', fontSize: 16, fontWeight: '900', marginBottom: 5 },
-  roleText: { color: '#D8E5DF', fontSize: 13, lineHeight: 18 },
-  section: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: '#263432', borderWidth: 1, borderColor: '#526A62', marginTop: 10 },
-  sectionActive: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: '#3D5C56', borderWidth: 2, borderColor: '#D9B45A', marginTop: 10 },
-  sectionCode: { color: '#D9B45A', fontSize: 18, fontWeight: '900', width: 34 },
-  sectionHeading: { color: '#F2E6D4', fontSize: 17, fontWeight: '900', marginBottom: 8 },
-  sectionTitle: { color: '#F2E6D4', fontSize: 16, fontWeight: '900' },
-  sectionText: { color: '#D8E5DF', fontSize: 13, marginTop: 2 },
-  chevron: { color: '#D9B45A', fontSize: 24, fontWeight: '900' },
-  detailBox: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#526A62' },
-  miniRow: { padding: 12, borderRadius: 15, backgroundColor: '#263432', borderWidth: 1, borderColor: '#526A62', marginTop: 8 },
-  miniTitle: { color: '#F2E6D4', fontSize: 15, fontWeight: '900' },
-  miniSub: { color: '#D8E5DF', marginTop: 2 },
-  footer: { backgroundColor: '#30423E', borderRadius: 20, padding: 14, borderWidth: 1, borderColor: '#71847D' }
+  tab: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 15, backgroundColor: '#3B554F' },
+  tabActive: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 15, backgroundColor: '#F0C766' },
+  tabText: { color: '#DDEBE4', fontWeight: '900' },
+  tabActiveText: { color: '#243835', fontWeight: '900' },
+  inputWrap: { backgroundColor: '#243835', borderRadius: 16, paddingHorizontal: 13, paddingVertical: 9, marginBottom: 10, borderWidth: 1, borderColor: '#5F786F' },
+  inputLabel: { color: '#F0C766', fontSize: 12, fontWeight: '900', marginBottom: 3 },
+  input: { color: '#FFF2DD', fontSize: 16, paddingVertical: 5 },
+  primaryButton: { backgroundColor: '#F0C766', borderRadius: 16, padding: 15, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  primaryText: { color: '#243835', fontSize: 15, fontWeight: '900' },
+  secondaryButton: { backgroundColor: '#3B554F', borderRadius: 16, padding: 14, alignItems: 'center', justifyContent: 'center', marginTop: 12, borderWidth: 1, borderColor: '#5F786F' },
+  secondaryText: { color: '#FFF2DD', fontWeight: '900' },
+  smallNote: { color: '#BFD0CA', fontSize: 12, lineHeight: 18, marginTop: 10 },
+  section: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: '#243835', borderWidth: 1, borderColor: '#5F786F', marginTop: 10 },
+  sectionActive: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, backgroundColor: '#3B5E58', borderWidth: 2, borderColor: '#F0C766', marginTop: 10 },
+  sectionCode: { color: '#F0C766', fontSize: 18, fontWeight: '900', width: 34 },
+  sectionHeading: { color: '#FFF2DD', fontSize: 17, fontWeight: '900', marginBottom: 8 },
+  sectionTitle: { color: '#FFF2DD', fontSize: 16, fontWeight: '900' },
+  sectionText: { color: '#DDEBE4', fontSize: 13, marginTop: 2 },
+  chevron: { color: '#F0C766', fontSize: 24, fontWeight: '900' },
+  detailBox: { marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#5F786F' },
+  miniRow: { padding: 12, borderRadius: 15, backgroundColor: '#243835', borderWidth: 1, borderColor: '#5F786F', marginTop: 8 },
+  miniTitle: { color: '#FFF2DD', fontSize: 15, fontWeight: '900' },
+  miniSub: { color: '#DDEBE4', marginTop: 2 },
+  footer: { backgroundColor: '#304944', borderRadius: 20, padding: 14, borderWidth: 1, borderColor: '#82978E' }
 });
