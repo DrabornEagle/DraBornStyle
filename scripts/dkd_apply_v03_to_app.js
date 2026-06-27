@@ -5,9 +5,11 @@ const appPath = path.join(__dirname, '..', 'App.tsx');
 let src = fs.readFileSync(appPath, 'utf8');
 let changed = false;
 
-function apply(search, replace) {
-  if (src.includes(search) && !src.includes(replace)) {
-    src = src.replace(search, replace);
+const V03_HOOK = '  const dkd_v03_appts = useDkdAppointments(userId, businessId, accessRoles, setStatus);';
+
+function markChanged(nextSrc) {
+  if (nextSrc !== src) {
+    src = nextSrc;
     changed = true;
   }
 }
@@ -16,11 +18,34 @@ function replaceOnce(search, replace) {
   if (src.includes(search)) {
     src = src.replace(search, replace);
     changed = true;
+    return true;
   }
+  return false;
+}
+
+function replaceIfMissing(marker, search, replace) {
+  if (!src.includes(marker) && src.includes(search)) {
+    src = src.replace(search, replace);
+    changed = true;
+    return true;
+  }
+  return false;
+}
+
+function cleanupDuplicateHook() {
+  const lines = src.split('\n');
+  let seen = false;
+  const cleaned = lines.filter((line) => {
+    if (line.trim() !== V03_HOOK.trim()) return true;
+    if (seen) return false;
+    seen = true;
+    return true;
+  }).join('\n');
+  markChanged(cleaned);
 }
 
 if (!src.includes("./src/dkd_v0_3")) {
-  apply(
+  replaceOnce(
     "import { dkd_is_supabase_env_ready, dkd_supabase_client } from './src/dkd_config/dkd_supabase_client';",
     "import { dkd_is_supabase_env_ready, dkd_supabase_client } from './src/dkd_config/dkd_supabase_client';\nimport { DkdBusinessAppointmentPanel, DkdCustomerBookingPanel, DkdMasterAppointmentPanel, useDkdAppointments } from './src/dkd_v0_3';"
   );
@@ -44,16 +69,20 @@ replaceOnce(
   "  { key: 'services', title: 'Hizmetler / Fiyatlar', caption: 'Fiyat ve süre yönetimi', code: '03' },\n  { key: 'appointments', title: 'Randevu & Takvim', caption: 'Müşteri randevuları, usta takvimi ve geliş akışı', code: '04' },\n  { key: 'master_request', title: 'Usta Yetki Başvurusu', caption: 'Kayıtlı kullanıcıyı usta yapmak için admin onayı iste', code: '05' }"
 );
 
-if (!src.includes('const dkd_v03_appts = useDkdAppointments')) {
-  apply(
+cleanupDuplicateHook();
+if (!src.includes(V03_HOOK)) {
+  const insertedAfterV02 = replaceOnce(
     "  const dkd_v02_tx = useDkdTransactions(businessId, services, setStatus);",
-    "  const dkd_v02_tx = useDkdTransactions(businessId, services, setStatus);\n  const dkd_v03_appts = useDkdAppointments(userId, businessId, accessRoles, setStatus);"
+    "  const dkd_v02_tx = useDkdTransactions(businessId, services, setStatus);\n" + V03_HOOK
   );
-  apply(
-    "  const [serviceDuration, setServiceDuration] = React.useState('30');",
-    "  const [serviceDuration, setServiceDuration] = React.useState('30');\n\n  const dkd_v03_appts = useDkdAppointments(userId, businessId, accessRoles, setStatus);"
-  );
+  if (!insertedAfterV02) {
+    replaceOnce(
+      "  const [serviceDuration, setServiceDuration] = React.useState('30');",
+      "  const [serviceDuration, setServiceDuration] = React.useState('30');\n\n" + V03_HOOK
+    );
+  }
 }
+cleanupDuplicateHook();
 
 if (!src.includes('v03Appts={dkd_v03_appts}')) {
   replaceOnce(
@@ -89,22 +118,23 @@ replaceOnce(
 );
 
 if (!src.includes("section.key === 'appointments' ? <DkdBusinessAppointmentPanel")) {
-  replaceOnce(
+  const insertedBeforeTransactions = replaceOnce(
     "{section.key === 'transactions' ? <DkdTransactionPanel services={props.services} masters={props.masters} transactions={props.v02Tx.records} debtTotal={props.v02Tx.debtTotal} revenueTotal={props.v02Tx.revenueTotal} onStart={props.v02Tx.startTransaction} onFinish={props.v02Tx.finishTransaction} /> : null}{section.key === 'master_request' ? <>",
     "{section.key === 'appointments' ? <DkdBusinessAppointmentPanel appointments={props.v03Appts.businessAppointments} services={props.services} masters={props.masters} refresh={props.v03Appts.refreshAll} setAppointmentStatus={props.v03Appts.setAppointmentStatus} /> : null}{section.key === 'transactions' ? <DkdTransactionPanel services={props.services} masters={props.masters} transactions={props.v02Tx.records} debtTotal={props.v02Tx.debtTotal} revenueTotal={props.v02Tx.revenueTotal} onStart={props.v02Tx.startTransaction} onFinish={props.v02Tx.finishTransaction} /> : null}{section.key === 'master_request' ? <>"
   );
-  replaceOnce(
-    "{section.key === 'master_request' ? <>",
-    "{section.key === 'appointments' ? <DkdBusinessAppointmentPanel appointments={props.v03Appts.businessAppointments} services={props.services} masters={props.masters} refresh={props.v03Appts.refreshAll} setAppointmentStatus={props.v03Appts.setAppointmentStatus} /> : null}{section.key === 'master_request' ? <>"
-  );
+  if (!insertedBeforeTransactions && !src.includes("section.key === 'appointments' ? <DkdBusinessAppointmentPanel")) {
+    replaceOnce(
+      "{section.key === 'master_request' ? <>",
+      "{section.key === 'appointments' ? <DkdBusinessAppointmentPanel appointments={props.v03Appts.businessAppointments} services={props.services} masters={props.masters} refresh={props.v03Appts.refreshAll} setAppointmentStatus={props.v03Appts.setAppointmentStatus} /> : null}{section.key === 'master_request' ? <>"
+    );
+  }
 }
 
-if (!src.includes('<DkdCustomerBookingPanel appointments={props.v03Appts.customerAppointments}')) {
-  replaceOnce(
-    "<Text style={dkd_styles.body}>Müşteri hesabın hazır. İşletme veya usta yetkisi için admin onayına başvuru gönderebilirsin.</Text>",
-    "<Text style={dkd_styles.body}>Müşteri hesabın hazır. İşletme veya usta yetkisi için admin onayına başvuru gönderebilirsin.</Text><DkdCustomerBookingPanel appointments={props.v03Appts.customerAppointments} businesses={props.v03Appts.businesses} masters={props.v03Appts.customerMasters} services={props.v03Appts.customerServices} selectedBusinessId={props.v03Appts.selectedBusinessId} setSelectedBusinessId={props.v03Appts.setSelectedBusinessId} selectedMasterId={props.v03Appts.selectedMasterId} setSelectedMasterId={props.v03Appts.setSelectedMasterId} selectedServiceId={props.v03Appts.selectedServiceId} setSelectedServiceId={props.v03Appts.setSelectedServiceId} appointmentDate={props.v03Appts.appointmentDate} setAppointmentDate={props.v03Appts.setAppointmentDate} appointmentTime={props.v03Appts.appointmentTime} setAppointmentTime={props.v03Appts.setAppointmentTime} customerName={props.v03Appts.customerName} setCustomerName={props.v03Appts.setCustomerName} customerPhone={props.v03Appts.customerPhone} setCustomerPhone={props.v03Appts.setCustomerPhone} customerNote={props.v03Appts.customerNote} setCustomerNote={props.v03Appts.setCustomerNote} createAppointment={props.v03Appts.createAppointment} setAppointmentStatus={props.v03Appts.setAppointmentStatus} />"
-  );
-}
+replaceIfMissing(
+  '<DkdCustomerBookingPanel appointments={props.v03Appts.customerAppointments}',
+  "<Text style={dkd_styles.body}>Müşteri hesabın hazır. İşletme veya usta yetkisi için admin onayına başvuru gönderebilirsin.</Text>",
+  "<Text style={dkd_styles.body}>Müşteri hesabın hazır. İşletme veya usta yetkisi için admin onayına başvuru gönderebilirsin.</Text><DkdCustomerBookingPanel appointments={props.v03Appts.customerAppointments} businesses={props.v03Appts.businesses} masters={props.v03Appts.customerMasters} services={props.v03Appts.customerServices} selectedBusinessId={props.v03Appts.selectedBusinessId} setSelectedBusinessId={props.v03Appts.setSelectedBusinessId} selectedMasterId={props.v03Appts.selectedMasterId} setSelectedMasterId={props.v03Appts.setSelectedMasterId} selectedServiceId={props.v03Appts.selectedServiceId} setSelectedServiceId={props.v03Appts.setSelectedServiceId} appointmentDate={props.v03Appts.appointmentDate} setAppointmentDate={props.v03Appts.setAppointmentDate} appointmentTime={props.v03Appts.appointmentTime} setAppointmentTime={props.v03Appts.setAppointmentTime} customerName={props.v03Appts.customerName} setCustomerName={props.v03Appts.setCustomerName} customerPhone={props.v03Appts.customerPhone} setCustomerPhone={props.v03Appts.setCustomerPhone} customerNote={props.v03Appts.customerNote} setCustomerNote={props.v03Appts.setCustomerNote} createAppointment={props.v03Appts.createAppointment} setAppointmentStatus={props.v03Appts.setAppointmentStatus} />"
+);
 
 replaceOnce(
   "{activePanel === 'master' && canMaster ? <View style={dkd_styles.card}><Text style={dkd_styles.title}>Usta Paneli</Text><Text style={dkd_styles.body}>Usta yetkin aktif. v0.2 içinde takvim, işlem başlatma, işlem bitirme ve performans ekranları buraya eklenecek.</Text><DkdMiniRow title=\"Takvim\" subtitle=\"v0.2 hazırlığı: günlük randevu listesi\" /><DkdMiniRow title=\"İşlem Akışı\" subtitle=\"v0.2 hazırlığı: işleme başla / işlem bitti\" /><DkdMiniRow title=\"Performans\" subtitle=\"v0.2 hazırlığı: hizmet sayısı ve kazanç özeti\" /></View> : null}",
