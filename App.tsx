@@ -33,30 +33,10 @@ type Dkd_RoleOption = {
 };
 
 const dkd_role_options: Dkd_RoleOption[] = [
-  {
-    dkd_key: 'customer',
-    dkd_title: 'Müşteri',
-    dkd_caption: 'Randevu al, işletmeleri keşfet, hizmetleri görüntüle.',
-    dkd_icon: UserRound
-  },
-  {
-    dkd_key: 'business',
-    dkd_title: 'İşletme Sahibi',
-    dkd_caption: 'Salon profilini, ustaları, hizmetleri ve fiyatları yönet.',
-    dkd_icon: Building2
-  },
-  {
-    dkd_key: 'master',
-    dkd_title: 'Usta',
-    dkd_caption: 'Takvimini, işlemlerini ve günlük akışını takip et.',
-    dkd_icon: Scissors
-  },
-  {
-    dkd_key: 'admin',
-    dkd_title: 'Admin',
-    dkd_caption: 'Tüm yönetim, onay ve platform kontrolünü tek panelde topla.',
-    dkd_icon: ShieldCheck
-  }
+  { dkd_key: 'customer', dkd_title: 'Müşteri', dkd_caption: 'Randevu al, işletmeleri keşfet, hizmetleri görüntüle.', dkd_icon: UserRound },
+  { dkd_key: 'business', dkd_title: 'İşletme Sahibi', dkd_caption: 'Salon profilini, ustaları, hizmetleri ve fiyatları yönet.', dkd_icon: Building2 },
+  { dkd_key: 'master', dkd_title: 'Usta', dkd_caption: 'Takvimini, işlemlerini ve günlük akışını takip et.', dkd_icon: Scissors },
+  { dkd_key: 'admin', dkd_title: 'Admin', dkd_caption: 'Tüm yönetim, onay ve platform kontrolünü tek panelde topla.', dkd_icon: ShieldCheck }
 ];
 
 function dkd_create_slug(dkd_value: string) {
@@ -207,15 +187,7 @@ export default function Dkd_DraBornStyleApp() {
 
     const dkd_profile_response = await dkd_supabase_client
       .from('dkd_user_profiles')
-      .upsert(
-        {
-          dkd_user_id,
-          dkd_role,
-          dkd_display_name: dkd_user_email ?? '',
-          dkd_is_active: true
-        },
-        { onConflict: 'dkd_user_id' }
-      );
+      .upsert({ dkd_user_id, dkd_role, dkd_display_name: dkd_user_email ?? '', dkd_is_active: true }, { onConflict: 'dkd_user_id' });
 
     dkd_set_role_loading(false);
 
@@ -274,34 +246,45 @@ export default function Dkd_DraBornStyleApp() {
   return (
     <SafeAreaProvider>
       <SafeAreaView style={dkd_styles.dkd_safe_area}>
-        <LinearGradient colors={['#06101F', '#081B33', '#111827']} style={dkd_styles.dkd_gradient}>
+        <LinearGradient colors={['#8BE9FF', '#FDE68A', '#FF7AB6', '#38BDF8']} style={dkd_styles.dkd_gradient}>
+          <View style={dkd_styles.dkd_sun_blob} />
+          <View style={dkd_styles.dkd_ocean_blob} />
           <ScrollView contentContainerStyle={dkd_styles.dkd_screen} keyboardShouldPersistTaps="handled">
-            <LinearGradient colors={['#172554', '#0F172A', '#111827']} style={dkd_styles.dkd_hero_card}>
+            <LinearGradient colors={['#06B6D4', '#EC4899', '#FB923C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={dkd_styles.dkd_hero_card}>
               <View style={dkd_styles.dkd_brand_row}>
                 <View style={dkd_styles.dkd_logo_bubble}>
-                  <Sparkles color="#22D3EE" size={26} strokeWidth={2.6} />
+                  <Sparkles color="#0891B2" size={27} strokeWidth={2.8} />
                 </View>
-                <Text style={dkd_styles.dkd_overline}>MIAMI STYLE • SMART BOOKING</Text>
+                <Text style={dkd_styles.dkd_overline}>MIAMI SALON • SMART STYLE</Text>
               </View>
               <Text style={dkd_styles.dkd_title}>DraBornStyle</Text>
-              <Text style={dkd_styles.dkd_text}>Modern salon, berber, usta ve müşteri yönetimi için premium v0.1 temel sistemi.</Text>
+              <Text style={dkd_styles.dkd_hero_text}>Berber, kuaför ve salonlar için canlı, hızlı ve profesyonel randevu yönetimi.</Text>
 
-              <View style={dkd_styles.dkd_status_box}>
-                <Text style={dkd_styles.dkd_label}>Supabase .env durumu</Text>
+              <View style={dkd_styles.dkd_mini_row}>
+                <View style={dkd_styles.dkd_mini_pill}><Scissors color="#0F172A" size={16} strokeWidth={2.8} /><Text style={dkd_styles.dkd_mini_text}>Salon</Text></View>
+                <View style={dkd_styles.dkd_mini_pill}><Clock3 color="#0F172A" size={16} strokeWidth={2.8} /><Text style={dkd_styles.dkd_mini_text}>Randevu</Text></View>
+                <View style={dkd_styles.dkd_mini_pill}><Sparkles color="#0F172A" size={16} strokeWidth={2.8} /><Text style={dkd_styles.dkd_mini_text}>Premium</Text></View>
+              </View>
+            </LinearGradient>
+
+            <View style={dkd_styles.dkd_status_banner}>
+              <View style={dkd_styles.dkd_status_icon}><ShieldCheck color="#06B6D4" size={23} strokeWidth={2.8} /></View>
+              <View style={dkd_styles.dkd_role_content}>
+                <Text style={dkd_styles.dkd_label_dark}>Supabase .env durumu</Text>
                 <Text style={dkd_is_supabase_env_ready ? dkd_styles.dkd_success : dkd_styles.dkd_warning}>
                   {dkd_is_supabase_env_ready ? 'Bağlantı bilgileri hazır' : 'Publishable key eksik veya hatalı'}
                 </Text>
               </View>
-            </LinearGradient>
+            </View>
 
             <View style={dkd_styles.dkd_card}>
               {dkd_user_email ? (
                 <View>
                   <Text style={dkd_styles.dkd_section_title}>Aktif hesap</Text>
                   <Text style={dkd_styles.dkd_account_text}>{dkd_user_email}</Text>
-                  <Text style={dkd_styles.dkd_status_text}>{dkd_saved_role_title ? `Seçili rol: ${dkd_saved_role_title}` : 'Henüz rol seçilmedi.'}</Text>
+                  <Text style={dkd_styles.dkd_status_text_dark}>{dkd_saved_role_title ? `Seçili rol: ${dkd_saved_role_title}` : 'Henüz rol seçilmedi.'}</Text>
                   <TouchableOpacity style={dkd_styles.dkd_secondary_button} onPress={dkd_handle_logout}>
-                    <LogOut color="#F8FAFC" size={18} strokeWidth={2.6} />
+                    <LogOut color="#0F172A" size={18} strokeWidth={2.7} />
                     <Text style={dkd_styles.dkd_secondary_button_text}>Çıkış Yap</Text>
                   </TouchableOpacity>
                 </View>
@@ -309,19 +292,19 @@ export default function Dkd_DraBornStyleApp() {
                 <View>
                   <View style={dkd_styles.dkd_mode_row}>
                     <TouchableOpacity style={dkd_auth_mode === 'login' ? dkd_styles.dkd_mode_active : dkd_styles.dkd_mode_button} onPress={() => dkd_set_auth_mode('login')}>
-                      <Text style={dkd_styles.dkd_mode_text}>Giriş Yap</Text>
+                      <Text style={dkd_auth_mode === 'login' ? dkd_styles.dkd_mode_text_active : dkd_styles.dkd_mode_text}>Giriş Yap</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={dkd_auth_mode === 'signup' ? dkd_styles.dkd_mode_active : dkd_styles.dkd_mode_button} onPress={() => dkd_set_auth_mode('signup')}>
-                      <Text style={dkd_styles.dkd_mode_text}>Kayıt Ol</Text>
+                      <Text style={dkd_auth_mode === 'signup' ? dkd_styles.dkd_mode_text_active : dkd_styles.dkd_mode_text}>Kayıt Ol</Text>
                     </TouchableOpacity>
                   </View>
 
                   <View style={dkd_styles.dkd_input_shell}>
-                    <Mail color="#67E8F9" size={19} strokeWidth={2.5} />
+                    <Mail color="#06B6D4" size={19} strokeWidth={2.6} />
                     <TextInput value={dkd_email} onChangeText={dkd_set_email} placeholder="E-posta" placeholderTextColor="#64748B" autoCapitalize="none" keyboardType="email-address" style={dkd_styles.dkd_input} />
                   </View>
                   <View style={dkd_styles.dkd_input_shell}>
-                    <LockKeyhole color="#67E8F9" size={19} strokeWidth={2.5} />
+                    <LockKeyhole color="#06B6D4" size={19} strokeWidth={2.6} />
                     <TextInput value={dkd_password} onChangeText={dkd_set_password} placeholder="Şifre" placeholderTextColor="#64748B" secureTextEntry style={dkd_styles.dkd_input} />
                   </View>
 
@@ -335,14 +318,14 @@ export default function Dkd_DraBornStyleApp() {
             {dkd_user_email ? (
               <View style={dkd_styles.dkd_card}>
                 <Text style={dkd_styles.dkd_section_title}>Rolünü seç</Text>
-                <Text style={dkd_styles.dkd_text}>Admin tek yönetim rolüdür. Super Admin ayrımı v0.1 MVP içinde kullanılmaz.</Text>
+                <Text style={dkd_styles.dkd_text_dark}>Admin tek yönetim rolüdür. Super Admin ayrımı v0.1 MVP içinde kullanılmaz.</Text>
                 {dkd_role_options.map((dkd_role) => {
                   const DkdIcon = dkd_role.dkd_icon;
                   const dkd_is_selected = dkd_saved_role === dkd_role.dkd_key;
                   return (
                     <TouchableOpacity key={dkd_role.dkd_key} style={dkd_is_selected ? dkd_styles.dkd_role_card_selected : dkd_styles.dkd_role_card} onPress={() => dkd_save_role(dkd_role.dkd_key)} disabled={dkd_role_loading}>
-                      <View style={dkd_styles.dkd_icon_tile}>
-                        <DkdIcon color={dkd_is_selected ? '#06101F' : '#67E8F9'} size={25} strokeWidth={2.6} />
+                      <View style={dkd_is_selected ? dkd_styles.dkd_icon_tile_selected : dkd_styles.dkd_icon_tile}>
+                        <DkdIcon color={dkd_is_selected ? '#0F172A' : '#06B6D4'} size={25} strokeWidth={2.7} />
                       </View>
                       <View style={dkd_styles.dkd_role_content}>
                         <Text style={dkd_styles.dkd_role_title}>{dkd_role.dkd_title}</Text>
@@ -358,21 +341,21 @@ export default function Dkd_DraBornStyleApp() {
               <View style={dkd_styles.dkd_card}>
                 <View style={dkd_styles.dkd_form_header_row}>
                   <View style={dkd_styles.dkd_logo_bubble_small}>
-                    <Store color="#22D3EE" size={22} strokeWidth={2.6} />
+                    <Store color="#EC4899" size={22} strokeWidth={2.7} />
                   </View>
                   <View style={dkd_styles.dkd_role_content}>
                     <Text style={dkd_styles.dkd_section_title}>İşletme profili</Text>
-                    <Text style={dkd_styles.dkd_status_text}>v0.0.19 temel işletme oluşturma formu</Text>
+                    <Text style={dkd_styles.dkd_status_text_dark}>Salonunu Miami vitrini gibi hazırla.</Text>
                   </View>
                 </View>
 
                 <View style={dkd_styles.dkd_upload_row}>
                   <View style={dkd_styles.dkd_upload_box}>
-                    <ImagePlus color="#FB7185" size={26} strokeWidth={2.6} />
+                    <ImagePlus color="#EC4899" size={26} strokeWidth={2.7} />
                     <Text style={dkd_styles.dkd_upload_text}>Logo</Text>
                   </View>
                   <View style={dkd_styles.dkd_upload_box_wide}>
-                    <ImagePlus color="#22D3EE" size={26} strokeWidth={2.6} />
+                    <ImagePlus color="#06B6D4" size={26} strokeWidth={2.7} />
                     <Text style={dkd_styles.dkd_upload_text}>Kapak görseli</Text>
                   </View>
                 </View>
@@ -380,30 +363,19 @@ export default function Dkd_DraBornStyleApp() {
                 <TextInput value={dkd_business_name} onChangeText={dkd_set_business_name} placeholder="İşletme adı" placeholderTextColor="#64748B" style={dkd_styles.dkd_plain_input} />
                 <TextInput value={dkd_business_description} onChangeText={dkd_set_business_description} placeholder="Kısa açıklama" placeholderTextColor="#64748B" multiline style={dkd_styles.dkd_plain_input_tall} />
 
-                <View style={dkd_styles.dkd_input_shell}>
-                  <Phone color="#67E8F9" size={19} strokeWidth={2.5} />
-                  <TextInput value={dkd_business_phone} onChangeText={dkd_set_business_phone} placeholder="Telefon" placeholderTextColor="#64748B" keyboardType="phone-pad" style={dkd_styles.dkd_input} />
-                </View>
-
-                <View style={dkd_styles.dkd_input_shell}>
-                  <MapPin color="#67E8F9" size={19} strokeWidth={2.5} />
-                  <TextInput value={dkd_business_address} onChangeText={dkd_set_business_address} placeholder="Adres ve konum bilgisi" placeholderTextColor="#64748B" style={dkd_styles.dkd_input} />
-                </View>
-
-                <View style={dkd_styles.dkd_input_shell}>
-                  <Clock3 color="#67E8F9" size={19} strokeWidth={2.5} />
-                  <TextInput value={dkd_business_hours} onChangeText={dkd_set_business_hours} placeholder="Çalışma saatleri" placeholderTextColor="#64748B" style={dkd_styles.dkd_input} />
-                </View>
+                <View style={dkd_styles.dkd_input_shell}><Phone color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_business_phone} onChangeText={dkd_set_business_phone} placeholder="Telefon" placeholderTextColor="#64748B" keyboardType="phone-pad" style={dkd_styles.dkd_input} /></View>
+                <View style={dkd_styles.dkd_input_shell}><MapPin color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_business_address} onChangeText={dkd_set_business_address} placeholder="Adres ve konum bilgisi" placeholderTextColor="#64748B" style={dkd_styles.dkd_input} /></View>
+                <View style={dkd_styles.dkd_input_shell}><Clock3 color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_business_hours} onChangeText={dkd_set_business_hours} placeholder="Çalışma saatleri" placeholderTextColor="#64748B" style={dkd_styles.dkd_input} /></View>
 
                 <TouchableOpacity style={dkd_styles.dkd_primary_button} onPress={dkd_save_business_profile} disabled={dkd_business_loading}>
-                  <Save color="#06101F" size={18} strokeWidth={2.8} />
+                  <Save color="#0F172A" size={18} strokeWidth={2.8} />
                   <Text style={dkd_styles.dkd_primary_button_text}>{dkd_business_loading ? 'Kaydediliyor...' : dkd_business_id ? 'İşletmeyi Güncelle' : 'İşletmeyi Oluştur'}</Text>
                 </TouchableOpacity>
               </View>
             ) : null}
 
-            <View style={dkd_styles.dkd_card_footer}>
-              <Text style={dkd_styles.dkd_status_text}>{dkd_status_text}</Text>
+            <View style={dkd_styles.dkd_footer_card}>
+              <Text style={dkd_styles.dkd_status_text_dark}>{dkd_status_text}</Text>
               <Text style={dkd_styles.dkd_next}>Sıradaki adım: logo, kapak, konum ve çalışma saatlerini detaylı bağlama.</Text>
             </View>
           </ScrollView>
@@ -414,47 +386,56 @@ export default function Dkd_DraBornStyleApp() {
 }
 
 const dkd_styles = StyleSheet.create({
-  dkd_safe_area: { flex: 1, backgroundColor: '#06101F' },
+  dkd_safe_area: { flex: 1, backgroundColor: '#8BE9FF' },
   dkd_gradient: { flex: 1 },
+  dkd_sun_blob: { position: 'absolute', top: 24, right: -50, width: 170, height: 170, borderRadius: 85, backgroundColor: 'rgba(251, 146, 60, 0.35)' },
+  dkd_ocean_blob: { position: 'absolute', top: 230, left: -80, width: 210, height: 210, borderRadius: 105, backgroundColor: 'rgba(6, 182, 212, 0.28)' },
   dkd_screen: { flexGrow: 1, padding: 20, paddingTop: 30, paddingBottom: 46 },
-  dkd_hero_card: { borderRadius: 34, padding: 24, borderWidth: 1, borderColor: '#334155', marginBottom: 16 },
-  dkd_card: { borderRadius: 28, padding: 20, backgroundColor: 'rgba(15, 23, 42, 0.94)', borderWidth: 1, borderColor: '#263B5E', marginBottom: 16 },
-  dkd_card_footer: { borderRadius: 24, padding: 18, backgroundColor: 'rgba(8, 17, 31, 0.94)', borderWidth: 1, borderColor: '#1E3A5F' },
-  dkd_brand_row: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
-  dkd_logo_bubble: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#081225', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#155E75' },
-  dkd_logo_bubble_small: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#081225', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#155E75' },
-  dkd_overline: { color: '#FB7185', fontSize: 12, fontWeight: '900', letterSpacing: 1.6, flex: 1 },
-  dkd_title: { color: '#F8FAFC', fontSize: 40, fontWeight: '900', marginBottom: 10 },
-  dkd_text: { color: '#CBD5E1', fontSize: 16, lineHeight: 24 },
-  dkd_status_box: { marginTop: 18, padding: 16, borderRadius: 20, backgroundColor: '#081225', borderWidth: 1, borderColor: '#172554' },
-  dkd_label: { color: '#94A3B8', fontSize: 14, fontWeight: '800', marginBottom: 8 },
-  dkd_success: { color: '#86EFAC', fontSize: 17, fontWeight: '900' },
-  dkd_warning: { color: '#FDE68A', fontSize: 17, fontWeight: '900' },
-  dkd_section_title: { color: '#F8FAFC', fontSize: 24, fontWeight: '900', marginBottom: 6 },
-  dkd_account_text: { color: '#67E8F9', fontSize: 19, fontWeight: '900', marginBottom: 10 },
+  dkd_hero_card: { borderRadius: 36, padding: 25, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.65)' },
+  dkd_card: { borderRadius: 30, padding: 20, backgroundColor: 'rgba(255, 255, 255, 0.92)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.82)', marginBottom: 16 },
+  dkd_footer_card: { borderRadius: 26, padding: 18, backgroundColor: 'rgba(255, 255, 255, 0.84)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.78)' },
+  dkd_brand_row: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
+  dkd_logo_bubble: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)' },
+  dkd_logo_bubble_small: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFF7ED', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#FED7AA' },
+  dkd_overline: { color: '#FFFFFF', fontSize: 12, fontWeight: '900', letterSpacing: 1.8, flex: 1 },
+  dkd_title: { color: '#FFFFFF', fontSize: 42, fontWeight: '900', marginBottom: 10 },
+  dkd_hero_text: { color: '#F8FAFC', fontSize: 18, lineHeight: 27, fontWeight: '700' },
+  dkd_mini_row: { flexDirection: 'row', gap: 9, flexWrap: 'wrap', marginTop: 18 },
+  dkd_mini_pill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.86)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 },
+  dkd_mini_text: { color: '#0F172A', fontSize: 13, fontWeight: '900' },
+  dkd_status_banner: { flexDirection: 'row', gap: 12, alignItems: 'center', borderRadius: 28, padding: 16, backgroundColor: 'rgba(255,255,255,0.90)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.78)', marginBottom: 16 },
+  dkd_status_icon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ECFEFF' },
+  dkd_label_dark: { color: '#64748B', fontSize: 14, fontWeight: '900', marginBottom: 6 },
+  dkd_success: { color: '#059669', fontSize: 17, fontWeight: '900' },
+  dkd_warning: { color: '#B45309', fontSize: 17, fontWeight: '900' },
+  dkd_section_title: { color: '#0F172A', fontSize: 25, fontWeight: '900', marginBottom: 7 },
+  dkd_account_text: { color: '#0891B2', fontSize: 19, fontWeight: '900', marginBottom: 10 },
+  dkd_text_dark: { color: '#334155', fontSize: 16, lineHeight: 24 },
+  dkd_status_text_dark: { color: '#475569', fontSize: 14, lineHeight: 20 },
   dkd_mode_row: { flexDirection: 'row', gap: 10, marginBottom: 14 },
-  dkd_mode_button: { flex: 1, padding: 13, borderRadius: 16, backgroundColor: '#081225', alignItems: 'center', borderWidth: 1, borderColor: '#1E3A5F' },
-  dkd_mode_active: { flex: 1, padding: 13, borderRadius: 16, backgroundColor: '#0EA5E9', alignItems: 'center' },
-  dkd_mode_text: { color: '#F8FAFC', fontSize: 15, fontWeight: '900' },
-  dkd_input_shell: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12, borderRadius: 18, paddingHorizontal: 14, backgroundColor: '#081225', borderWidth: 1, borderColor: '#334155' },
-  dkd_input: { flex: 1, paddingVertical: 14, color: '#F8FAFC', fontSize: 16 },
-  dkd_plain_input: { marginBottom: 12, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 14, color: '#F8FAFC', backgroundColor: '#081225', borderWidth: 1, borderColor: '#334155', fontSize: 16 },
-  dkd_plain_input_tall: { minHeight: 90, textAlignVertical: 'top', marginBottom: 12, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 14, color: '#F8FAFC', backgroundColor: '#081225', borderWidth: 1, borderColor: '#334155', fontSize: 16 },
+  dkd_mode_button: { flex: 1, padding: 13, borderRadius: 18, backgroundColor: '#F8FAFC', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' },
+  dkd_mode_active: { flex: 1, padding: 13, borderRadius: 18, backgroundColor: '#0EA5E9', alignItems: 'center' },
+  dkd_mode_text: { color: '#334155', fontSize: 15, fontWeight: '900' },
+  dkd_mode_text_active: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
+  dkd_input_shell: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12, borderRadius: 18, paddingHorizontal: 14, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' },
+  dkd_input: { flex: 1, paddingVertical: 14, color: '#0F172A', fontSize: 16 },
+  dkd_plain_input: { marginBottom: 12, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 14, color: '#0F172A', backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', fontSize: 16 },
+  dkd_plain_input_tall: { minHeight: 90, textAlignVertical: 'top', marginBottom: 12, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 14, color: '#0F172A', backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', fontSize: 16 },
   dkd_primary_button: { flexDirection: 'row', gap: 9, marginTop: 4, padding: 16, borderRadius: 20, backgroundColor: '#22D3EE', alignItems: 'center', justifyContent: 'center' },
-  dkd_primary_button_text: { color: '#06101F', fontSize: 16, fontWeight: '900' },
-  dkd_secondary_button: { flexDirection: 'row', gap: 9, marginTop: 14, padding: 14, borderRadius: 18, backgroundColor: '#1E293B', alignItems: 'center', justifyContent: 'center' },
-  dkd_secondary_button_text: { color: '#F8FAFC', fontSize: 15, fontWeight: '900' },
-  dkd_role_card: { flexDirection: 'row', gap: 14, alignItems: 'center', marginTop: 12, padding: 16, borderRadius: 22, backgroundColor: '#081225', borderWidth: 1, borderColor: '#1E3A5F' },
-  dkd_role_card_selected: { flexDirection: 'row', gap: 14, alignItems: 'center', marginTop: 12, padding: 16, borderRadius: 22, backgroundColor: '#164E63', borderWidth: 1, borderColor: '#67E8F9' },
-  dkd_icon_tile: { width: 46, height: 46, borderRadius: 18, backgroundColor: '#0F172A', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#155E75' },
+  dkd_primary_button_text: { color: '#0F172A', fontSize: 16, fontWeight: '900' },
+  dkd_secondary_button: { flexDirection: 'row', gap: 9, marginTop: 14, padding: 14, borderRadius: 18, backgroundColor: '#E0F2FE', alignItems: 'center', justifyContent: 'center' },
+  dkd_secondary_button_text: { color: '#0F172A', fontSize: 15, fontWeight: '900' },
+  dkd_role_card: { flexDirection: 'row', gap: 14, alignItems: 'center', marginTop: 12, padding: 16, borderRadius: 24, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0' },
+  dkd_role_card_selected: { flexDirection: 'row', gap: 14, alignItems: 'center', marginTop: 12, padding: 16, borderRadius: 24, backgroundColor: '#CCFBF1', borderWidth: 2, borderColor: '#06B6D4' },
+  dkd_icon_tile: { width: 48, height: 48, borderRadius: 19, backgroundColor: '#ECFEFF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#A5F3FC' },
+  dkd_icon_tile_selected: { width: 48, height: 48, borderRadius: 19, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#67E8F9' },
   dkd_role_content: { flex: 1 },
-  dkd_role_title: { color: '#F8FAFC', fontSize: 18, fontWeight: '900', marginBottom: 4 },
-  dkd_role_caption: { color: '#CBD5E1', fontSize: 14, lineHeight: 20 },
+  dkd_role_title: { color: '#0F172A', fontSize: 18, fontWeight: '900', marginBottom: 4 },
+  dkd_role_caption: { color: '#475569', fontSize: 14, lineHeight: 20 },
   dkd_form_header_row: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
   dkd_upload_row: { flexDirection: 'row', gap: 12, marginBottom: 14 },
-  dkd_upload_box: { width: 104, height: 92, borderRadius: 22, backgroundColor: '#081225', borderWidth: 1, borderColor: '#334155', alignItems: 'center', justifyContent: 'center' },
-  dkd_upload_box_wide: { flex: 1, height: 92, borderRadius: 22, backgroundColor: '#081225', borderWidth: 1, borderColor: '#334155', alignItems: 'center', justifyContent: 'center' },
-  dkd_upload_text: { marginTop: 8, color: '#CBD5E1', fontSize: 13, fontWeight: '800' },
-  dkd_status_text: { color: '#CBD5E1', fontSize: 14, lineHeight: 20 },
-  dkd_next: { marginTop: 12, color: '#7DD3FC', fontSize: 15, lineHeight: 22, fontWeight: '800' }
+  dkd_upload_box: { width: 104, height: 94, borderRadius: 24, backgroundColor: '#FFF1F2', borderWidth: 1, borderColor: '#FDA4AF', alignItems: 'center', justifyContent: 'center' },
+  dkd_upload_box_wide: { flex: 1, height: 94, borderRadius: 24, backgroundColor: '#ECFEFF', borderWidth: 1, borderColor: '#67E8F9', alignItems: 'center', justifyContent: 'center' },
+  dkd_upload_text: { marginTop: 8, color: '#334155', fontSize: 13, fontWeight: '900' },
+  dkd_next: { marginTop: 12, color: '#0E7490', fontSize: 15, lineHeight: 22, fontWeight: '900' }
 });
