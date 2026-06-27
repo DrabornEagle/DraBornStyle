@@ -15,7 +15,15 @@ export const dkd_supabase_publishable_key = process.env.EXPO_PUBLIC_DKD_SUPABASE
 export const dkd_is_supabase_env_ready =
   dkd_supabase_url.includes('supabase.co') && dkd_supabase_publishable_key.length > 20;
 
-export const dkd_supabase_client = dkd_create_client(dkd_supabase_url, dkd_supabase_publishable_key, {
+const dkd_safe_supabase_url = dkd_is_supabase_env_ready
+  ? dkd_supabase_url
+  : 'https://example.supabase.co';
+
+const dkd_safe_supabase_key = dkd_is_supabase_env_ready
+  ? dkd_supabase_publishable_key
+  : 'missing-supabase-publishable-key';
+
+export const dkd_supabase_client = dkd_create_client(dkd_safe_supabase_url, dkd_safe_supabase_key, {
   auth: {
     storage: dkd_async_storage,
     autoRefreshToken: true,
