@@ -26,7 +26,9 @@ DraBornStyle'ı v0.1 final login/panel yapısını bozmadan; işletme ödeme, pl
 | ✅ | v0.2.12 | Admin ödeme onay API/panel altyapısı eklendi |
 | ✅ | v0.2.13 | v0.2 modülleri tek import noktasına toplandı |
 | ✅ | v0.2.14 | v0.1 final App.tsx korunarak v0.2 İşlem & Ödeme bölümü patch script ile bağlandı |
-| 🟡 | v0.2.14-final-test | Telefonda final test bekleniyor |
+| ✅ | v0.2.15 | QR kaynak ve usta özel indirim kodu paneli eklendi |
+| ✅ | v0.2.16 | Login PNG koruma ve final test scriptleri hazırlandı |
+| 🟡 | v0.2.16-final-test | Telefonda final test bekleniyor |
 
 ## v0.2 Dosyaları
 
@@ -35,8 +37,10 @@ DraBornStyle'ı v0.1 final login/panel yapısını bozmadan; işletme ödeme, pl
 - `src/dkd_v0_2/use_dkd_transactions.ts`
 - `src/dkd_v0_2/dkd_admin_payment_api.ts`
 - `src/dkd_v0_2/dkd_admin_payment_panel.tsx`
+- `src/dkd_v0_2/dkd_business_v02_tools_panel.tsx`
 - `src/dkd_v0_2/index.ts`
 - `scripts/dkd_apply_v02_to_app.js`
+- `scripts/dkd_apply_v02_business_tools_to_app.js`
 - `scripts/dkd_fix_login_layout.js`
 
 ## Korunan v0.1 Alanları
@@ -63,6 +67,9 @@ DraBornStyle'ı v0.1 final login/panel yapısını bozmadan; işletme ödeme, pl
 13. İşlem Bitti yapılır.
 14. Son işlemler listesinde completed görünür.
 15. Platform borcu 20 TL artar.
+16. QR & İndirim bölümü açılır.
+17. İndirim kodu oluşturulur.
+18. QR kaynak oluşturulur.
 
 ## Supabase v0.2 Tabloları
 
