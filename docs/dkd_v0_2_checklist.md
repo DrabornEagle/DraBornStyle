@@ -2,7 +2,7 @@
 
 ## Güncel Sürüm
 
-**v0.2.14 Final Test Adayı**
+**v0.2.17 Final Tamamlandı**
 
 ## v0.2 Ana Hedef
 
@@ -28,7 +28,8 @@ DraBornStyle'ı v0.1 final login/panel yapısını bozmadan; işletme ödeme, pl
 | ✅ | v0.2.14 | v0.1 final App.tsx korunarak v0.2 İşlem & Ödeme bölümü patch script ile bağlandı |
 | ✅ | v0.2.15 | QR kaynak ve usta özel indirim kodu paneli eklendi |
 | ✅ | v0.2.16 | Login PNG koruma ve final test scriptleri hazırlandı |
-| 🟡 | v0.2.16-final-test | Telefonda final test bekleniyor |
+| ✅ | v0.2.17 | Admin başvuru onay/reddet/sil hataları düzeltildi; yalnız pending başvurular işlem listesinde gösterilecek şekilde ayarlandı |
+| ✅ | v0.2-final | Telefonda final test tamamlandı |
 
 ## v0.2 Dosyaları
 
@@ -42,6 +43,7 @@ DraBornStyle'ı v0.1 final login/panel yapısını bozmadan; işletme ödeme, pl
 - `scripts/dkd_apply_v02_to_app.js`
 - `scripts/dkd_apply_v02_business_tools_to_app.js`
 - `scripts/dkd_fix_login_layout.js`
+- `scripts/dkd_patch_admin_pending_only.js`
 
 ## Korunan v0.1 Alanları
 
@@ -70,6 +72,9 @@ DraBornStyle'ı v0.1 final login/panel yapısını bozmadan; işletme ödeme, pl
 16. QR & İndirim bölümü açılır.
 17. İndirim kodu oluşturulur.
 18. QR kaynak oluşturulur.
+19. Admin başvurularda pending kayıt onaylanınca işlem listesinden çıkar.
+20. Admin başvuru reddedilince işlem listesinden çıkar.
+21. Admin başvuru silinince veritabanından tamamen kaldırılır.
 
 ## Supabase v0.2 Tabloları
 
@@ -83,6 +88,12 @@ DraBornStyle'ı v0.1 final login/panel yapısını bozmadan; işletme ödeme, pl
 ## Supabase v0.2 View
 
 - `dkd_business_payment_report_summary`
+
+## Supabase v0.2 Ek Düzeltmeler
+
+- `dkd_role_applications.updated_at` eklendi.
+- `dkd_user_role_access.updated_at` eklendi.
+- Admin başvuru silme RPC altyapısı hazırlandı.
 
 ## Otomatik İş Kuralı
 
