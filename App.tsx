@@ -3,9 +3,11 @@ import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import {
+  BadgeDollarSign,
   Building2,
   Clock3,
   ImagePlus,
+  ListPlus,
   LockKeyhole,
   LogOut,
   Mail,
@@ -16,6 +18,7 @@ import {
   ShieldCheck,
   Sparkles,
   Store,
+  Timer,
   UserPlus,
   UserRound,
   UsersRound
@@ -42,6 +45,14 @@ type Dkd_MasterItem = {
   dkd_bio?: string | null;
 };
 
+type Dkd_ServiceItem = {
+  dkd_service_id: string;
+  dkd_service_title: string;
+  dkd_service_description?: string | null;
+  dkd_price_cents: number;
+  dkd_duration_minutes: number;
+};
+
 const dkd_role_options: Dkd_RoleOption[] = [
   { dkd_key: 'customer', dkd_title: 'Müşteri', dkd_caption: 'Randevu al, işletmeleri keşfet, hizmetleri görüntüle.', dkd_icon: UserRound },
   { dkd_key: 'business', dkd_title: 'İşletme Sahibi', dkd_caption: 'Salon profilini, ustaları, hizmetleri ve fiyatları yönet.', dkd_icon: Building2 },
@@ -62,6 +73,19 @@ function dkd_create_slug(dkd_value: string) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 46);
+}
+
+function dkd_price_text_to_cents(dkd_value: string) {
+  const dkd_normalized = dkd_value.replace(',', '.').replace(/[^0-9.]/g, '');
+  const dkd_number = Number(dkd_normalized);
+  if (!Number.isFinite(dkd_number) || dkd_number <= 0) {
+    return 0;
+  }
+  return Math.round(dkd_number * 100);
+}
+
+function dkd_format_price(dkd_price_cents: number) {
+  return `${(dkd_price_cents / 100).toFixed(0)} TL`;
 }
 
 export default function Dkd_DraBornStyleApp() {
@@ -90,6 +114,31 @@ export default function Dkd_DraBornStyleApp() {
   const [dkd_master_bio, dkd_set_master_bio] = React.useState('');
   const [dkd_master_loading, dkd_set_master_loading] = React.useState(false);
 
+  const [dkd_service_list, dkd_set_service_list] = React.useState<Dkd_ServiceItem[]>([]);
+  const [dkd_service_title, dkd_set_service_title] = React.useState('');
+  const [dkd_service_description, dkd_set_service_description] = React.useState('');
+  const [dkd_service_price, dkd_set_service_price] = React.useState('');
+  const [dkd_service_duration, dkd_set_service_duration] = React.useState('30');
+  const [dkd_service_loading, dkd_set_service_loading] = React.useState(false);
+
+  async function dkd_load_service_list(dkd_next_business_id: string | null) {
+    if (!dkd_next_business_id) {
+      dkd_set_service_list([]);
+      return;
+    }
+
+    const dkd_service_response = await dkd_supabase_client
+      .from('dkd_services')
+      .select('dkd_service_id, dkd_service_title, dkd_service_description, dkd_price_cents, dkd_duration_minutes')
+      .eq('dkd_business_id', dkd_next_business_id)
+      .eq('dkd_is_active', true)
+      .order('dkd_created_at', { ascending: false });
+
+    if (!dkd_service_response.error) {
+      dkd_set_service_list((dkd_service_response.data ?? []) as Dkd_ServiceItem[]);
+    }
+  }
+
   async function dkd_load_master_team(dkd_next_business_id: string | null) {
     if (!dkd_next_business_id) {
       dkd_set_master_team([]);
@@ -112,6 +161,7 @@ export default function Dkd_DraBornStyleApp() {
     if (!dkd_next_user_id) {
       dkd_set_business_id(null);
       dkd_set_master_team([]);
+      dkd_set_service_list([]);
       return;
     }
 
@@ -132,9 +182,11 @@ export default function Dkd_DraBornStyleApp() {
       dkd_set_business_address(dkd_business_response.data.dkd_address_text ?? '');
       dkd_set_business_hours(dkd_business_response.data.dkd_working_hours?.dkd_summary ?? 'Hafta içi 09:00 - 20:00');
       dkd_load_master_team(dkd_loaded_business_id);
+      dkd_load_service_list(dkd_loaded_business_id);
     } else {
       dkd_set_business_id(null);
       dkd_set_master_team([]);
+      dkd_set_service_list([]);
     }
   }
 
@@ -215,6 +267,7 @@ export default function Dkd_DraBornStyleApp() {
     dkd_set_saved_role(null);
     dkd_set_business_id(null);
     dkd_set_master_team([]);
+    dkd_set_service_list([]);
     dkd_set_status_text('Çıkış yapıldı.');
   }
 
@@ -281,7 +334,8 @@ export default function Dkd_DraBornStyleApp() {
 
     dkd_set_business_id(dkd_business_response.data.dkd_business_id);
     dkd_load_master_team(dkd_business_response.data.dkd_business_id);
-    dkd_set_status_text('İşletme profili kaydedildi. Şimdi usta/çalışan ekleyebilirsin.');
+    dkd_load_service_list(dkd_business_response.data.dkd_business_id);
+    dkd_set_status_text('İşletme profili kaydedildi. Şimdi usta ve hizmet ekleyebilirsin.');
   }
 
   async function dkd_save_master_profile() {
@@ -325,6 +379,62 @@ export default function Dkd_DraBornStyleApp() {
     dkd_set_master_bio('');
     dkd_load_master_team(dkd_business_id);
     dkd_set_status_text('Usta / çalışan kaydedildi. Sıradaki adım hizmet fiyat ve süre ekranı.');
+  }
+
+  async function dkd_save_service() {
+    if (!dkd_business_id) {
+      dkd_set_status_text('Hizmet eklemek için önce işletme profilini kaydet.');
+      return;
+    }
+
+    const dkd_clean_service_title = dkd_service_title.trim();
+    const dkd_price_cents = dkd_price_text_to_cents(dkd_service_price);
+    const dkd_duration_minutes = Number.parseInt(dkd_service_duration, 10);
+
+    if (dkd_clean_service_title.length < 2) {
+      dkd_set_status_text('Hizmet adı en az 2 karakter olmalı.');
+      return;
+    }
+
+    if (dkd_price_cents <= 0) {
+      dkd_set_status_text('Hizmet fiyatını TL olarak yaz. Örnek: 250');
+      return;
+    }
+
+    if (!Number.isFinite(dkd_duration_minutes) || dkd_duration_minutes <= 0) {
+      dkd_set_status_text('Hizmet süresini dakika olarak yaz. Örnek: 30');
+      return;
+    }
+
+    dkd_set_service_loading(true);
+    dkd_set_status_text('Hizmet kaydediliyor...');
+
+    const dkd_service_response = await dkd_supabase_client
+      .from('dkd_services')
+      .insert({
+        dkd_business_id,
+        dkd_service_title: dkd_clean_service_title,
+        dkd_service_description: dkd_service_description.trim(),
+        dkd_price_cents,
+        dkd_duration_minutes,
+        dkd_is_active: true
+      })
+      .select('dkd_service_id')
+      .single();
+
+    dkd_set_service_loading(false);
+
+    if (dkd_service_response.error) {
+      dkd_set_status_text(dkd_service_response.error.message);
+      return;
+    }
+
+    dkd_set_service_title('');
+    dkd_set_service_description('');
+    dkd_set_service_price('');
+    dkd_set_service_duration('30');
+    dkd_load_service_list(dkd_business_id);
+    dkd_set_status_text('Hizmet kaydedildi. Sıradaki adım hesap akışlarını test etmek.');
   }
 
   const dkd_saved_role_title = dkd_role_options.find((dkd_role) => dkd_role.dkd_key === dkd_saved_role)?.dkd_title;
@@ -481,12 +591,49 @@ export default function Dkd_DraBornStyleApp() {
                     </View>
                   ) : null}
                 </View>
+
+                <View style={dkd_styles.dkd_card}>
+                  <View style={dkd_styles.dkd_form_header_row}>
+                    <View style={dkd_styles.dkd_logo_bubble_small}><ListPlus color="#EC4899" size={22} strokeWidth={2.7} /></View>
+                    <View style={dkd_styles.dkd_role_content}>
+                      <Text style={dkd_styles.dkd_section_title}>Hizmet ekle</Text>
+                      <Text style={dkd_styles.dkd_status_text_dark}>Fiyat ve süre gir; müşteri randevu akışına hazırlansın.</Text>
+                    </View>
+                  </View>
+
+                  {!dkd_business_id ? <Text style={dkd_styles.dkd_warning_note}>Hizmet eklemek için önce işletme profilini kaydet.</Text> : null}
+
+                  <TextInput value={dkd_service_title} onChangeText={dkd_set_service_title} placeholder="Hizmet adı: Saç kesim, Sakal, Boya..." placeholderTextColor="#64748B" style={dkd_styles.dkd_plain_input} />
+                  <TextInput value={dkd_service_description} onChangeText={dkd_set_service_description} placeholder="Kısa hizmet açıklaması" placeholderTextColor="#64748B" multiline style={dkd_styles.dkd_plain_input_tall} />
+                  <View style={dkd_styles.dkd_input_shell}><BadgeDollarSign color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_service_price} onChangeText={dkd_set_service_price} placeholder="Fiyat TL: 250" placeholderTextColor="#64748B" keyboardType="numeric" style={dkd_styles.dkd_input} /></View>
+                  <View style={dkd_styles.dkd_input_shell}><Timer color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_service_duration} onChangeText={dkd_set_service_duration} placeholder="Süre dakika: 30" placeholderTextColor="#64748B" keyboardType="numeric" style={dkd_styles.dkd_input} /></View>
+
+                  <TouchableOpacity style={dkd_styles.dkd_primary_button} onPress={dkd_save_service} disabled={dkd_service_loading}>
+                    <Save color="#0F172A" size={18} strokeWidth={2.8} />
+                    <Text style={dkd_styles.dkd_primary_button_text}>{dkd_service_loading ? 'Kaydediliyor...' : 'Hizmet Ekle'}</Text>
+                  </TouchableOpacity>
+
+                  {dkd_service_list.length > 0 ? (
+                    <View style={dkd_styles.dkd_team_list}>
+                      <Text style={dkd_styles.dkd_team_title}>Hizmetlerin</Text>
+                      {dkd_service_list.map((dkd_service_item) => (
+                        <View key={dkd_service_item.dkd_service_id} style={dkd_styles.dkd_team_card}>
+                          <View style={dkd_styles.dkd_icon_tile}><Scissors color="#06B6D4" size={21} strokeWidth={2.7} /></View>
+                          <View style={dkd_styles.dkd_role_content}>
+                            <Text style={dkd_styles.dkd_role_title}>{dkd_service_item.dkd_service_title}</Text>
+                            <Text style={dkd_styles.dkd_role_caption}>{dkd_format_price(dkd_service_item.dkd_price_cents)} • {dkd_service_item.dkd_duration_minutes} dk</Text>
+                          </View>
+                        </View>
+                      ))}
+                    </View>
+                  ) : null}
+                </View>
               </View>
             ) : null}
 
             <View style={dkd_styles.dkd_footer_card}>
               <Text style={dkd_styles.dkd_status_text_dark}>{dkd_status_text}</Text>
-              <Text style={dkd_styles.dkd_next}>Sıradaki adım: hizmet ekleme, hizmet fiyatı ve hizmet süresi ekranı.</Text>
+              <Text style={dkd_styles.dkd_next}>Sıradaki adım: müşteri, işletme, usta ve admin hesap akışlarını test etmek.</Text>
             </View>
           </ScrollView>
         </LinearGradient>
