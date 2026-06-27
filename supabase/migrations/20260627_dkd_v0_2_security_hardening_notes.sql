@@ -1,0 +1,13 @@
+-- DraBornStyle v0.2 security hardening notes
+-- This migration was already applied directly to the Supabase project.
+-- Purpose:
+-- 1. Keep updated_at trigger helper with fixed search path.
+-- 2. Make the business payment report view use invoker permissions.
+-- 3. Prevent app clients from calling internal trigger/helper routines directly.
+--
+-- Applied database actions summary:
+-- - Recreated dkd_touch_updated_at with an explicit public search path.
+-- - Changed dkd_business_payment_report_summary to security invoker mode.
+-- - Removed direct API execution access for internal payment-fee trigger/helper routines from anon and authenticated roles.
+--
+-- The exact database hardening is intentionally summarized here because the same raw SQL upload was blocked by the connector safety filter.
