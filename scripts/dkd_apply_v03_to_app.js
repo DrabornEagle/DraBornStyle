@@ -44,6 +44,46 @@ function cleanupDuplicateHook() {
   markChanged(cleaned);
 }
 
+function replaceAssetLoginWithNativeLogin() {
+  replaceOnce(
+    "import { ImageBackground, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';",
+    "import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';"
+  );
+
+  const nativeLogin = `  if (!userEmail) {
+    return (
+      <SafeAreaProvider>
+        <SafeAreaView style={dkd_styles.safe}>
+          <LinearGradient colors={['#111C1B', '#304944', '#71857E']} style={dkd_styles.bg}>
+            <ScrollView contentContainerStyle={dkd_styles.screen} keyboardShouldPersistTaps="handled">
+              <View style={dkd_styles.heroCard}>
+                <View style={dkd_styles.poleRow}><View style={dkd_styles.poleRed} /><View style={dkd_styles.poleCream} /><View style={dkd_styles.poleBlue} /></View>
+                <Text style={dkd_styles.heroLabel}>DRABORNSTYLE</Text>
+                <Text style={dkd_styles.heroTitle}>Barber Studio OS</Text>
+                <Text style={dkd_styles.heroText}>Randevu, usta takvimi, müşteri akışı ve salon yönetimi tek panelde.</Text>
+              </View>
+              <View style={dkd_styles.card}>
+                <Text style={dkd_styles.title}>Giriş Yap</Text>
+                <Text style={dkd_styles.body}>Tek hesapla müşteri, işletme, usta ve admin panellerine giriş yap.</Text>
+                <DkdInput label="E-posta" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="ornek@mail.com" />
+                <DkdInput label="Şifre" value={password} onChangeText={setPassword} secureTextEntry placeholder="En az 6 karakter" />
+                <TouchableOpacity style={dkd_styles.primaryButton} onPress={() => loginOrSignup('login')} disabled={loading}><Text style={dkd_styles.primaryText}>{loading ? 'Kontrol ediliyor...' : 'Giriş Yap'}</Text></TouchableOpacity>
+                <TouchableOpacity style={dkd_styles.secondaryButton} onPress={() => loginOrSignup('signup')} disabled={loading}><Text style={dkd_styles.secondaryText}>Yeni Hesap Oluştur</Text></TouchableOpacity>
+                {status !== 'Barber Studio panel hazır.' ? <Text style={dkd_styles.body}>{status}</Text> : null}
+              </View>
+            </ScrollView>
+          </LinearGradient>
+        </SafeAreaView>
+      </SafeAreaProvider>
+    );
+  }`;
+
+  const loginRegex = /  if \(!userEmail\) \{\n    return <SafeAreaProvider><View style=\{dkd_styles\.mockupRoot\}>[\s\S]*?<\/SafeAreaProvider>;\n  \}/;
+  markChanged(src.replace(loginRegex, nativeLogin));
+}
+
+replaceAssetLoginWithNativeLogin();
+
 if (!src.includes("./src/dkd_v0_3")) {
   replaceOnce(
     "import { dkd_is_supabase_env_ready, dkd_supabase_client } from './src/dkd_config/dkd_supabase_client';",
