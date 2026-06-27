@@ -27,7 +27,6 @@ type DkdService = {
 
 type DkdUserProfile = {
   dkd_user_id: string;
-  dkd_role: DkdRole;
   dkd_display_name?: string | null;
   dkd_is_active?: boolean | null;
 };
@@ -59,13 +58,6 @@ const dkd_sections: { key: DkdSection; title: string; caption: string; code: str
   { key: 'master_request', title: 'Usta Yetki Başvurusu', caption: 'Kayıtlı kullanıcıyı usta yapmak için admin onayı iste', code: '04' }
 ];
 
-const dkd_permissions: Record<DkdRole, string[]> = {
-  customer: ['Standart müşteri hesabı', 'İşletme başvurusu gönderebilir', 'Usta başvurusu gönderebilir'],
-  business: ['Salon profili yönetimi', 'Ekip / usta başvurusu gönderebilir', 'Hizmet, fiyat ve süre yönetimi'],
-  master: ['Usta hesabı doğrulandı', 'v0.2 takvim akışına hazır', 'İşlem yönetimi için hazırlanır'],
-  admin: ['Başvuruları onaylar/reddeder', 'Kullanıcıya işletme/usta yetkisi verir', 'Test için işletme ve usta panellerini görür']
-};
-
 function dkd_slug(value: string) {
   return value
     .toLowerCase()
@@ -88,6 +80,13 @@ function dkd_price_to_cents(value: string) {
 
 function dkd_price(cents: number) {
   return `${Math.round(cents / 100)} TL`;
+}
+
+function dkd_pick_primary_role(roles: DkdRole[]): DkdRole {
+  if (roles.includes('admin')) return 'admin';
+  if (roles.includes('business')) return 'business';
+  if (roles.includes('master')) return 'master';
+  return 'customer';
 }
 
 export default function DkdDraBornStyleApp() {
@@ -150,43 +149,41 @@ export default function DkdDraBornStyleApp() {
     return accessRoles.includes('admin') || accessRoles.includes(nextRole);
   }
 
-  function dkd_sync_active_panel(nextRoles: DkdRole[]) {
-    if (nextRoles.includes('admin')) setActivePanel('admin');
-    else if (nextRoles.includes('business')) setActivePanel('business');
-    else if (nextRoles.includes('master')) setActivePanel('master');
+  function dkd_sync_panel(roles: DkdRole[]) {
+    if (roles.includes('admin')) setActivePanel('admin');
+    else if (roles.includes('business')) setActivePanel('business');
+    else if (roles.includes('master')) setActivePanel('master');
     else setActivePanel('customer');
   }
 
   async function ensureProfile(nextUserId: string, nextEmail: string | null) {
     const existing = await dkd_supabase_client
       .from('dkd_user_profiles')
-      .select('dkd_role')
+      .select('dkd_user_id')
       .eq('dkd_user_id', nextUserId)
       .maybeSingle();
 
-    if (!existing.data?.dkd_role) {
+    if (!existing.data?.dkd_user_id) {
       await dkd_supabase_client
         .from('dkd_user_profiles')
-        .upsert({ dkd_user_id: nextUserId, dkd_role: 'customer', dkd_display_name: nextEmail ?? '', dkd_is_active: true }, { onConflict: 'dkd_user_id' });
-      await dkd_supabase_client.rpc('dkd_ensure_customer_access', { dkd_target_user_id: nextUserId });
-      return 'customer' as DkdRole;
+        .upsert({ dkd_user_id: nextUserId, dkd_display_name: nextEmail ?? '', dkd_is_active: true }, { onConflict: 'dkd_user_id' });
     }
 
     await dkd_supabase_client.rpc('dkd_ensure_customer_access', { dkd_target_user_id: nextUserId });
-    return existing.data.dkd_role as DkdRole;
   }
 
-  async function loadRoleAccess(nextUserId: string, fallbackRole: DkdRole) {
+  async function loadRoleAccess(nextUserId: string) {
     const response = await dkd_supabase_client
       .from('dkd_user_role_access')
       .select('dkd_role')
       .eq('dkd_user_id', nextUserId)
       .eq('dkd_is_active', true);
 
-    const roles = Array.from(new Set([fallbackRole, 'customer', ...((response.data ?? []).map((item: any) => item.dkd_role as DkdRole))]));
+    const roles = Array.from(new Set(['customer', ...((response.data ?? []).map((item: any) => item.dkd_role as DkdRole))]));
     const safeRoles = roles.filter((item): item is DkdRole => ['customer', 'business', 'master', 'admin'].includes(item));
     setAccessRoles(safeRoles);
-    dkd_sync_active_panel(safeRoles);
+    setPrimaryRole(dkd_pick_primary_role(safeRoles));
+    dkd_sync_panel(safeRoles);
     return safeRoles;
   }
 
@@ -194,6 +191,7 @@ export default function DkdDraBornStyleApp() {
     if (!nextUserId) {
       setPrimaryRole('customer');
       setAccessRoles(['customer']);
+      setActivePanel('customer');
       setBusinessId(null);
       setMasters([]);
       setServices([]);
@@ -203,11 +201,10 @@ export default function DkdDraBornStyleApp() {
       return;
     }
 
-    const nextPrimaryRole = await ensureProfile(nextUserId, nextEmail ?? userEmail);
-    setPrimaryRole(nextPrimaryRole);
-    const nextAccessRoles = await loadRoleAccess(nextUserId, nextPrimaryRole);
+    await ensureProfile(nextUserId, nextEmail ?? userEmail);
+    const roles = await loadRoleAccess(nextUserId);
     await loadBusiness(nextUserId);
-    await loadApplications(nextUserId, nextAccessRoles);
+    await loadApplications(nextUserId, roles);
   }
 
   async function loadBusiness(nextUserId: string) {
@@ -245,7 +242,7 @@ export default function DkdDraBornStyleApp() {
     if (roles.includes('admin')) {
       const users = await dkd_supabase_client
         .from('dkd_user_profiles')
-        .select('dkd_user_id, dkd_role, dkd_display_name, dkd_is_active')
+        .select('dkd_user_id, dkd_display_name, dkd_is_active')
         .order('dkd_display_name', { ascending: true });
       setAdminUsers((users.data ?? []) as DkdUserProfile[]);
 
@@ -297,10 +294,8 @@ export default function DkdDraBornStyleApp() {
 
     const nextUser = res.data.user ?? res.data.session?.user ?? null;
     if (nextUser?.id) {
-      const nextRole = await ensureProfile(nextUser.id, nextUser.email ?? cleanEmail);
-      setPrimaryRole(nextRole);
-      setStatus(`${dkd_role_meta[nextRole].title} hesabı açıldı.`);
       await loadAll(nextUser.id, nextUser.email ?? cleanEmail);
+      setStatus('Hesap açıldı. Yetkiler yüklendi.');
     } else {
       setStatus('Hesap oluşturuldu. E-posta doğrulaması açıksa gelen kutunu kontrol et.');
     }
@@ -324,12 +319,7 @@ export default function DkdDraBornStyleApp() {
       dkd_target_email: userEmail,
       dkd_requested_role: 'business',
       dkd_applicant_display_name: businessName.trim(),
-      dkd_metadata: {
-        business_name: businessName.trim(),
-        phone: businessPhone.trim(),
-        address: businessAddress.trim(),
-        note: businessApplicationNote.trim()
-      }
+      dkd_metadata: { business_name: businessName.trim(), phone: businessPhone.trim(), address: businessAddress.trim(), note: businessApplicationNote.trim() }
     });
 
     if (res.error) {
@@ -349,12 +339,7 @@ export default function DkdDraBornStyleApp() {
       dkd_target_email: userEmail,
       dkd_requested_role: 'master',
       dkd_applicant_display_name: displayName,
-      dkd_metadata: {
-        master_name: displayName,
-        specialty: masterSpecialty.trim(),
-        phone: masterPhone.trim(),
-        note: selfMasterNote.trim()
-      }
+      dkd_metadata: { master_name: displayName, specialty: masterSpecialty.trim(), phone: masterPhone.trim(), note: selfMasterNote.trim() }
     });
     if (res.error) {
       setStatus(res.error.message);
@@ -375,20 +360,13 @@ export default function DkdDraBornStyleApp() {
       return;
     }
 
-    const targetUser = adminUsers.find((item) => (item.dkd_display_name ?? '').toLowerCase() === targetEmail);
     const res = await dkd_supabase_client.from('dkd_role_applications').insert({
       dkd_requester_user_id: userId,
-      dkd_target_user_id: targetUser?.dkd_user_id ?? null,
       dkd_target_email: targetEmail,
       dkd_requested_role: 'master',
       dkd_requested_by_business_id: businessId,
       dkd_applicant_display_name: masterApplicantName.trim(),
-      dkd_metadata: {
-        master_name: masterApplicantName.trim(),
-        specialty: masterSpecialty.trim(),
-        phone: masterPhone.trim(),
-        business_name: businessName.trim()
-      }
+      dkd_metadata: { master_name: masterApplicantName.trim(), specialty: masterSpecialty.trim(), phone: masterPhone.trim(), business_name: businessName.trim() }
     });
 
     if (res.error) {
@@ -457,13 +435,7 @@ export default function DkdDraBornStyleApp() {
       setStatus('Hizmet adı, fiyat ve süreyi doğru gir.');
       return;
     }
-    const res = await dkd_supabase_client.from('dkd_services').insert({
-      dkd_business_id: businessId,
-      dkd_service_title: serviceTitle.trim(),
-      dkd_price_cents: priceCents,
-      dkd_duration_minutes: duration,
-      dkd_is_active: true
-    });
+    const res = await dkd_supabase_client.from('dkd_services').insert({ dkd_business_id: businessId, dkd_service_title: serviceTitle.trim(), dkd_price_cents: priceCents, dkd_duration_minutes: duration, dkd_is_active: true });
     if (res.error) {
       setStatus(res.error.message);
       return;
@@ -476,10 +448,7 @@ export default function DkdDraBornStyleApp() {
   }
 
   async function adminSetUserRole(targetUserId: string, nextRole: DkdRole) {
-    const res = await dkd_supabase_client.rpc('dkd_admin_grant_role', {
-      dkd_target_user_id: targetUserId,
-      dkd_next_role: nextRole
-    });
+    const res = await dkd_supabase_client.rpc('dkd_admin_grant_role', { dkd_target_user_id: targetUserId, dkd_next_role: nextRole });
     if (res.error) {
       setStatus(res.error.message);
       return;
@@ -489,9 +458,7 @@ export default function DkdDraBornStyleApp() {
   }
 
   async function adminApproveApplication(app: DkdRoleApplication) {
-    const res = await dkd_supabase_client.rpc('dkd_admin_approve_role_application', {
-      dkd_application_id_input: app.dkd_application_id
-    });
+    const res = await dkd_supabase_client.rpc('dkd_admin_approve_role_application', { dkd_application_id_input: app.dkd_application_id });
     if (res.error) {
       setStatus(res.error.message);
       return;
@@ -501,10 +468,7 @@ export default function DkdDraBornStyleApp() {
   }
 
   async function adminRejectApplication(app: DkdRoleApplication) {
-    const res = await dkd_supabase_client
-      .from('dkd_role_applications')
-      .update({ dkd_status: 'rejected', dkd_admin_note: 'Admin tarafından reddedildi.' })
-      .eq('dkd_application_id', app.dkd_application_id);
+    const res = await dkd_supabase_client.from('dkd_role_applications').update({ dkd_status: 'rejected', dkd_admin_note: 'Admin tarafından reddedildi.' }).eq('dkd_application_id', app.dkd_application_id);
     if (res.error) {
       setStatus(res.error.message);
       return;
@@ -522,26 +486,9 @@ export default function DkdDraBornStyleApp() {
     return (
       <SafeAreaProvider>
         <View style={dkd_styles.mockupRoot}>
-          <ImageBackground
-            source={require('./src/dkd_assets/login_barber_miami.png')}
-            resizeMode="stretch"
-            style={dkd_styles.mockupImage}
-          >
-            <TextInput
-              value={email}
-              onChangeText={setEmail}
-              autoCapitalize="none"
-              keyboardType="email-address"
-              placeholder=""
-              style={[dkd_styles.mockupInput, dkd_styles.mockupEmailInput]}
-            />
-            <TextInput
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              placeholder=""
-              style={[dkd_styles.mockupInput, dkd_styles.mockupPasswordInput]}
-            />
+          <ImageBackground source={require('./src/dkd_assets/login_barber_miami.png')} resizeMode="stretch" style={dkd_styles.mockupImage}>
+            <TextInput value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" placeholder="" style={[dkd_styles.mockupInput, dkd_styles.mockupEmailInput]} />
+            <TextInput value={password} onChangeText={setPassword} secureTextEntry placeholder="" style={[dkd_styles.mockupInput, dkd_styles.mockupPasswordInput]} />
             <TouchableOpacity activeOpacity={0.8} style={[dkd_styles.mockupButton, dkd_styles.mockupLoginButton]} onPress={() => loginOrSignup('login')} disabled={loading} />
             <TouchableOpacity activeOpacity={0.8} style={[dkd_styles.mockupButton, dkd_styles.mockupSignupButton]} onPress={() => loginOrSignup('signup')} disabled={loading} />
             {status !== 'Barber Studio panel hazır.' ? <Text style={dkd_styles.mockupStatus}>{status}</Text> : null}
@@ -556,97 +503,23 @@ export default function DkdDraBornStyleApp() {
       <SafeAreaView style={dkd_styles.safe}>
         <LinearGradient colors={['#71857E', '#465E58', '#2D3B39']} style={dkd_styles.bg}>
           <ScrollView contentContainerStyle={dkd_styles.screen} keyboardShouldPersistTaps="handled">
-            <View style={dkd_styles.topBar}>
-              <View>
-                <Text style={dkd_styles.brand}>DraBornStyle</Text>
-                <Text style={dkd_styles.brandSub}>Barber & Booking Studio</Text>
-              </View>
-              <View style={dkd_styles.onlinePill}><Text style={dkd_styles.onlineText}>{dkd_is_supabase_env_ready ? 'ONLINE' : 'ENV'}</Text></View>
-            </View>
+            <View style={dkd_styles.topBar}><View><Text style={dkd_styles.brand}>DraBornStyle</Text><Text style={dkd_styles.brandSub}>Barber & Booking Studio</Text></View><View style={dkd_styles.onlinePill}><Text style={dkd_styles.onlineText}>{dkd_is_supabase_env_ready ? 'ONLINE' : 'ENV'}</Text></View></View>
 
-            <View style={dkd_styles.heroCard}>
-              <View style={dkd_styles.poleRow}><View style={dkd_styles.poleRed} /><View style={dkd_styles.poleCream} /><View style={dkd_styles.poleBlue} /></View>
-              <Text style={dkd_styles.heroLabel}>ÇOKLU YETKİLİ SALON SİSTEMİ</Text>
-              <Text style={dkd_styles.heroTitle}>Tek hesap, birden fazla panel.</Text>
-              <Text style={dkd_styles.heroText}>Müşteri hesabı herkeste açık. İşletme ve usta panelleri admin onayıyla ayrı ayrı görünür.</Text>
-              <View style={dkd_styles.statRow}>
-                <DkdStat value={masters.length.toString()} label="Usta" />
-                <DkdStat value={services.length.toString()} label="Hizmet" />
-                <DkdStat value={accessRoles.length.toString()} label="Yetki" />
-              </View>
-            </View>
+            <View style={dkd_styles.heroCard}><View style={dkd_styles.poleRow}><View style={dkd_styles.poleRed} /><View style={dkd_styles.poleCream} /><View style={dkd_styles.poleBlue} /></View><Text style={dkd_styles.heroLabel}>ÇOKLU YETKİLİ SALON SİSTEMİ</Text><Text style={dkd_styles.heroTitle}>Tek hesap, birden fazla panel.</Text><Text style={dkd_styles.heroText}>Müşteri hesabı herkeste açık. İşletme ve usta panelleri admin onayıyla ayrı ayrı görünür.</Text><View style={dkd_styles.statRow}><DkdStat value={masters.length.toString()} label="Usta" /><DkdStat value={services.length.toString()} label="Hizmet" /><DkdStat value={accessRoles.length.toString()} label="Yetki" /></View></View>
 
-            <View style={dkd_styles.card}>
-              <View style={dkd_styles.cardTitleRow}><Text style={dkd_styles.title}>Hesap Merkezi</Text><Text style={dkd_styles.badge}>{activeRole.icon} {activeRole.title}</Text></View>
-              <Text style={dkd_styles.accent}>{userEmail}</Text>
-              <Text style={dkd_styles.body}>Aktif yetkiler: {accessRoles.map((item) => `${dkd_role_meta[item].icon} ${dkd_role_meta[item].title}`).join('  •  ')}</Text>
-              <View style={dkd_styles.panelTabs}>
-                <DkdPanelButton title="Müşteri" active={activePanel === 'customer'} onPress={() => setActivePanel('customer')} />
-                {canBusiness ? <DkdPanelButton title="İşletme" active={activePanel === 'business'} onPress={() => setActivePanel('business')} /> : null}
-                {canMaster ? <DkdPanelButton title="Usta" active={activePanel === 'master'} onPress={() => setActivePanel('master')} /> : null}
-                {canAdmin ? <DkdPanelButton title="Admin" active={activePanel === 'admin'} onPress={() => setActivePanel('admin')} /> : null}
-              </View>
-              <TouchableOpacity style={dkd_styles.secondaryButton} onPress={logout}><Text style={dkd_styles.secondaryText}>Çıkış Yap</Text></TouchableOpacity>
-            </View>
+            <View style={dkd_styles.card}><View style={dkd_styles.cardTitleRow}><Text style={dkd_styles.title}>Hesap Merkezi</Text><Text style={dkd_styles.badge}>{activeRole.icon} {activeRole.title}</Text></View><Text style={dkd_styles.accent}>{userEmail}</Text><Text style={dkd_styles.body}>Aktif yetkiler: {accessRoles.map((item) => `${dkd_role_meta[item].icon} ${dkd_role_meta[item].title}`).join('  •  ')}</Text><View style={dkd_styles.panelTabs}><DkdPanelButton title="Müşteri" active={activePanel === 'customer'} onPress={() => setActivePanel('customer')} />{canBusiness ? <DkdPanelButton title="İşletme" active={activePanel === 'business'} onPress={() => setActivePanel('business')} /> : null}{canMaster ? <DkdPanelButton title="Usta" active={activePanel === 'master'} onPress={() => setActivePanel('master')} /> : null}{canAdmin ? <DkdPanelButton title="Admin" active={activePanel === 'admin'} onPress={() => setActivePanel('admin')} /> : null}</View><TouchableOpacity style={dkd_styles.secondaryButton} onPress={logout}><Text style={dkd_styles.secondaryText}>Çıkış Yap</Text></TouchableOpacity></View>
 
-            <View style={dkd_styles.cardCompact}>
-              <Text style={dkd_styles.sectionHeading}>Yetki Özeti</Text>
-              {accessRoles.map((item) => <DkdMiniRow key={item} title={`${dkd_role_meta[item].icon} ${dkd_role_meta[item].title}`} subtitle={dkd_role_meta[item].caption} />)}
-              {canAdmin ? <DkdMiniRow title="🧪 Admin test erişimi" subtitle="İşletme ve Usta panelleri test için admin hesabında da görünür." /> : null}
-            </View>
+            <View style={dkd_styles.cardCompact}><Text style={dkd_styles.sectionHeading}>Yetki Özeti</Text>{accessRoles.map((item) => <DkdMiniRow key={item} title={`${dkd_role_meta[item].icon} ${dkd_role_meta[item].title}`} subtitle={dkd_role_meta[item].caption} />)}{canAdmin ? <DkdMiniRow title="🧪 Admin test erişimi" subtitle="İşletme ve Usta panelleri test için admin hesabında da görünür." /> : null}</View>
 
-            {activePanel === 'customer' ? (
-              <View style={dkd_styles.card}>
-                <Text style={dkd_styles.title}>Müşteri Paneli</Text>
-                <Text style={dkd_styles.body}>Müşteri hesabın hazır. İstersen işletme sahibi veya usta yetkisi için admin onayına başvuru gönderebilirsin.</Text>
-                {!canBusiness ? <><Text style={dkd_styles.sectionHeading}>İşletme Başvurusu</Text><DkdInput label="Salon" value={businessName} onChangeText={setBusinessName} placeholder="Salon adı" /><DkdInput label="Telefon" value={businessPhone} onChangeText={setBusinessPhone} placeholder="Telefon" keyboardType="phone-pad" /><DkdInput label="Adres" value={businessAddress} onChangeText={setBusinessAddress} placeholder="Adres" /><DkdInput label="Not" value={businessApplicationNote} onChangeText={setBusinessApplicationNote} placeholder="Kısa başvuru notu" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={sendBusinessApplication}><Text style={dkd_styles.primaryText}>İşletme Başvurusunu Gönder</Text></TouchableOpacity></> : <DkdMiniRow title="İşletme yetkisi" subtitle="Bu hesapta işletme paneli erişimi aktif." />}
-                {!canMaster ? <><Text style={dkd_styles.sectionHeading}>Usta Başvurusu</Text><DkdInput label="Ad Soyad" value={masterApplicantName} onChangeText={setMasterApplicantName} placeholder="Ad soyad" /><DkdInput label="Uzmanlık" value={masterSpecialty} onChangeText={setMasterSpecialty} placeholder="Saç, sakal, boya" /><DkdInput label="Telefon" value={masterPhone} onChangeText={setMasterPhone} placeholder="Telefon" keyboardType="phone-pad" /><DkdInput label="Not" value={selfMasterNote} onChangeText={setSelfMasterNote} placeholder="Kısa başvuru notu" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={sendSelfMasterApplication}><Text style={dkd_styles.primaryText}>Usta Başvurusunu Gönder</Text></TouchableOpacity></> : <DkdMiniRow title="Usta yetkisi" subtitle="Bu hesapta usta paneli erişimi aktif." />}
-              </View>
-            ) : null}
+            {activePanel === 'customer' ? <CustomerPanel canBusiness={canBusiness} canMaster={canMaster} businessName={businessName} setBusinessName={setBusinessName} businessPhone={businessPhone} setBusinessPhone={setBusinessPhone} businessAddress={businessAddress} setBusinessAddress={setBusinessAddress} businessApplicationNote={businessApplicationNote} setBusinessApplicationNote={setBusinessApplicationNote} sendBusinessApplication={sendBusinessApplication} masterApplicantName={masterApplicantName} setMasterApplicantName={setMasterApplicantName} masterSpecialty={masterSpecialty} setMasterSpecialty={setMasterSpecialty} masterPhone={masterPhone} setMasterPhone={setMasterPhone} selfMasterNote={selfMasterNote} setSelfMasterNote={setSelfMasterNote} sendSelfMasterApplication={sendSelfMasterApplication} /> : null}
 
             {applications.length > 0 ? <View style={dkd_styles.cardCompact}><Text style={dkd_styles.sectionHeading}>Başvuru Durumu</Text>{applications.map((item) => <DkdMiniRow key={item.dkd_application_id} title={`${dkd_role_meta[item.dkd_requested_role].title} • ${item.dkd_status}`} subtitle={item.dkd_applicant_display_name || item.dkd_target_email || 'Başvuru'} />)}</View> : null}
 
-            {activePanel === 'business' && canBusiness ? (
-              <View style={dkd_styles.card}>
-                <Text style={dkd_styles.title}>İşletme Paneli</Text>
-                <Text style={dkd_styles.body}>İşletme yetkin aktif. Salon bilgisi, usta listesi, hizmet fiyatı ve süre yönetimi burada.</Text>
-                {dkd_sections.map((section) => (
-                  <View key={section.key}>
-                    <DkdSectionButton section={section} active={activeSection === section.key} onPress={() => setActiveSection(activeSection === section.key ? null : section.key)} count={section.key === 'team' ? masters.length : section.key === 'services' ? services.length : section.key === 'business' ? businessId ? 1 : 0 : 0} />
-                    {activeSection === section.key ? (
-                      <View style={dkd_styles.detailBox}>
-                        {section.key === 'business' ? <><DkdInput label="Salon" value={businessName} onChangeText={setBusinessName} placeholder="Salon adı" /><DkdInput label="Açıklama" value={businessDescription} onChangeText={setBusinessDescription} placeholder="Kısa açıklama" /><DkdInput label="Telefon" value={businessPhone} onChangeText={setBusinessPhone} placeholder="Telefon" keyboardType="phone-pad" /><DkdInput label="Adres" value={businessAddress} onChangeText={setBusinessAddress} placeholder="Adres" /><DkdInput label="Saat" value={businessHours} onChangeText={setBusinessHours} placeholder="Çalışma saatleri" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={saveBusiness}><Text style={dkd_styles.primaryText}>Salon Bilgilerini Kaydet</Text></TouchableOpacity></> : null}
-                        {section.key === 'team' ? <><DkdInput label="Usta" value={masterName} onChangeText={setMasterName} placeholder="Ad soyad" /><DkdInput label="Uzmanlık" value={masterSpecialty} onChangeText={setMasterSpecialty} placeholder="Saç, sakal, boya" /><DkdInput label="Telefon" value={masterPhone} onChangeText={setMasterPhone} placeholder="Telefon" keyboardType="phone-pad" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={saveMaster}><Text style={dkd_styles.primaryText}>Usta Listeye Ekle</Text></TouchableOpacity>{masters.map((item) => <DkdMiniRow key={item.dkd_master_id} title={item.dkd_master_name} subtitle={item.dkd_master_specialty || 'Uzmanlık eklenmedi'} />)}</> : null}
-                        {section.key === 'services' ? <><DkdInput label="Hizmet" value={serviceTitle} onChangeText={setServiceTitle} placeholder="Saç kesim" /><DkdInput label="Fiyat" value={servicePrice} onChangeText={setServicePrice} placeholder="250" keyboardType="numeric" /><DkdInput label="Süre" value={serviceDuration} onChangeText={setServiceDuration} placeholder="30" keyboardType="numeric" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={saveService}><Text style={dkd_styles.primaryText}>Hizmet Ekle</Text></TouchableOpacity>{services.map((item) => <DkdMiniRow key={item.dkd_service_id} title={item.dkd_service_title} subtitle={`${dkd_price(item.dkd_price_cents)} • ${item.dkd_duration_minutes} dk`} />)}</> : null}
-                        {section.key === 'master_request' ? <><DkdInput label="E-posta" value={masterApplicantEmail} onChangeText={setMasterApplicantEmail} placeholder="Usta olacak kayıtlı kullanıcı e-postası" /><DkdInput label="Ad Soyad" value={masterApplicantName} onChangeText={setMasterApplicantName} placeholder="Usta adı soyadı" /><DkdInput label="Uzmanlık" value={masterSpecialty} onChangeText={setMasterSpecialty} placeholder="Saç, sakal, boya" /><DkdInput label="Telefon" value={masterPhone} onChangeText={setMasterPhone} placeholder="Telefon" keyboardType="phone-pad" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={sendMasterApplication}><Text style={dkd_styles.primaryText}>Usta Yetkisini Admin Onayına Gönder</Text></TouchableOpacity></> : null}
-                      </View>
-                    ) : null}
-                  </View>
-                ))}
-              </View>
-            ) : null}
+            {activePanel === 'business' && canBusiness ? <BusinessPanel activeSection={activeSection} setActiveSection={setActiveSection} businessId={businessId} masters={masters} services={services} businessName={businessName} setBusinessName={setBusinessName} businessDescription={businessDescription} setBusinessDescription={setBusinessDescription} businessPhone={businessPhone} setBusinessPhone={setBusinessPhone} businessAddress={businessAddress} setBusinessAddress={setBusinessAddress} businessHours={businessHours} setBusinessHours={setBusinessHours} saveBusiness={saveBusiness} masterName={masterName} setMasterName={setMasterName} masterSpecialty={masterSpecialty} setMasterSpecialty={setMasterSpecialty} masterPhone={masterPhone} setMasterPhone={setMasterPhone} saveMaster={saveMaster} serviceTitle={serviceTitle} setServiceTitle={setServiceTitle} servicePrice={servicePrice} setServicePrice={setServicePrice} serviceDuration={serviceDuration} setServiceDuration={setServiceDuration} saveService={saveService} masterApplicantEmail={masterApplicantEmail} setMasterApplicantEmail={setMasterApplicantEmail} masterApplicantName={masterApplicantName} setMasterApplicantName={setMasterApplicantName} sendMasterApplication={sendMasterApplication} /> : null}
 
-            {activePanel === 'master' && canMaster ? (
-              <View style={dkd_styles.card}>
-                <Text style={dkd_styles.title}>Usta Paneli</Text>
-                <Text style={dkd_styles.body}>Usta yetkin aktif. v0.2 içinde takvim, işlem başlatma, işlem bitirme ve performans ekranları buraya eklenecek.</Text>
-                <DkdMiniRow title="Takvim" subtitle="v0.2 hazırlığı: günlük randevu listesi" />
-                <DkdMiniRow title="İşlem Akışı" subtitle="v0.2 hazırlığı: işleme başla / işlem bitti" />
-                <DkdMiniRow title="Performans" subtitle="v0.2 hazırlığı: hizmet sayısı ve kazanç özeti" />
-              </View>
-            ) : null}
+            {activePanel === 'master' && canMaster ? <View style={dkd_styles.card}><Text style={dkd_styles.title}>Usta Paneli</Text><Text style={dkd_styles.body}>Usta yetkin aktif. v0.2 içinde takvim, işlem başlatma, işlem bitirme ve performans ekranları buraya eklenecek.</Text><DkdMiniRow title="Takvim" subtitle="v0.2 hazırlığı: günlük randevu listesi" /><DkdMiniRow title="İşlem Akışı" subtitle="v0.2 hazırlığı: işleme başla / işlem bitti" /><DkdMiniRow title="Performans" subtitle="v0.2 hazırlığı: hizmet sayısı ve kazanç özeti" /></View> : null}
 
-            {activePanel === 'admin' && canAdmin ? (
-              <View style={dkd_styles.card}>
-                <Text style={dkd_styles.title}>Admin Paneli</Text>
-                <Text style={dkd_styles.body}>Kayıtlı kullanıcıları işletme sahibi veya usta olarak işaretle; başvuruları onayla/reddet.</Text>
-                <Text style={dkd_styles.sectionHeading}>Başvurular</Text>
-                {adminApplications.length === 0 ? <DkdMiniRow title="Başvuru yok" subtitle="Yeni başvurular burada listelenecek." /> : null}
-                {adminApplications.map((app) => <View key={app.dkd_application_id} style={dkd_styles.adminBox}><Text style={dkd_styles.miniTitle}>{dkd_role_meta[app.dkd_requested_role].icon} {dkd_role_meta[app.dkd_requested_role].title} • {app.dkd_status}</Text><Text style={dkd_styles.miniSub}>{app.dkd_applicant_display_name || app.dkd_target_email || 'Başvuru'}</Text><View style={dkd_styles.actionRow}><TouchableOpacity style={dkd_styles.smallButton} onPress={() => adminApproveApplication(app)}><Text style={dkd_styles.smallButtonText}>Onayla</Text></TouchableOpacity><TouchableOpacity style={dkd_styles.smallButtonGhost} onPress={() => adminRejectApplication(app)}><Text style={dkd_styles.smallButtonGhostText}>Reddet</Text></TouchableOpacity></View></View>)}
-                <Text style={dkd_styles.sectionHeading}>Kayıtlı Kullanıcılar</Text>
-                {adminUsers.map((item) => <View key={item.dkd_user_id} style={dkd_styles.adminBox}><Text style={dkd_styles.miniTitle}>{item.dkd_display_name || item.dkd_user_id}</Text><Text style={dkd_styles.miniSub}>Eski rol alanı: {dkd_role_meta[item.dkd_role]?.title ?? item.dkd_role}</Text><View style={dkd_styles.actionRow}><TouchableOpacity style={dkd_styles.smallButton} onPress={() => adminSetUserRole(item.dkd_user_id, 'business')}><Text style={dkd_styles.smallButtonText}>İşletme Yetkisi Ver</Text></TouchableOpacity><TouchableOpacity style={dkd_styles.smallButton} onPress={() => adminSetUserRole(item.dkd_user_id, 'master')}><Text style={dkd_styles.smallButtonText}>Usta Yetkisi Ver</Text></TouchableOpacity></View></View>)}
-              </View>
-            ) : null}
+            {activePanel === 'admin' && canAdmin ? <AdminPanel adminApplications={adminApplications} adminUsers={adminUsers} adminApproveApplication={adminApproveApplication} adminRejectApplication={adminRejectApplication} adminSetUserRole={adminSetUserRole} /> : null}
 
             <View style={dkd_styles.footer}><Text style={dkd_styles.body}>{status}</Text></View>
           </ScrollView>
@@ -654,6 +527,18 @@ export default function DkdDraBornStyleApp() {
       </SafeAreaView>
     </SafeAreaProvider>
   );
+}
+
+function CustomerPanel(props: any) {
+  return <View style={dkd_styles.card}><Text style={dkd_styles.title}>Müşteri Paneli</Text><Text style={dkd_styles.body}>Müşteri hesabın hazır. İşletme veya usta yetkisi için admin onayına başvuru gönderebilirsin.</Text>{!props.canBusiness ? <><Text style={dkd_styles.sectionHeading}>İşletme Başvurusu</Text><DkdInput label="Salon" value={props.businessName} onChangeText={props.setBusinessName} placeholder="Salon adı" /><DkdInput label="Telefon" value={props.businessPhone} onChangeText={props.setBusinessPhone} placeholder="Telefon" keyboardType="phone-pad" /><DkdInput label="Adres" value={props.businessAddress} onChangeText={props.setBusinessAddress} placeholder="Adres" /><DkdInput label="Not" value={props.businessApplicationNote} onChangeText={props.setBusinessApplicationNote} placeholder="Kısa başvuru notu" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={props.sendBusinessApplication}><Text style={dkd_styles.primaryText}>İşletme Başvurusunu Gönder</Text></TouchableOpacity></> : <DkdMiniRow title="İşletme yetkisi" subtitle="Bu hesapta işletme paneli erişimi aktif." />}{!props.canMaster ? <><Text style={dkd_styles.sectionHeading}>Usta Başvurusu</Text><DkdInput label="Ad Soyad" value={props.masterApplicantName} onChangeText={props.setMasterApplicantName} placeholder="Ad soyad" /><DkdInput label="Uzmanlık" value={props.masterSpecialty} onChangeText={props.setMasterSpecialty} placeholder="Saç, sakal, boya" /><DkdInput label="Telefon" value={props.masterPhone} onChangeText={props.setMasterPhone} placeholder="Telefon" keyboardType="phone-pad" /><DkdInput label="Not" value={props.selfMasterNote} onChangeText={props.setSelfMasterNote} placeholder="Kısa başvuru notu" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={props.sendSelfMasterApplication}><Text style={dkd_styles.primaryText}>Usta Başvurusunu Gönder</Text></TouchableOpacity></> : <DkdMiniRow title="Usta yetkisi" subtitle="Bu hesapta usta paneli erişimi aktif." />}</View>;
+}
+
+function BusinessPanel(props: any) {
+  return <View style={dkd_styles.card}><Text style={dkd_styles.title}>İşletme Paneli</Text><Text style={dkd_styles.body}>İşletme yetkin aktif. Salon bilgisi, usta listesi, hizmet fiyatı ve süre yönetimi burada.</Text>{dkd_sections.map((section) => <View key={section.key}><DkdSectionButton section={section} active={props.activeSection === section.key} onPress={() => props.setActiveSection(props.activeSection === section.key ? null : section.key)} count={section.key === 'team' ? props.masters.length : section.key === 'services' ? props.services.length : section.key === 'business' ? props.businessId ? 1 : 0 : 0} />{props.activeSection === section.key ? <View style={dkd_styles.detailBox}>{section.key === 'business' ? <><DkdInput label="Salon" value={props.businessName} onChangeText={props.setBusinessName} placeholder="Salon adı" /><DkdInput label="Açıklama" value={props.businessDescription} onChangeText={props.setBusinessDescription} placeholder="Kısa açıklama" /><DkdInput label="Telefon" value={props.businessPhone} onChangeText={props.setBusinessPhone} placeholder="Telefon" keyboardType="phone-pad" /><DkdInput label="Adres" value={props.businessAddress} onChangeText={props.setBusinessAddress} placeholder="Adres" /><DkdInput label="Saat" value={props.businessHours} onChangeText={props.setBusinessHours} placeholder="Çalışma saatleri" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={props.saveBusiness}><Text style={dkd_styles.primaryText}>Salon Bilgilerini Kaydet</Text></TouchableOpacity></> : null}{section.key === 'team' ? <><DkdInput label="Usta" value={props.masterName} onChangeText={props.setMasterName} placeholder="Ad soyad" /><DkdInput label="Uzmanlık" value={props.masterSpecialty} onChangeText={props.setMasterSpecialty} placeholder="Saç, sakal, boya" /><DkdInput label="Telefon" value={props.masterPhone} onChangeText={props.setMasterPhone} placeholder="Telefon" keyboardType="phone-pad" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={props.saveMaster}><Text style={dkd_styles.primaryText}>Usta Listeye Ekle</Text></TouchableOpacity>{props.masters.map((item: DkdMaster) => <DkdMiniRow key={item.dkd_master_id} title={item.dkd_master_name} subtitle={item.dkd_master_specialty || 'Uzmanlık eklenmedi'} />)}</> : null}{section.key === 'services' ? <><DkdInput label="Hizmet" value={props.serviceTitle} onChangeText={props.setServiceTitle} placeholder="Saç kesim" /><DkdInput label="Fiyat" value={props.servicePrice} onChangeText={props.setServicePrice} placeholder="250" keyboardType="numeric" /><DkdInput label="Süre" value={props.serviceDuration} onChangeText={props.setServiceDuration} placeholder="30" keyboardType="numeric" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={props.saveService}><Text style={dkd_styles.primaryText}>Hizmet Ekle</Text></TouchableOpacity>{props.services.map((item: DkdService) => <DkdMiniRow key={item.dkd_service_id} title={item.dkd_service_title} subtitle={`${dkd_price(item.dkd_price_cents)} • ${item.dkd_duration_minutes} dk`} />)}</> : null}{section.key === 'master_request' ? <><DkdInput label="E-posta" value={props.masterApplicantEmail} onChangeText={props.setMasterApplicantEmail} placeholder="Usta olacak kayıtlı kullanıcı e-postası" /><DkdInput label="Ad Soyad" value={props.masterApplicantName} onChangeText={props.setMasterApplicantName} placeholder="Usta adı soyadı" /><DkdInput label="Uzmanlık" value={props.masterSpecialty} onChangeText={props.setMasterSpecialty} placeholder="Saç, sakal, boya" /><DkdInput label="Telefon" value={props.masterPhone} onChangeText={props.setMasterPhone} placeholder="Telefon" keyboardType="phone-pad" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={props.sendMasterApplication}><Text style={dkd_styles.primaryText}>Usta Yetkisini Admin Onayına Gönder</Text></TouchableOpacity></> : null}</View> : null}</View>)}</View>;
+}
+
+function AdminPanel(props: any) {
+  return <View style={dkd_styles.card}><Text style={dkd_styles.title}>Admin Paneli</Text><Text style={dkd_styles.body}>Kayıtlı kullanıcıları işletme sahibi veya usta olarak işaretle; başvuruları onayla/reddet.</Text><Text style={dkd_styles.sectionHeading}>Başvurular</Text>{props.adminApplications.length === 0 ? <DkdMiniRow title="Başvuru yok" subtitle="Yeni başvurular burada listelenecek." /> : null}{props.adminApplications.map((app: DkdRoleApplication) => <View key={app.dkd_application_id} style={dkd_styles.adminBox}><Text style={dkd_styles.miniTitle}>{dkd_role_meta[app.dkd_requested_role].icon} {dkd_role_meta[app.dkd_requested_role].title} • {app.dkd_status}</Text><Text style={dkd_styles.miniSub}>{app.dkd_applicant_display_name || app.dkd_target_email || 'Başvuru'}</Text><View style={dkd_styles.actionRow}><TouchableOpacity style={dkd_styles.smallButton} onPress={() => props.adminApproveApplication(app)}><Text style={dkd_styles.smallButtonText}>Onayla</Text></TouchableOpacity><TouchableOpacity style={dkd_styles.smallButtonGhost} onPress={() => props.adminRejectApplication(app)}><Text style={dkd_styles.smallButtonGhostText}>Reddet</Text></TouchableOpacity></View></View>)}<Text style={dkd_styles.sectionHeading}>Kayıtlı Kullanıcılar</Text>{props.adminUsers.map((item: DkdUserProfile) => <View key={item.dkd_user_id} style={dkd_styles.adminBox}><Text style={dkd_styles.miniTitle}>{item.dkd_display_name || item.dkd_user_id}</Text><Text style={dkd_styles.miniSub}>Rol kaynağı: dkd_user_role_access</Text><View style={dkd_styles.actionRow}><TouchableOpacity style={dkd_styles.smallButton} onPress={() => props.adminSetUserRole(item.dkd_user_id, 'business')}><Text style={dkd_styles.smallButtonText}>İşletme Yetkisi Ver</Text></TouchableOpacity><TouchableOpacity style={dkd_styles.smallButton} onPress={() => props.adminSetUserRole(item.dkd_user_id, 'master')}><Text style={dkd_styles.smallButtonText}>Usta Yetkisi Ver</Text></TouchableOpacity><TouchableOpacity style={dkd_styles.smallButtonGhost} onPress={() => props.adminSetUserRole(item.dkd_user_id, 'admin')}><Text style={dkd_styles.smallButtonGhostText}>Admin Yetkisi Ver</Text></TouchableOpacity></View></View>)}</View>;
 }
 
 function DkdPanelButton(props: { title: string; active: boolean; onPress: () => void }) {
@@ -680,21 +565,7 @@ function DkdMiniRow(props: { title: string; subtitle: string }) {
 const dkd_styles = StyleSheet.create({
   mockupRoot: { flex: 1, backgroundColor: '#0A0E19' },
   mockupImage: { flex: 1, width: '100%', height: '100%' },
-  mockupInput: {
-    position: 'absolute',
-    left: '27%',
-    width: '55%',
-    height: '6.4%',
-    backgroundColor: 'rgba(0,0,0,0.01)',
-    color: '#FFFFFF',
-    fontSize: 18,
-    lineHeight: 22,
-    fontWeight: '800',
-    paddingHorizontal: 8,
-    paddingTop: 8,
-    paddingBottom: 0,
-    textAlignVertical: 'center'
-  },
+  mockupInput: { position: 'absolute', left: '27%', width: '55%', height: '6.4%', backgroundColor: 'rgba(0,0,0,0.01)', color: '#FFFFFF', fontSize: 18, lineHeight: 22, fontWeight: '800', paddingHorizontal: 8, paddingTop: 8, paddingBottom: 0, textAlignVertical: 'center' },
   mockupEmailInput: { top: '48.8%' },
   mockupPasswordInput: { top: '58.6%' },
   mockupButton: { position: 'absolute', left: '19%', width: '62%', height: '7.1%', backgroundColor: 'rgba(0,0,0,0.01)', borderRadius: 18 },
