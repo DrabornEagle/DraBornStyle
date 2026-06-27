@@ -48,6 +48,12 @@ export function DkdTransactionPanel(props: Props) {
 
   const activeTransaction = props.transactions.find((item) => item.id === activeId);
 
+  function startSelectedService() {
+    const nextServiceId = serviceId || props.services[0]?.dkd_service_id;
+    if (!nextServiceId) return;
+    props.onStart(nextServiceId, masterId || props.masters[0]?.dkd_master_id || null);
+  }
+
   return (
     <View style={styles.card}>
       <Text style={styles.title}>v0.2 İşlem & Ödeme</Text>
@@ -70,7 +76,7 @@ export function DkdTransactionPanel(props: Props) {
         </TouchableOpacity>
       ))}
 
-      <TouchableOpacity style={styles.button} onPress={() => props.onStart(serviceId || props.services[0]?.dkd_service_id, masterId || props.masters[0]?.dkd_master_id)}>
+      <TouchableOpacity style={styles.button} onPress={startSelectedService}>
         <Text style={styles.buttonText}>İşleme Başla</Text>
       </TouchableOpacity>
 
