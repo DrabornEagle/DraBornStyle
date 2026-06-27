@@ -4,7 +4,7 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "postinstall": "node scripts/dkd_make_login_asset.js",
+    "postinstall": "node scripts/dkd_make_login_asset.js && node scripts/dkd_apply_v02_to_app.js",
     "drabornstyle_start": "expo start",
     "drabornstyle_android": "expo start --android",
     "drabornstyle_web": "expo start --web",
