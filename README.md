@@ -30,12 +30,52 @@ DraBornStyle v0.1, berber / kuaför / salon işletmeleri için mobil uygulama ba
 | ✅ | v0.0.22 | Hizmet ekleme, hizmet fiyatı ve hizmet süresi ekranı eklendi |
 | ✅ | v0.0.23 | Performans için kategori / akordeon salon paneli eklendi |
 | ✅ | v0.0.24 | Tek giriş/kayıt, işletme başvurusu, usta başvurusu, admin rol onay sistemi ve mockup login ekranı eklendi |
-| 🟡 | v0.0.25 | v0.1 mobil test ve düzeltme turu başladı |
+| 🟡 | v0.0.25 | Çoklu rol/yetki altyapısı eklendi, v0.1 mobil test ve düzeltme turu devam ediyor |
 | ⬜ | v0.1 | v0.1 final tamamlanacak ve v0.2 hazırlığına geçilecek |
+
+## dkd_v0_0_25_coklu_rol_karari
+
+v0.0.25 içinde rol mantığı tek rol sisteminden çoklu yetki sistemine genişletildi.
+
+Yeni kararlar:
+
+- Her kullanıcı kayıt olduktan sonra standart `Müşteri` hesabıyla başlar.
+- Bir kullanıcı ayrıca `İşletme Sahibi` başvurusu yapabilir.
+- Bir kullanıcı ayrıca `Usta` başvurusu yapabilir.
+- İşletme ve Usta başvuruları Admin onayına gider.
+- Admin onayladıktan sonra kullanıcı ilgili panele erişebilir.
+- Bir kullanıcı aynı anda hem `Müşteri`, hem `İşletme Sahibi`, hem de `Usta` yetkisine sahip olabilir.
+- Admin kullanıcı listesinden seçtiği kullanıcıya `İşletme Sahibi` veya `Usta` yetkisi verebilir.
+- Admin test amacıyla hem işletme sahibi hem de usta yetkilerine sahip kabul edilir.
+- Eski `dkd_user_profiles.dkd_role` alanı geriye uyumluluk için korunur.
+- Yeni gerçek yetki kaynağı `dkd_user_role_access` tablosudur.
+
+Yeni Supabase tablosu:
+
+- `dkd_user_role_access`
+
+Bu tablo kullanıcının sahip olduğu aktif rolleri ayrı ayrı tutar.
+
+Örnek:
+
+```text
+user@example.com
+- customer ✅
+- business ✅
+- master ✅
+```
+
+Admin için kural:
+
+```text
+admin ✅
+Business panel test erişimi ✅
+Master panel test erişimi ✅
+```
 
 ## dkd_v0_0_25_final_test_turu
 
-v0.0.25 yeni büyük özellik ekleme sürümü değildir. Bu adım v0.1 final öncesi son mobil test, hata düzeltme ve temizlik turudur.
+v0.0.25 yeni büyük özellik ekleme sürümü değildir. Bu adım v0.1 final öncesi son mobil test, hata düzeltme ve temizlik turudur. Ancak çoklu rol kararı v0.1 güvenliği için gerekli olduğu için bu turda backend altyapısına eklendi.
 
 Test edilecekler:
 
@@ -44,9 +84,12 @@ Test edilecekler:
 - `Giriş Yap` ve `Kayıt Ol` görünmez tıklama alanları doğru çalışıyor mu?
 - Yeni kullanıcı otomatik `Müşteri` rolüyle açılıyor mu?
 - Müşteri işletme başvurusu gönderebiliyor mu?
+- Müşteri usta başvurusu gönderebiliyor mu?
 - Başvuru durumu `pending / approved / rejected` olarak görünüyor mu?
 - Admin başvuruları görebiliyor, onaylayabiliyor ve reddedebiliyor mu?
-- Admin kayıtlı kullanıcıyı `İşletme Sahibi` veya `Usta` olarak işaretleyebiliyor mu?
+- Admin kayıtlı kullanıcıya `İşletme Sahibi` veya `Usta` yetkisi verebiliyor mu?
+- Kullanıcı hem işletme paneline hem usta paneline ayrı ayrı erişebiliyor mu?
+- Admin kendi hesabında işletme ve usta test panellerine erişebiliyor mu?
 - İşletme Sahibi panelinde salon bilgisi, usta listesi, hizmet fiyatı ve hizmet süresi çalışıyor mu?
 - İşletme panelinden usta yetki başvurusu admin onayına gönderilebiliyor mu?
 - Usta rolü onaylandıktan sonra Usta Paneli açılıyor mu?
@@ -114,6 +157,7 @@ v0.1 finalde eksiksiz yapılacaklar:
 - İşletme başvuru sistemi
 - Usta başvuru sistemi
 - Admin rol onay sistemi
+- Çoklu rol/yetki sistemi
 - İşletme oluşturma
 - İşletme profili
 - İşletme adı, logo, kapak görseli altyapısı
