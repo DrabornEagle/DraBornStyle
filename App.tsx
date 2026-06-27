@@ -1,8 +1,9 @@
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ImageBackground, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
+import { dkd_login_mockup_base64 } from './src/dkd_assets/dkd_login_mockup_base64';
 import { dkd_is_supabase_env_ready, dkd_supabase_client } from './src/dkd_config/dkd_supabase_client';
 
 type DkdAuthMode = 'login' | 'signup';
@@ -249,14 +250,14 @@ export default function DkdDraBornStyleApp() {
     setServices((res.data ?? []) as DkdService[]);
   }
 
-  async function loginOrSignup() {
+  async function loginOrSignup(nextAuthMode: DkdAuthMode = authMode) {
     const cleanEmail = email.trim().toLowerCase();
     if (!cleanEmail || password.length < 6) {
       setStatus('E-posta ve en az 6 karakter şifre gir.');
       return;
     }
     setLoading(true);
-    const res = authMode === 'login'
+    const res = nextAuthMode === 'login'
       ? await dkd_supabase_client.auth.signInWithPassword({ email: cleanEmail, password })
       : await dkd_supabase_client.auth.signUp({ email: cleanEmail, password });
     setLoading(false);
@@ -478,6 +479,39 @@ export default function DkdDraBornStyleApp() {
 
   const activeRole = role ? dkd_role_meta[role] : null;
 
+  if (!userEmail) {
+    return (
+      <SafeAreaProvider>
+        <View style={dkd_styles.mockupRoot}>
+          <ImageBackground
+            source={{ uri: `data:image/jpeg;base64,${dkd_login_mockup_base64}` }}
+            resizeMode="stretch"
+            style={dkd_styles.mockupImage}
+          >
+            <TextInput
+              value={email}
+              onChangeText={setEmail}
+              autoCapitalize="none"
+              keyboardType="email-address"
+              placeholder=""
+              style={[dkd_styles.mockupInput, dkd_styles.mockupEmailInput]}
+            />
+            <TextInput
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry
+              placeholder=""
+              style={[dkd_styles.mockupInput, dkd_styles.mockupPasswordInput]}
+            />
+            <TouchableOpacity activeOpacity={0.8} style={[dkd_styles.mockupButton, dkd_styles.mockupLoginButton]} onPress={() => loginOrSignup('login')} disabled={loading} />
+            <TouchableOpacity activeOpacity={0.8} style={[dkd_styles.mockupButton, dkd_styles.mockupSignupButton]} onPress={() => loginOrSignup('signup')} disabled={loading} />
+            {status !== 'Barber Studio panel hazır.' ? <Text style={dkd_styles.mockupStatus}>{status}</Text> : null}
+          </ImageBackground>
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
   return (
     <SafeAreaProvider>
       <SafeAreaView style={dkd_styles.safe}>
@@ -504,31 +538,17 @@ export default function DkdDraBornStyleApp() {
             </View>
 
             <View style={dkd_styles.card}>
-              {userEmail ? (
-                <View>
-                  <View style={dkd_styles.cardTitleRow}><Text style={dkd_styles.title}>Hesap Merkezi</Text><Text style={dkd_styles.badge}>{activeRole?.icon} {activeRole?.title ?? 'Müşteri'}</Text></View>
-                  <Text style={dkd_styles.accent}>{userEmail}</Text>
-                  <Text style={dkd_styles.body}>Giriş/kayıt tek tiptir. İşletme ve usta yetkileri admin onayından sonra açılır.</Text>
-                  <TouchableOpacity style={dkd_styles.secondaryButton} onPress={logout}><Text style={dkd_styles.secondaryText}>Çıkış Yap</Text></TouchableOpacity>
-                </View>
-              ) : (
-                <View>
-                  <Text style={dkd_styles.title}>Giriş / Kayıt</Text>
-                  <Text style={dkd_styles.body}>Tek hesapla başla. İlk girişte hesap otomatik müşteri olarak açılır.</Text>
-                  <View style={dkd_styles.tabs}>
-                    <TouchableOpacity style={authMode === 'login' ? dkd_styles.tabActive : dkd_styles.tab} onPress={() => setAuthMode('login')}><Text style={authMode === 'login' ? dkd_styles.tabActiveText : dkd_styles.tabText}>Giriş</Text></TouchableOpacity>
-                    <TouchableOpacity style={authMode === 'signup' ? dkd_styles.tabActive : dkd_styles.tab} onPress={() => setAuthMode('signup')}><Text style={authMode === 'signup' ? dkd_styles.tabActiveText : dkd_styles.tabText}>Kayıt</Text></TouchableOpacity>
-                  </View>
-                  <DkdInput label="E-posta" value={email} onChangeText={setEmail} placeholder="ornek@mail.com" />
-                  <DkdInput label="Şifre" value={password} onChangeText={setPassword} placeholder="En az 6 karakter" secureTextEntry />
-                  <TouchableOpacity style={dkd_styles.primaryButton} onPress={loginOrSignup} disabled={loading}><Text style={dkd_styles.primaryText}>{loading ? 'Bekle...' : 'Devam Et'}</Text></TouchableOpacity>
-                </View>
-              )}
+              <View>
+                <View style={dkd_styles.cardTitleRow}><Text style={dkd_styles.title}>Hesap Merkezi</Text><Text style={dkd_styles.badge}>{activeRole?.icon} {activeRole?.title ?? 'Müşteri'}</Text></View>
+                <Text style={dkd_styles.accent}>{userEmail}</Text>
+                <Text style={dkd_styles.body}>Giriş/kayıt tek tiptir. İşletme ve usta yetkileri admin onayından sonra açılır.</Text>
+                <TouchableOpacity style={dkd_styles.secondaryButton} onPress={logout}><Text style={dkd_styles.secondaryText}>Çıkış Yap</Text></TouchableOpacity>
+              </View>
             </View>
 
-            {userEmail && role ? <View style={dkd_styles.cardCompact}><Text style={dkd_styles.sectionHeading}>Yetki Özeti</Text>{dkd_permissions[role].map((item) => <DkdMiniRow key={item} title="Aktif" subtitle={item} />)}</View> : null}
+            {role ? <View style={dkd_styles.cardCompact}><Text style={dkd_styles.sectionHeading}>Yetki Özeti</Text>{dkd_permissions[role].map((item) => <DkdMiniRow key={item} title="Aktif" subtitle={item} />)}</View> : null}
 
-            {userEmail && role === 'customer' ? (
+            {role === 'customer' ? (
               <View style={dkd_styles.card}>
                 <Text style={dkd_styles.title}>İşletme Başvurusu</Text>
                 <Text style={dkd_styles.body}>Salon sahibiysen başvurunu gönder. Admin onayladıktan sonra işletme panelin açılır.</Text>
@@ -540,17 +560,29 @@ export default function DkdDraBornStyleApp() {
               </View>
             ) : null}
 
-            {userEmail && applications.length > 0 ? <View style={dkd_styles.cardCompact}><Text style={dkd_styles.sectionHeading}>Başvuru Durumu</Text>{applications.map((item) => <DkdMiniRow key={item.dkd_application_id} title={`${dkd_role_meta[item.dkd_requested_role].title} • ${item.dkd_status}`} subtitle={item.dkd_applicant_display_name || item.dkd_target_email || 'Başvuru'} />)}</View> : null}
+            {applications.length > 0 ? <View style={dkd_styles.cardCompact}><Text style={dkd_styles.sectionHeading}>Başvuru Durumu</Text>{applications.map((item) => <DkdMiniRow key={item.dkd_application_id} title={`${dkd_role_meta[item.dkd_requested_role].title} • ${item.dkd_status}`} subtitle={item.dkd_applicant_display_name || item.dkd_target_email || 'Başvuru'} />)}</View> : null}
 
-            {userEmail && role === 'business' ? (
+            {role === 'business' ? (
               <View style={dkd_styles.card}>
                 <Text style={dkd_styles.title}>Salon Kurulumu</Text>
                 <Text style={dkd_styles.body}>İşletme paneli admin onayıyla açılır. Usta yetkisi de buradan admin onayına gönderilir.</Text>
-                {dkd_sections.map((section) => <View key={section.key}><DkdSectionButton section={section} active={activeSection === section.key} onPress={() => setActiveSection(activeSection === section.key ? null : section.key)} count={section.key === 'team' ? masters.length : section.key === 'services' ? services.length : section.key === 'business' ? businessId ? 1 : 0 : 0} />{activeSection === section.key ? <View style={dkd_styles.detailBox}>{section.key === 'business' ? <><DkdInput label="Salon" value={businessName} onChangeText={setBusinessName} placeholder="Salon adı" /><DkdInput label="Açıklama" value={businessDescription} onChangeText={setBusinessDescription} placeholder="Kısa açıklama" /><DkdInput label="Telefon" value={businessPhone} onChangeText={setBusinessPhone} placeholder="Telefon" keyboardType="phone-pad" /><DkdInput label="Adres" value={businessAddress} onChangeText={setBusinessAddress} placeholder="Adres" /><DkdInput label="Saat" value={businessHours} onChangeText={setBusinessHours} placeholder="Çalışma saatleri" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={saveBusiness}><Text style={dkd_styles.primaryText}>Salon Bilgilerini Kaydet</Text></TouchableOpacity></> : null}{section.key === 'team' ? <><DkdInput label="Usta" value={masterName} onChangeText={setMasterName} placeholder="Ad soyad" /><DkdInput label="Uzmanlık" value={masterSpecialty} onChangeText={setMasterSpecialty} placeholder="Saç, sakal, boya" /><DkdInput label="Telefon" value={masterPhone} onChangeText={setMasterPhone} placeholder="Telefon" keyboardType="phone-pad" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={saveMaster}><Text style={dkd_styles.primaryText}>Usta Listeye Ekle</Text></TouchableOpacity>{masters.map((item) => <DkdMiniRow key={item.dkd_master_id} title={item.dkd_master_name} subtitle={item.dkd_master_specialty || 'Uzmanlık eklenmedi'} />)}</> : null}{section.key === 'services' ? <><DkdInput label="Hizmet" value={serviceTitle} onChangeText={setServiceTitle} placeholder="Saç kesim" /><DkdInput label="Fiyat" value={servicePrice} onChangeText={setServicePrice} placeholder="250" keyboardType="numeric" /><DkdInput label="Süre" value={serviceDuration} onChangeText={setServiceDuration} placeholder="30" keyboardType="numeric" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={saveService}><Text style={dkd_styles.primaryText}>Hizmet Ekle</Text></TouchableOpacity>{services.map((item) => <DkdMiniRow key={item.dkd_service_id} title={item.dkd_service_title} subtitle={`${dkd_price(item.dkd_price_cents)} • ${item.dkd_duration_minutes} dk`} />)}</> : null}{section.key === 'master_request' ? <><DkdInput label="E-posta" value={masterApplicantEmail} onChangeText={setMasterApplicantEmail} placeholder="Usta olacak kayıtlı kullanıcı e-postası" /><DkdInput label="Ad Soyad" value={masterApplicantName} onChangeText={setMasterApplicantName} placeholder="Usta adı soyadı" /><DkdInput label="Uzmanlık" value={masterSpecialty} onChangeText={setMasterSpecialty} placeholder="Saç, sakal, boya" /><DkdInput label="Telefon" value={masterPhone} onChangeText={setMasterPhone} placeholder="Telefon" keyboardType="phone-pad" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={sendMasterApplication}><Text style={dkd_styles.primaryText}>Usta Yetkisini Admin Onayına Gönder</Text></TouchableOpacity></> : null}</View> : null}</View>)}
+                {dkd_sections.map((section) => (
+                  <View key={section.key}>
+                    <DkdSectionButton section={section} active={activeSection === section.key} onPress={() => setActiveSection(activeSection === section.key ? null : section.key)} count={section.key === 'team' ? masters.length : section.key === 'services' ? services.length : section.key === 'business' ? businessId ? 1 : 0 : 0} />
+                    {activeSection === section.key ? (
+                      <View style={dkd_styles.detailBox}>
+                        {section.key === 'business' ? <><DkdInput label="Salon" value={businessName} onChangeText={setBusinessName} placeholder="Salon adı" /><DkdInput label="Açıklama" value={businessDescription} onChangeText={setBusinessDescription} placeholder="Kısa açıklama" /><DkdInput label="Telefon" value={businessPhone} onChangeText={setBusinessPhone} placeholder="Telefon" keyboardType="phone-pad" /><DkdInput label="Adres" value={businessAddress} onChangeText={setBusinessAddress} placeholder="Adres" /><DkdInput label="Saat" value={businessHours} onChangeText={setBusinessHours} placeholder="Çalışma saatleri" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={saveBusiness}><Text style={dkd_styles.primaryText}>Salon Bilgilerini Kaydet</Text></TouchableOpacity></> : null}
+                        {section.key === 'team' ? <><DkdInput label="Usta" value={masterName} onChangeText={setMasterName} placeholder="Ad soyad" /><DkdInput label="Uzmanlık" value={masterSpecialty} onChangeText={setMasterSpecialty} placeholder="Saç, sakal, boya" /><DkdInput label="Telefon" value={masterPhone} onChangeText={setMasterPhone} placeholder="Telefon" keyboardType="phone-pad" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={saveMaster}><Text style={dkd_styles.primaryText}>Usta Listeye Ekle</Text></TouchableOpacity>{masters.map((item) => <DkdMiniRow key={item.dkd_master_id} title={item.dkd_master_name} subtitle={item.dkd_master_specialty || 'Uzmanlık eklenmedi'} />)}</> : null}
+                        {section.key === 'services' ? <><DkdInput label="Hizmet" value={serviceTitle} onChangeText={setServiceTitle} placeholder="Saç kesim" /><DkdInput label="Fiyat" value={servicePrice} onChangeText={setServicePrice} placeholder="250" keyboardType="numeric" /><DkdInput label="Süre" value={serviceDuration} onChangeText={setServiceDuration} placeholder="30" keyboardType="numeric" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={saveService}><Text style={dkd_styles.primaryText}>Hizmet Ekle</Text></TouchableOpacity>{services.map((item) => <DkdMiniRow key={item.dkd_service_id} title={item.dkd_service_title} subtitle={`${dkd_price(item.dkd_price_cents)} • ${item.dkd_duration_minutes} dk`} />)}</> : null}
+                        {section.key === 'master_request' ? <><DkdInput label="E-posta" value={masterApplicantEmail} onChangeText={setMasterApplicantEmail} placeholder="Usta olacak kayıtlı kullanıcı e-postası" /><DkdInput label="Ad Soyad" value={masterApplicantName} onChangeText={setMasterApplicantName} placeholder="Usta adı soyadı" /><DkdInput label="Uzmanlık" value={masterSpecialty} onChangeText={setMasterSpecialty} placeholder="Saç, sakal, boya" /><DkdInput label="Telefon" value={masterPhone} onChangeText={setMasterPhone} placeholder="Telefon" keyboardType="phone-pad" /><TouchableOpacity style={dkd_styles.primaryButton} onPress={sendMasterApplication}><Text style={dkd_styles.primaryText}>Usta Yetkisini Admin Onayına Gönder</Text></TouchableOpacity></> : null}
+                      </View>
+                    ) : null}
+                  </View>
+                ))}
               </View>
             ) : null}
 
-            {userEmail && role === 'admin' ? (
+            {role === 'admin' ? (
               <View style={dkd_styles.card}>
                 <Text style={dkd_styles.title}>Admin Paneli</Text>
                 <Text style={dkd_styles.body}>Kayıtlı kullanıcıları işletme sahibi veya usta olarak işaretle; başvuruları onayla/reddet.</Text>
@@ -561,7 +593,7 @@ export default function DkdDraBornStyleApp() {
               </View>
             ) : null}
 
-            {userEmail && role === 'master' ? <View style={dkd_styles.card}><Text style={dkd_styles.title}>Usta Paneli</Text><Text style={dkd_styles.body}>Usta yetkin admin tarafından açıldı. Detaylı takvim ve işlem ekranı v0.2+ adımlarında gelecek.</Text></View> : null}
+            {role === 'master' ? <View style={dkd_styles.card}><Text style={dkd_styles.title}>Usta Paneli</Text><Text style={dkd_styles.body}>Usta yetkin admin tarafından açıldı. Detaylı takvim ve işlem ekranı v0.2+ adımlarında gelecek.</Text></View> : null}
             <View style={dkd_styles.footer}><Text style={dkd_styles.body}>{status}</Text></View>
           </ScrollView>
         </LinearGradient>
@@ -588,6 +620,15 @@ function DkdMiniRow(props: { title: string; subtitle: string }) {
 }
 
 const dkd_styles = StyleSheet.create({
+  mockupRoot: { flex: 1, backgroundColor: '#0A0E19' },
+  mockupImage: { flex: 1, width: '100%', height: '100%' },
+  mockupInput: { position: 'absolute', left: '27%', width: '55%', height: '6.4%', backgroundColor: 'rgba(0,0,0,0.01)', color: '#FFFFFF', fontSize: 18, fontWeight: '800', paddingHorizontal: 8, paddingVertical: 0 },
+  mockupEmailInput: { top: '42.9%' },
+  mockupPasswordInput: { top: '55.7%' },
+  mockupButton: { position: 'absolute', left: '19%', width: '62%', height: '7.1%', backgroundColor: 'rgba(0,0,0,0.01)', borderRadius: 18 },
+  mockupLoginButton: { top: '68.5%' },
+  mockupSignupButton: { top: '77.4%' },
+  mockupStatus: { position: 'absolute', left: '12%', right: '12%', bottom: '3%', color: '#FFFFFF', backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: 12, padding: 10, textAlign: 'center', fontSize: 13, fontWeight: '800', overflow: 'hidden' },
   safe: { flex: 1, backgroundColor: '#71857E' },
   bg: { flex: 1 },
   screen: { padding: 18, paddingTop: 24, paddingBottom: 44 },
