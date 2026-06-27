@@ -5,9 +5,9 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import {
   BadgeDollarSign,
   Building2,
+  ChevronDown,
+  ChevronRight,
   Clock3,
-  ImagePlus,
-  ListPlus,
   LockKeyhole,
   LogOut,
   Mail,
@@ -28,13 +28,14 @@ import { dkd_is_supabase_env_ready, dkd_supabase_client } from './src/dkd_config
 
 type Dkd_AuthMode = 'login' | 'signup';
 type Dkd_RoleKey = 'customer' | 'business' | 'master' | 'admin';
-type Dkd_IconComponent = React.ComponentType<{ color?: string; size?: number; strokeWidth?: number }>;
+type Dkd_SetupSection = 'business' | 'team' | 'services';
+type Dkd_Icon = React.ComponentType<{ color?: string; size?: number; strokeWidth?: number }>;
 
 type Dkd_RoleOption = {
-  dkd_key: Dkd_RoleKey;
-  dkd_title: string;
-  dkd_caption: string;
-  dkd_icon: Dkd_IconComponent;
+  key: Dkd_RoleKey;
+  title: string;
+  caption: string;
+  icon: Dkd_Icon;
 };
 
 type Dkd_MasterItem = {
@@ -42,23 +43,27 @@ type Dkd_MasterItem = {
   dkd_master_name: string;
   dkd_master_specialty?: string | null;
   dkd_master_phone?: string | null;
-  dkd_bio?: string | null;
 };
 
 type Dkd_ServiceItem = {
   dkd_service_id: string;
   dkd_service_title: string;
-  dkd_service_description?: string | null;
   dkd_price_cents: number;
   dkd_duration_minutes: number;
 };
 
 const dkd_role_options: Dkd_RoleOption[] = [
-  { dkd_key: 'customer', dkd_title: 'Müşteri', dkd_caption: 'Randevu al, işletmeleri keşfet, hizmetleri görüntüle.', dkd_icon: UserRound },
-  { dkd_key: 'business', dkd_title: 'İşletme Sahibi', dkd_caption: 'Salon profilini, ustaları, hizmetleri ve fiyatları yönet.', dkd_icon: Building2 },
-  { dkd_key: 'master', dkd_title: 'Usta', dkd_caption: 'Takvimini, işlemlerini ve günlük akışını takip et.', dkd_icon: Scissors },
-  { dkd_key: 'admin', dkd_title: 'Admin', dkd_caption: 'Tüm yönetim, onay ve platform kontrolünü tek panelde topla.', dkd_icon: ShieldCheck }
+  { key: 'customer', title: 'Müşteri', caption: 'Randevu ve salon keşfi.', icon: UserRound },
+  { key: 'business', title: 'İşletme Sahibi', caption: 'Salon, ekip, hizmet ve fiyat yönetimi.', icon: Building2 },
+  { key: 'master', title: 'Usta', caption: 'Kendi çalışma akışı ve takvimi.', icon: Scissors },
+  { key: 'admin', title: 'Admin', caption: 'Platform yönetimi ve kontrol.', icon: ShieldCheck }
 ];
+
+const dkd_section_titles: Record<Dkd_SetupSection, string> = {
+  business: 'Salon Bilgileri',
+  team: 'Ekip / Ustalar',
+  services: 'Hizmetler ve Fiyatlar'
+};
 
 function dkd_create_slug(dkd_value: string) {
   return dkd_value
@@ -72,100 +77,83 @@ function dkd_create_slug(dkd_value: string) {
     .replace(/ç/g, 'c')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
-    .slice(0, 46);
+    .slice(0, 44);
 }
 
-function dkd_price_text_to_cents(dkd_value: string) {
-  const dkd_normalized = dkd_value.replace(',', '.').replace(/[^0-9.]/g, '');
-  const dkd_number = Number(dkd_normalized);
-  if (!Number.isFinite(dkd_number) || dkd_number <= 0) {
-    return 0;
-  }
-  return Math.round(dkd_number * 100);
+function dkd_price_to_cents(dkd_value: string) {
+  const dkd_number = Number(dkd_value.replace(',', '.').replace(/[^0-9.]/g, ''));
+  return Number.isFinite(dkd_number) && dkd_number > 0 ? Math.round(dkd_number * 100) : 0;
 }
 
-function dkd_format_price(dkd_price_cents: number) {
-  return `${(dkd_price_cents / 100).toFixed(0)} TL`;
+function dkd_format_price(dkd_cents: number) {
+  return `${Math.round(dkd_cents / 100)} TL`;
 }
 
 export default function Dkd_DraBornStyleApp() {
   const [dkd_auth_mode, dkd_set_auth_mode] = React.useState<Dkd_AuthMode>('login');
   const [dkd_email, dkd_set_email] = React.useState('');
   const [dkd_password, dkd_set_password] = React.useState('');
-  const [dkd_loading, dkd_set_loading] = React.useState(false);
-  const [dkd_status_text, dkd_set_status_text] = React.useState('Supabase bağlantısı hazır. E-posta ve şifre ile devam et.');
   const [dkd_user_email, dkd_set_user_email] = React.useState<string | null>(null);
   const [dkd_user_id, dkd_set_user_id] = React.useState<string | null>(null);
-  const [dkd_saved_role, dkd_set_saved_role] = React.useState<Dkd_RoleKey | null>(null);
-  const [dkd_role_loading, dkd_set_role_loading] = React.useState(false);
+  const [dkd_role, dkd_set_role] = React.useState<Dkd_RoleKey | null>(null);
+  const [dkd_status, dkd_set_status] = React.useState('Hazır. Hızlı ve sade salon akışı başladı.');
+  const [dkd_loading, dkd_set_loading] = React.useState(false);
+  const [dkd_active_section, dkd_set_active_section] = React.useState<Dkd_SetupSection | null>('business');
 
   const [dkd_business_id, dkd_set_business_id] = React.useState<string | null>(null);
   const [dkd_business_name, dkd_set_business_name] = React.useState('');
   const [dkd_business_description, dkd_set_business_description] = React.useState('');
   const [dkd_business_phone, dkd_set_business_phone] = React.useState('');
   const [dkd_business_address, dkd_set_business_address] = React.useState('');
-  const [dkd_business_hours, dkd_set_business_hours] = React.useState('Hafta içi 09:00 - 20:00');
-  const [dkd_business_loading, dkd_set_business_loading] = React.useState(false);
+  const [dkd_business_hours, dkd_set_business_hours] = React.useState('09:00 - 20:00');
 
-  const [dkd_master_team, dkd_set_master_team] = React.useState<Dkd_MasterItem[]>([]);
+  const [dkd_masters, dkd_set_masters] = React.useState<Dkd_MasterItem[]>([]);
   const [dkd_master_name, dkd_set_master_name] = React.useState('');
   const [dkd_master_specialty, dkd_set_master_specialty] = React.useState('');
   const [dkd_master_phone, dkd_set_master_phone] = React.useState('');
-  const [dkd_master_bio, dkd_set_master_bio] = React.useState('');
-  const [dkd_master_loading, dkd_set_master_loading] = React.useState(false);
 
-  const [dkd_service_list, dkd_set_service_list] = React.useState<Dkd_ServiceItem[]>([]);
+  const [dkd_services, dkd_set_services] = React.useState<Dkd_ServiceItem[]>([]);
   const [dkd_service_title, dkd_set_service_title] = React.useState('');
-  const [dkd_service_description, dkd_set_service_description] = React.useState('');
   const [dkd_service_price, dkd_set_service_price] = React.useState('');
   const [dkd_service_duration, dkd_set_service_duration] = React.useState('30');
-  const [dkd_service_loading, dkd_set_service_loading] = React.useState(false);
 
-  async function dkd_load_service_list(dkd_next_business_id: string | null) {
-    if (!dkd_next_business_id) {
-      dkd_set_service_list([]);
-      return;
-    }
+  React.useEffect(() => {
+    dkd_supabase_client.auth.getSession().then((dkd_response: any) => {
+      const dkd_user = dkd_response.data.session?.user ?? null;
+      dkd_set_user_email(dkd_user?.email ?? null);
+      dkd_set_user_id(dkd_user?.id ?? null);
+      dkd_load_all(dkd_user?.id ?? null);
+    });
 
-    const dkd_service_response = await dkd_supabase_client
-      .from('dkd_services')
-      .select('dkd_service_id, dkd_service_title, dkd_service_description, dkd_price_cents, dkd_duration_minutes')
-      .eq('dkd_business_id', dkd_next_business_id)
-      .eq('dkd_is_active', true)
-      .order('dkd_created_at', { ascending: false });
+    const dkd_subscription = dkd_supabase_client.auth.onAuthStateChange((_event: string, dkd_session: any) => {
+      const dkd_user = dkd_session?.user ?? null;
+      dkd_set_user_email(dkd_user?.email ?? null);
+      dkd_set_user_id(dkd_user?.id ?? null);
+      dkd_load_all(dkd_user?.id ?? null);
+    });
 
-    if (!dkd_service_response.error) {
-      dkd_set_service_list((dkd_service_response.data ?? []) as Dkd_ServiceItem[]);
-    }
-  }
+    return () => dkd_subscription.data.subscription.unsubscribe();
+  }, []);
 
-  async function dkd_load_master_team(dkd_next_business_id: string | null) {
-    if (!dkd_next_business_id) {
-      dkd_set_master_team([]);
-      return;
-    }
-
-    const dkd_master_response = await dkd_supabase_client
-      .from('dkd_master_profiles')
-      .select('dkd_master_id, dkd_master_name, dkd_master_specialty, dkd_master_phone, dkd_bio')
-      .eq('dkd_business_id', dkd_next_business_id)
-      .eq('dkd_is_active', true)
-      .order('dkd_created_at', { ascending: false });
-
-    if (!dkd_master_response.error) {
-      dkd_set_master_team((dkd_master_response.data ?? []) as Dkd_MasterItem[]);
-    }
-  }
-
-  async function dkd_load_business_profile(dkd_next_user_id: string | null) {
+  async function dkd_load_all(dkd_next_user_id: string | null) {
     if (!dkd_next_user_id) {
+      dkd_set_role(null);
       dkd_set_business_id(null);
-      dkd_set_master_team([]);
-      dkd_set_service_list([]);
+      dkd_set_masters([]);
+      dkd_set_services([]);
       return;
     }
 
-    const dkd_business_response = await dkd_supabase_client
+    const dkd_profile = await dkd_supabase_client
+      .from('dkd_user_profiles')
+      .select('dkd_role')
+      .eq('dkd_user_id', dkd_next_user_id)
+      .maybeSingle();
+
+    const dkd_next_role = dkd_profile.data?.dkd_role as Dkd_RoleKey | undefined;
+    dkd_set_role(dkd_next_role ?? null);
+
+    const dkd_business = await dkd_supabase_client
       .from('dkd_business_profiles')
       .select('dkd_business_id, dkd_business_name, dkd_business_description, dkd_business_phone, dkd_address_text, dkd_working_hours')
       .eq('dkd_owner_user_id', dkd_next_user_id)
@@ -173,147 +161,79 @@ export default function Dkd_DraBornStyleApp() {
       .limit(1)
       .maybeSingle();
 
-    if (dkd_business_response.data) {
-      const dkd_loaded_business_id = dkd_business_response.data.dkd_business_id ?? null;
-      dkd_set_business_id(dkd_loaded_business_id);
-      dkd_set_business_name(dkd_business_response.data.dkd_business_name ?? '');
-      dkd_set_business_description(dkd_business_response.data.dkd_business_description ?? '');
-      dkd_set_business_phone(dkd_business_response.data.dkd_business_phone ?? '');
-      dkd_set_business_address(dkd_business_response.data.dkd_address_text ?? '');
-      dkd_set_business_hours(dkd_business_response.data.dkd_working_hours?.dkd_summary ?? 'Hafta içi 09:00 - 20:00');
-      dkd_load_master_team(dkd_loaded_business_id);
-      dkd_load_service_list(dkd_loaded_business_id);
-    } else {
-      dkd_set_business_id(null);
-      dkd_set_master_team([]);
-      dkd_set_service_list([]);
+    const dkd_business_data = dkd_business.data;
+    const dkd_next_business_id = dkd_business_data?.dkd_business_id ?? null;
+    dkd_set_business_id(dkd_next_business_id);
+    dkd_set_business_name(dkd_business_data?.dkd_business_name ?? '');
+    dkd_set_business_description(dkd_business_data?.dkd_business_description ?? '');
+    dkd_set_business_phone(dkd_business_data?.dkd_business_phone ?? '');
+    dkd_set_business_address(dkd_business_data?.dkd_address_text ?? '');
+    dkd_set_business_hours(dkd_business_data?.dkd_working_hours?.dkd_summary ?? '09:00 - 20:00');
+
+    if (dkd_next_business_id) {
+      dkd_load_team(dkd_next_business_id);
+      dkd_load_services(dkd_next_business_id);
     }
   }
 
-  async function dkd_load_user_role(dkd_next_user_id: string | null) {
-    if (!dkd_next_user_id) {
-      dkd_set_saved_role(null);
-      return;
-    }
-
-    const dkd_role_response = await dkd_supabase_client
-      .from('dkd_user_profiles')
-      .select('dkd_role')
-      .eq('dkd_user_id', dkd_next_user_id)
-      .maybeSingle();
-
-    if (dkd_role_response.data?.dkd_role) {
-      dkd_set_saved_role(dkd_role_response.data.dkd_role as Dkd_RoleKey);
-    } else {
-      dkd_set_saved_role(null);
-    }
+  async function dkd_load_team(dkd_next_business_id: string) {
+    const dkd_response = await dkd_supabase_client
+      .from('dkd_master_profiles')
+      .select('dkd_master_id, dkd_master_name, dkd_master_specialty, dkd_master_phone')
+      .eq('dkd_business_id', dkd_next_business_id)
+      .eq('dkd_is_active', true)
+      .order('dkd_created_at', { ascending: false });
+    dkd_set_masters((dkd_response.data ?? []) as Dkd_MasterItem[]);
   }
 
-  React.useEffect(() => {
-    dkd_supabase_client.auth.getSession().then((dkd_response: any) => {
-      const dkd_session_user = dkd_response.data.session?.user ?? null;
-      dkd_set_user_email(dkd_session_user?.email ?? null);
-      dkd_set_user_id(dkd_session_user?.id ?? null);
-      dkd_load_user_role(dkd_session_user?.id ?? null);
-      dkd_load_business_profile(dkd_session_user?.id ?? null);
-    });
+  async function dkd_load_services(dkd_next_business_id: string) {
+    const dkd_response = await dkd_supabase_client
+      .from('dkd_services')
+      .select('dkd_service_id, dkd_service_title, dkd_price_cents, dkd_duration_minutes')
+      .eq('dkd_business_id', dkd_next_business_id)
+      .eq('dkd_is_active', true)
+      .order('dkd_created_at', { ascending: false });
+    dkd_set_services((dkd_response.data ?? []) as Dkd_ServiceItem[]);
+  }
 
-    const dkd_subscription_response = dkd_supabase_client.auth.onAuthStateChange((_dkd_event: string, dkd_session: any) => {
-      const dkd_next_user = dkd_session?.user ?? null;
-      dkd_set_user_email(dkd_next_user?.email ?? null);
-      dkd_set_user_id(dkd_next_user?.id ?? null);
-      dkd_load_user_role(dkd_next_user?.id ?? null);
-      dkd_load_business_profile(dkd_next_user?.id ?? null);
-    });
-
-    return () => {
-      dkd_subscription_response.data.subscription.unsubscribe();
-    };
-  }, []);
-
-  async function dkd_handle_auth() {
+  async function dkd_auth() {
     const dkd_clean_email = dkd_email.trim().toLowerCase();
-
-    if (!dkd_is_supabase_env_ready) {
-      dkd_set_status_text('Supabase publishable key eksik veya hatalı.');
-      return;
-    }
-
     if (!dkd_clean_email || dkd_password.length < 6) {
-      dkd_set_status_text('E-posta gir ve en az 6 karakter şifre yaz.');
+      dkd_set_status('E-posta ve en az 6 karakter şifre gir.');
       return;
     }
-
     dkd_set_loading(true);
-    dkd_set_status_text(dkd_auth_mode === 'login' ? 'Giriş deneniyor...' : 'Kayıt oluşturuluyor...');
-
-    const dkd_response =
-      dkd_auth_mode === 'login'
-        ? await dkd_supabase_client.auth.signInWithPassword({ email: dkd_clean_email, password: dkd_password })
-        : await dkd_supabase_client.auth.signUp({ email: dkd_clean_email, password: dkd_password });
-
+    const dkd_response = dkd_auth_mode === 'login'
+      ? await dkd_supabase_client.auth.signInWithPassword({ email: dkd_clean_email, password: dkd_password })
+      : await dkd_supabase_client.auth.signUp({ email: dkd_clean_email, password: dkd_password });
     dkd_set_loading(false);
-
-    if (dkd_response.error) {
-      dkd_set_status_text(dkd_response.error.message);
-      return;
-    }
-
-    dkd_set_status_text(dkd_auth_mode === 'signup' ? 'Kayıt alındı. Rolünü seçip devam edebilirsin.' : 'Giriş başarılı. Miami panelinden devam et.');
+    dkd_set_status(dkd_response.error ? dkd_response.error.message : 'Hesap hazır. Salon akışını seç.');
   }
 
-  async function dkd_handle_logout() {
+  async function dkd_logout() {
     await dkd_supabase_client.auth.signOut();
-    dkd_set_saved_role(null);
-    dkd_set_business_id(null);
-    dkd_set_master_team([]);
-    dkd_set_service_list([]);
-    dkd_set_status_text('Çıkış yapıldı.');
+    dkd_set_status('Çıkış yapıldı.');
   }
 
-  async function dkd_save_role(dkd_role: Dkd_RoleKey) {
-    if (!dkd_user_id) {
-      dkd_set_status_text('Rol seçmek için önce giriş yapmalısın.');
-      return;
-    }
-
-    dkd_set_role_loading(true);
-    dkd_set_status_text('Rol kaydediliyor...');
-
-    const dkd_profile_response = await dkd_supabase_client
+  async function dkd_save_role(dkd_next_role: Dkd_RoleKey) {
+    if (!dkd_user_id) return;
+    dkd_set_role(dkd_next_role);
+    const dkd_response = await dkd_supabase_client
       .from('dkd_user_profiles')
-      .upsert({ dkd_user_id, dkd_role, dkd_display_name: dkd_user_email ?? '', dkd_is_active: true }, { onConflict: 'dkd_user_id' });
-
-    dkd_set_role_loading(false);
-
-    if (dkd_profile_response.error) {
-      dkd_set_status_text(dkd_profile_response.error.message);
-      return;
-    }
-
-    dkd_set_saved_role(dkd_role);
-    dkd_set_status_text(dkd_role === 'business' ? 'İşletme sahibi rolü kaydedildi. Şimdi salon profilini oluştur.' : 'Rol kaydedildi. Sıradaki adım role göre panel yönlendirmesi.');
+      .upsert({ dkd_user_id, dkd_role: dkd_next_role, dkd_display_name: dkd_user_email ?? '', dkd_is_active: true }, { onConflict: 'dkd_user_id' });
+    dkd_set_status(dkd_response.error ? dkd_response.error.message : `${dkd_role_options.find((item) => item.key === dkd_next_role)?.title} akışı açıldı.`);
   }
 
-  async function dkd_save_business_profile() {
-    if (!dkd_user_id) {
-      dkd_set_status_text('İşletme profili için önce giriş yapmalısın.');
+  async function dkd_save_business() {
+    if (!dkd_user_id || dkd_business_name.trim().length < 2) {
+      dkd_set_status('Salon adı en az 2 karakter olmalı.');
       return;
     }
 
-    const dkd_clean_name = dkd_business_name.trim();
-    if (dkd_clean_name.length < 2) {
-      dkd_set_status_text('İşletme adı en az 2 karakter olmalı.');
-      return;
-    }
-
-    dkd_set_business_loading(true);
-    dkd_set_status_text('İşletme profili kaydediliyor...');
-
-    const dkd_business_payload = {
+    const dkd_payload = {
       dkd_owner_user_id: dkd_user_id,
-      dkd_business_name: dkd_clean_name,
-      dkd_business_slug: `${dkd_create_slug(dkd_clean_name)}-${dkd_user_id.slice(0, 6)}`,
+      dkd_business_name: dkd_business_name.trim(),
+      dkd_business_slug: `${dkd_create_slug(dkd_business_name)}-${dkd_user_id.slice(0, 6)}`,
       dkd_business_description: dkd_business_description.trim(),
       dkd_business_phone: dkd_business_phone.trim(),
       dkd_address_text: dkd_business_address.trim(),
@@ -321,205 +241,130 @@ export default function Dkd_DraBornStyleApp() {
       dkd_is_active: true
     };
 
-    const dkd_business_response = dkd_business_id
-      ? await dkd_supabase_client.from('dkd_business_profiles').update(dkd_business_payload).eq('dkd_business_id', dkd_business_id).select('dkd_business_id').single()
-      : await dkd_supabase_client.from('dkd_business_profiles').insert(dkd_business_payload).select('dkd_business_id').single();
+    const dkd_response = dkd_business_id
+      ? await dkd_supabase_client.from('dkd_business_profiles').update(dkd_payload).eq('dkd_business_id', dkd_business_id).select('dkd_business_id').single()
+      : await dkd_supabase_client.from('dkd_business_profiles').insert(dkd_payload).select('dkd_business_id').single();
 
-    dkd_set_business_loading(false);
-
-    if (dkd_business_response.error) {
-      dkd_set_status_text(dkd_business_response.error.message);
+    if (dkd_response.error) {
+      dkd_set_status(dkd_response.error.message);
       return;
     }
-
-    dkd_set_business_id(dkd_business_response.data.dkd_business_id);
-    dkd_load_master_team(dkd_business_response.data.dkd_business_id);
-    dkd_load_service_list(dkd_business_response.data.dkd_business_id);
-    dkd_set_status_text('İşletme profili kaydedildi. Şimdi usta ve hizmet ekleyebilirsin.');
+    dkd_set_business_id(dkd_response.data.dkd_business_id);
+    dkd_set_status('Salon bilgileri kaydedildi.');
   }
 
-  async function dkd_save_master_profile() {
-    if (!dkd_business_id) {
-      dkd_set_status_text('Usta eklemek için önce işletme profilini kaydet.');
+  async function dkd_save_master() {
+    if (!dkd_business_id || dkd_master_name.trim().length < 2) {
+      dkd_set_status('Önce salonu kaydet ve usta adını yaz.');
       return;
     }
-
-    const dkd_clean_master_name = dkd_master_name.trim();
-    if (dkd_clean_master_name.length < 2) {
-      dkd_set_status_text('Usta adı en az 2 karakter olmalı.');
+    const dkd_response = await dkd_supabase_client.from('dkd_master_profiles').insert({
+      dkd_business_id,
+      dkd_master_name: dkd_master_name.trim(),
+      dkd_master_specialty: dkd_master_specialty.trim(),
+      dkd_master_phone: dkd_master_phone.trim(),
+      dkd_is_active: true
+    });
+    if (dkd_response.error) {
+      dkd_set_status(dkd_response.error.message);
       return;
     }
-
-    dkd_set_master_loading(true);
-    dkd_set_status_text('Usta / çalışan kaydediliyor...');
-
-    const dkd_master_response = await dkd_supabase_client
-      .from('dkd_master_profiles')
-      .insert({
-        dkd_business_id,
-        dkd_master_name: dkd_clean_master_name,
-        dkd_master_specialty: dkd_master_specialty.trim(),
-        dkd_master_phone: dkd_master_phone.trim(),
-        dkd_bio: dkd_master_bio.trim(),
-        dkd_is_active: true
-      })
-      .select('dkd_master_id')
-      .single();
-
-    dkd_set_master_loading(false);
-
-    if (dkd_master_response.error) {
-      dkd_set_status_text(dkd_master_response.error.message);
-      return;
-    }
-
     dkd_set_master_name('');
     dkd_set_master_specialty('');
     dkd_set_master_phone('');
-    dkd_set_master_bio('');
-    dkd_load_master_team(dkd_business_id);
-    dkd_set_status_text('Usta / çalışan kaydedildi. Sıradaki adım hizmet fiyat ve süre ekranı.');
+    dkd_load_team(dkd_business_id);
+    dkd_set_status('Usta / çalışan eklendi.');
   }
 
   async function dkd_save_service() {
-    if (!dkd_business_id) {
-      dkd_set_status_text('Hizmet eklemek için önce işletme profilini kaydet.');
+    const dkd_price_cents = dkd_price_to_cents(dkd_service_price);
+    const dkd_duration = Number.parseInt(dkd_service_duration, 10);
+    if (!dkd_business_id || dkd_service_title.trim().length < 2 || dkd_price_cents <= 0 || !Number.isFinite(dkd_duration)) {
+      dkd_set_status('Hizmet adı, fiyat ve süreyi doğru gir.');
       return;
     }
-
-    const dkd_clean_service_title = dkd_service_title.trim();
-    const dkd_price_cents = dkd_price_text_to_cents(dkd_service_price);
-    const dkd_duration_minutes = Number.parseInt(dkd_service_duration, 10);
-
-    if (dkd_clean_service_title.length < 2) {
-      dkd_set_status_text('Hizmet adı en az 2 karakter olmalı.');
+    const dkd_response = await dkd_supabase_client.from('dkd_services').insert({
+      dkd_business_id,
+      dkd_service_title: dkd_service_title.trim(),
+      dkd_price_cents,
+      dkd_duration_minutes: dkd_duration,
+      dkd_is_active: true
+    });
+    if (dkd_response.error) {
+      dkd_set_status(dkd_response.error.message);
       return;
     }
-
-    if (dkd_price_cents <= 0) {
-      dkd_set_status_text('Hizmet fiyatını TL olarak yaz. Örnek: 250');
-      return;
-    }
-
-    if (!Number.isFinite(dkd_duration_minutes) || dkd_duration_minutes <= 0) {
-      dkd_set_status_text('Hizmet süresini dakika olarak yaz. Örnek: 30');
-      return;
-    }
-
-    dkd_set_service_loading(true);
-    dkd_set_status_text('Hizmet kaydediliyor...');
-
-    const dkd_service_response = await dkd_supabase_client
-      .from('dkd_services')
-      .insert({
-        dkd_business_id,
-        dkd_service_title: dkd_clean_service_title,
-        dkd_service_description: dkd_service_description.trim(),
-        dkd_price_cents,
-        dkd_duration_minutes,
-        dkd_is_active: true
-      })
-      .select('dkd_service_id')
-      .single();
-
-    dkd_set_service_loading(false);
-
-    if (dkd_service_response.error) {
-      dkd_set_status_text(dkd_service_response.error.message);
-      return;
-    }
-
     dkd_set_service_title('');
-    dkd_set_service_description('');
     dkd_set_service_price('');
     dkd_set_service_duration('30');
-    dkd_load_service_list(dkd_business_id);
-    dkd_set_status_text('Hizmet kaydedildi. Sıradaki adım hesap akışlarını test etmek.');
+    dkd_load_services(dkd_business_id);
+    dkd_set_status('Hizmet eklendi.');
   }
 
-  const dkd_saved_role_title = dkd_role_options.find((dkd_role) => dkd_role.dkd_key === dkd_saved_role)?.dkd_title;
+  function dkd_toggle_section(dkd_section: Dkd_SetupSection) {
+    dkd_set_active_section(dkd_active_section === dkd_section ? null : dkd_section);
+  }
 
   return (
     <SafeAreaProvider>
-      <SafeAreaView style={dkd_styles.dkd_safe_area}>
-        <LinearGradient colors={['#8BE9FF', '#FDE68A', '#FF7AB6', '#38BDF8']} style={dkd_styles.dkd_gradient}>
-          <View style={dkd_styles.dkd_sun_blob} />
-          <View style={dkd_styles.dkd_ocean_blob} />
-          <ScrollView contentContainerStyle={dkd_styles.dkd_screen} keyboardShouldPersistTaps="handled">
-            <LinearGradient colors={['#06B6D4', '#EC4899', '#FB923C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={dkd_styles.dkd_hero_card}>
-              <View style={dkd_styles.dkd_brand_row}>
-                <View style={dkd_styles.dkd_logo_bubble}>
-                  <Sparkles color="#0891B2" size={27} strokeWidth={2.8} />
-                </View>
-                <Text style={dkd_styles.dkd_overline}>MIAMI SALON • SMART STYLE</Text>
+      <SafeAreaView style={dkd_styles.safe}>
+        <LinearGradient colors={['#E0F7FA', '#FFF1E6', '#FFE4F0']} style={dkd_styles.bg}>
+          <ScrollView contentContainerStyle={dkd_styles.screen} keyboardShouldPersistTaps="handled">
+            <LinearGradient colors={['#00BCD4', '#FF4FA3', '#FF9F45']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={dkd_styles.hero}>
+              <View style={dkd_styles.heroTop}>
+                <View style={dkd_styles.logo}><Sparkles color="#00A6B8" size={26} strokeWidth={2.8} /></View>
+                <Text style={dkd_styles.heroTag}>BERBER • KUAFÖR • SALON</Text>
               </View>
-              <Text style={dkd_styles.dkd_title}>DraBornStyle</Text>
-              <Text style={dkd_styles.dkd_hero_text}>Berber, kuaför ve salonlar için canlı, hızlı ve profesyonel randevu yönetimi.</Text>
-
-              <View style={dkd_styles.dkd_mini_row}>
-                <View style={dkd_styles.dkd_mini_pill}><Scissors color="#0F172A" size={16} strokeWidth={2.8} /><Text style={dkd_styles.dkd_mini_text}>Salon</Text></View>
-                <View style={dkd_styles.dkd_mini_pill}><Clock3 color="#0F172A" size={16} strokeWidth={2.8} /><Text style={dkd_styles.dkd_mini_text}>Randevu</Text></View>
-                <View style={dkd_styles.dkd_mini_pill}><Sparkles color="#0F172A" size={16} strokeWidth={2.8} /><Text style={dkd_styles.dkd_mini_text}>Premium</Text></View>
-              </View>
+              <Text style={dkd_styles.heroTitle}>DraBornStyle</Text>
+              <Text style={dkd_styles.heroText}>Randevu, ekip ve hizmet yönetimini sade bir salon panelinde topla.</Text>
             </LinearGradient>
 
-            <View style={dkd_styles.dkd_status_banner}>
-              <View style={dkd_styles.dkd_status_icon}><ShieldCheck color="#06B6D4" size={23} strokeWidth={2.8} /></View>
-              <View style={dkd_styles.dkd_role_content}>
-                <Text style={dkd_styles.dkd_label_dark}>Supabase .env durumu</Text>
-                <Text style={dkd_is_supabase_env_ready ? dkd_styles.dkd_success : dkd_styles.dkd_warning}>
-                  {dkd_is_supabase_env_ready ? 'Bağlantı bilgileri hazır' : 'Publishable key eksik veya hatalı'}
-                </Text>
+            <View style={dkd_styles.statusCard}>
+              <ShieldCheck color="#00A6B8" size={24} strokeWidth={2.7} />
+              <View style={dkd_styles.flex}>
+                <Text style={dkd_styles.muted}>Supabase bağlantısı</Text>
+                <Text style={dkd_is_supabase_env_ready ? dkd_styles.good : dkd_styles.warn}>{dkd_is_supabase_env_ready ? 'Hazır' : 'Key eksik'}</Text>
               </View>
             </View>
 
-            <View style={dkd_styles.dkd_card}>
+            <View style={dkd_styles.card}>
               {dkd_user_email ? (
                 <View>
-                  <Text style={dkd_styles.dkd_section_title}>Aktif hesap</Text>
-                  <Text style={dkd_styles.dkd_account_text}>{dkd_user_email}</Text>
-                  <Text style={dkd_styles.dkd_status_text_dark}>{dkd_saved_role_title ? `Seçili rol: ${dkd_saved_role_title}` : 'Henüz rol seçilmedi.'}</Text>
-                  <TouchableOpacity style={dkd_styles.dkd_secondary_button} onPress={dkd_handle_logout}>
-                    <LogOut color="#0F172A" size={18} strokeWidth={2.7} />
-                    <Text style={dkd_styles.dkd_secondary_button_text}>Çıkış Yap</Text>
+                  <Text style={dkd_styles.title}>Hesap</Text>
+                  <Text style={dkd_styles.accent}>{dkd_user_email}</Text>
+                  <Text style={dkd_styles.body}>{dkd_role ? `Aktif akış: ${dkd_role_options.find((item) => item.key === dkd_role)?.title}` : 'Henüz akış seçilmedi.'}</Text>
+                  <TouchableOpacity style={dkd_styles.softButton} onPress={dkd_logout}>
+                    <LogOut color="#111827" size={18} strokeWidth={2.7} />
+                    <Text style={dkd_styles.softButtonText}>Çıkış Yap</Text>
                   </TouchableOpacity>
                 </View>
               ) : (
                 <View>
-                  <View style={dkd_styles.dkd_mode_row}>
-                    <TouchableOpacity style={dkd_auth_mode === 'login' ? dkd_styles.dkd_mode_active : dkd_styles.dkd_mode_button} onPress={() => dkd_set_auth_mode('login')}>
-                      <Text style={dkd_auth_mode === 'login' ? dkd_styles.dkd_mode_text_active : dkd_styles.dkd_mode_text}>Giriş Yap</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity style={dkd_auth_mode === 'signup' ? dkd_styles.dkd_mode_active : dkd_styles.dkd_mode_button} onPress={() => dkd_set_auth_mode('signup')}>
-                      <Text style={dkd_auth_mode === 'signup' ? dkd_styles.dkd_mode_text_active : dkd_styles.dkd_mode_text}>Kayıt Ol</Text>
-                    </TouchableOpacity>
+                  <Text style={dkd_styles.title}>Hesabınla Devam Et</Text>
+                  <View style={dkd_styles.tabs}>
+                    <TouchableOpacity style={dkd_auth_mode === 'login' ? dkd_styles.tabActive : dkd_styles.tab} onPress={() => dkd_set_auth_mode('login')}><Text style={dkd_auth_mode === 'login' ? dkd_styles.tabTextActive : dkd_styles.tabText}>Giriş</Text></TouchableOpacity>
+                    <TouchableOpacity style={dkd_auth_mode === 'signup' ? dkd_styles.tabActive : dkd_styles.tab} onPress={() => dkd_set_auth_mode('signup')}><Text style={dkd_auth_mode === 'signup' ? dkd_styles.tabTextActive : dkd_styles.tabText}>Kayıt</Text></TouchableOpacity>
                   </View>
-
-                  <View style={dkd_styles.dkd_input_shell}><Mail color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_email} onChangeText={dkd_set_email} placeholder="E-posta" placeholderTextColor="#64748B" autoCapitalize="none" keyboardType="email-address" style={dkd_styles.dkd_input} /></View>
-                  <View style={dkd_styles.dkd_input_shell}><LockKeyhole color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_password} onChangeText={dkd_set_password} placeholder="Şifre" placeholderTextColor="#64748B" secureTextEntry style={dkd_styles.dkd_input} /></View>
-
-                  <TouchableOpacity style={dkd_styles.dkd_primary_button} onPress={dkd_handle_auth} disabled={dkd_loading}>
-                    <Text style={dkd_styles.dkd_primary_button_text}>{dkd_loading ? 'Bekle...' : dkd_auth_mode === 'login' ? 'Giriş Yap' : 'Kayıt Ol'}</Text>
-                  </TouchableOpacity>
+                  <DkdInput icon={Mail} value={dkd_email} onChangeText={dkd_set_email} placeholder="E-posta" />
+                  <DkdInput icon={LockKeyhole} value={dkd_password} onChangeText={dkd_set_password} placeholder="Şifre" secureTextEntry />
+                  <TouchableOpacity style={dkd_styles.primaryButton} onPress={dkd_auth} disabled={dkd_loading}><Text style={dkd_styles.primaryText}>{dkd_loading ? 'Bekle...' : 'Devam Et'}</Text></TouchableOpacity>
                 </View>
               )}
             </View>
 
             {dkd_user_email ? (
-              <View style={dkd_styles.dkd_card}>
-                <Text style={dkd_styles.dkd_section_title}>Rolünü seç</Text>
-                <Text style={dkd_styles.dkd_text_dark}>Admin tek yönetim rolüdür. Super Admin ayrımı v0.1 MVP içinde kullanılmaz.</Text>
-                {dkd_role_options.map((dkd_role) => {
-                  const DkdIcon = dkd_role.dkd_icon;
-                  const dkd_is_selected = dkd_saved_role === dkd_role.dkd_key;
+              <View style={dkd_styles.card}>
+                <Text style={dkd_styles.title}>Salon Akışını Seç</Text>
+                <Text style={dkd_styles.body}>DraBornStyle’ı nasıl kullanacağını seç. Detaylar sadece ihtiyaç olduğunda açılır.</Text>
+                {dkd_role_options.map((dkd_item) => {
+                  const DkdIcon = dkd_item.icon;
+                  const dkd_selected = dkd_role === dkd_item.key;
                   return (
-                    <TouchableOpacity key={dkd_role.dkd_key} style={dkd_is_selected ? dkd_styles.dkd_role_card_selected : dkd_styles.dkd_role_card} onPress={() => dkd_save_role(dkd_role.dkd_key)} disabled={dkd_role_loading}>
-                      <View style={dkd_is_selected ? dkd_styles.dkd_icon_tile_selected : dkd_styles.dkd_icon_tile}>
-                        <DkdIcon color={dkd_is_selected ? '#0F172A' : '#06B6D4'} size={25} strokeWidth={2.7} />
-                      </View>
-                      <View style={dkd_styles.dkd_role_content}>
-                        <Text style={dkd_styles.dkd_role_title}>{dkd_role.dkd_title}</Text>
-                        <Text style={dkd_styles.dkd_role_caption}>{dkd_role.dkd_caption}</Text>
+                    <TouchableOpacity key={dkd_item.key} style={dkd_selected ? dkd_styles.listItemActive : dkd_styles.listItem} onPress={() => dkd_save_role(dkd_item.key)}>
+                      <View style={dkd_styles.iconBox}><DkdIcon color="#00A6B8" size={23} strokeWidth={2.6} /></View>
+                      <View style={dkd_styles.flex}>
+                        <Text style={dkd_styles.itemTitle}>{dkd_item.title}</Text>
+                        <Text style={dkd_styles.itemText}>{dkd_item.caption}</Text>
                       </View>
                     </TouchableOpacity>
                   );
@@ -527,114 +372,54 @@ export default function Dkd_DraBornStyleApp() {
               </View>
             ) : null}
 
-            {dkd_user_email && dkd_saved_role === 'business' ? (
-              <View>
-                <View style={dkd_styles.dkd_card}>
-                  <View style={dkd_styles.dkd_form_header_row}>
-                    <View style={dkd_styles.dkd_logo_bubble_small}><Store color="#EC4899" size={22} strokeWidth={2.7} /></View>
-                    <View style={dkd_styles.dkd_role_content}>
-                      <Text style={dkd_styles.dkd_section_title}>İşletme profili</Text>
-                      <Text style={dkd_styles.dkd_status_text_dark}>Salonunu Miami vitrini gibi hazırla.</Text>
-                    </View>
+            {dkd_user_email && dkd_role === 'business' ? (
+              <View style={dkd_styles.card}>
+                <Text style={dkd_styles.title}>Salon Kurulum Menüsü</Text>
+                <Text style={dkd_styles.body}>Ekranı sade tuttuk. Bir kategoriye dokun, detayını aç.</Text>
+                <DkdSectionButton icon={Store} title={dkd_section_titles.business} subtitle={dkd_business_id ? 'Salon bilgileri kayıtlı' : 'Salon profilini oluştur'} active={dkd_active_section === 'business'} onPress={() => dkd_toggle_section('business')} />
+                {dkd_active_section === 'business' ? (
+                  <View style={dkd_styles.detailBox}>
+                    <DkdPlainInput value={dkd_business_name} onChangeText={dkd_set_business_name} placeholder="Salon / işletme adı" />
+                    <DkdPlainInput value={dkd_business_description} onChangeText={dkd_set_business_description} placeholder="Kısa açıklama" />
+                    <DkdInput icon={Phone} value={dkd_business_phone} onChangeText={dkd_set_business_phone} placeholder="Telefon" keyboardType="phone-pad" />
+                    <DkdInput icon={MapPin} value={dkd_business_address} onChangeText={dkd_set_business_address} placeholder="Adres" />
+                    <DkdInput icon={Clock3} value={dkd_business_hours} onChangeText={dkd_set_business_hours} placeholder="Çalışma saatleri" />
+                    <TouchableOpacity style={dkd_styles.primaryButton} onPress={dkd_save_business}><Save color="#111827" size={18} strokeWidth={2.8} /><Text style={dkd_styles.primaryText}>Salon Bilgilerini Kaydet</Text></TouchableOpacity>
                   </View>
+                ) : null}
 
-                  <View style={dkd_styles.dkd_upload_row}>
-                    <View style={dkd_styles.dkd_upload_box}><ImagePlus color="#EC4899" size={26} strokeWidth={2.7} /><Text style={dkd_styles.dkd_upload_text}>Logo</Text></View>
-                    <View style={dkd_styles.dkd_upload_box_wide}><ImagePlus color="#06B6D4" size={26} strokeWidth={2.7} /><Text style={dkd_styles.dkd_upload_text}>Kapak görseli</Text></View>
+                <DkdSectionButton icon={UsersRound} title={dkd_section_titles.team} subtitle={`${dkd_masters.length} usta / çalışan`} active={dkd_active_section === 'team'} onPress={() => dkd_toggle_section('team')} />
+                {dkd_active_section === 'team' ? (
+                  <View style={dkd_styles.detailBox}>
+                    <DkdPlainInput value={dkd_master_name} onChangeText={dkd_set_master_name} placeholder="Usta adı soyadı" />
+                    <DkdInput icon={Scissors} value={dkd_master_specialty} onChangeText={dkd_set_master_specialty} placeholder="Uzmanlık" />
+                    <DkdInput icon={Phone} value={dkd_master_phone} onChangeText={dkd_set_master_phone} placeholder="Telefon" keyboardType="phone-pad" />
+                    <TouchableOpacity style={dkd_styles.primaryButton} onPress={dkd_save_master}><UserPlus color="#111827" size={18} strokeWidth={2.8} /><Text style={dkd_styles.primaryText}>Usta Ekle</Text></TouchableOpacity>
+                    {dkd_masters.map((item) => <DkdMiniRow key={item.dkd_master_id} title={item.dkd_master_name} subtitle={item.dkd_master_specialty || 'Uzmanlık eklenmedi'} />)}
                   </View>
+                ) : null}
 
-                  <TextInput value={dkd_business_name} onChangeText={dkd_set_business_name} placeholder="İşletme adı" placeholderTextColor="#64748B" style={dkd_styles.dkd_plain_input} />
-                  <TextInput value={dkd_business_description} onChangeText={dkd_set_business_description} placeholder="Kısa açıklama" placeholderTextColor="#64748B" multiline style={dkd_styles.dkd_plain_input_tall} />
-                  <View style={dkd_styles.dkd_input_shell}><Phone color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_business_phone} onChangeText={dkd_set_business_phone} placeholder="Telefon" placeholderTextColor="#64748B" keyboardType="phone-pad" style={dkd_styles.dkd_input} /></View>
-                  <View style={dkd_styles.dkd_input_shell}><MapPin color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_business_address} onChangeText={dkd_set_business_address} placeholder="Adres ve konum bilgisi" placeholderTextColor="#64748B" style={dkd_styles.dkd_input} /></View>
-                  <View style={dkd_styles.dkd_input_shell}><Clock3 color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_business_hours} onChangeText={dkd_set_business_hours} placeholder="Çalışma saatleri" placeholderTextColor="#64748B" style={dkd_styles.dkd_input} /></View>
-
-                  <TouchableOpacity style={dkd_styles.dkd_primary_button} onPress={dkd_save_business_profile} disabled={dkd_business_loading}>
-                    <Save color="#0F172A" size={18} strokeWidth={2.8} />
-                    <Text style={dkd_styles.dkd_primary_button_text}>{dkd_business_loading ? 'Kaydediliyor...' : dkd_business_id ? 'İşletmeyi Güncelle' : 'İşletmeyi Oluştur'}</Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View style={dkd_styles.dkd_card}>
-                  <View style={dkd_styles.dkd_form_header_row}>
-                    <View style={dkd_styles.dkd_logo_bubble_small}><UsersRound color="#06B6D4" size={22} strokeWidth={2.7} /></View>
-                    <View style={dkd_styles.dkd_role_content}>
-                      <Text style={dkd_styles.dkd_section_title}>Usta / çalışan ekle</Text>
-                      <Text style={dkd_styles.dkd_status_text_dark}>Takvim ve hizmet ataması için ekibini oluştur.</Text>
-                    </View>
+                <DkdSectionButton icon={BadgeDollarSign} title={dkd_section_titles.services} subtitle={`${dkd_services.length} hizmet`} active={dkd_active_section === 'services'} onPress={() => dkd_toggle_section('services')} />
+                {dkd_active_section === 'services' ? (
+                  <View style={dkd_styles.detailBox}>
+                    <DkdPlainInput value={dkd_service_title} onChangeText={dkd_set_service_title} placeholder="Hizmet adı" />
+                    <DkdInput icon={BadgeDollarSign} value={dkd_service_price} onChangeText={dkd_set_service_price} placeholder="Fiyat TL" keyboardType="numeric" />
+                    <DkdInput icon={Timer} value={dkd_service_duration} onChangeText={dkd_set_service_duration} placeholder="Süre dakika" keyboardType="numeric" />
+                    <TouchableOpacity style={dkd_styles.primaryButton} onPress={dkd_save_service}><ListPlus color="#111827" size={18} strokeWidth={2.8} /><Text style={dkd_styles.primaryText}>Hizmet Ekle</Text></TouchableOpacity>
+                    {dkd_services.map((item) => <DkdMiniRow key={item.dkd_service_id} title={item.dkd_service_title} subtitle={`${dkd_format_price(item.dkd_price_cents)} • ${item.dkd_duration_minutes} dk`} />)}
                   </View>
-
-                  {!dkd_business_id ? <Text style={dkd_styles.dkd_warning_note}>Önce işletme profilini kaydet, sonra usta ekleyebilirsin.</Text> : null}
-
-                  <TextInput value={dkd_master_name} onChangeText={dkd_set_master_name} placeholder="Usta adı soyadı" placeholderTextColor="#64748B" style={dkd_styles.dkd_plain_input} />
-                  <View style={dkd_styles.dkd_input_shell}><Scissors color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_master_specialty} onChangeText={dkd_set_master_specialty} placeholder="Uzmanlık: saç kesim, sakal, boya..." placeholderTextColor="#64748B" style={dkd_styles.dkd_input} /></View>
-                  <View style={dkd_styles.dkd_input_shell}><Phone color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_master_phone} onChangeText={dkd_set_master_phone} placeholder="Telefon" placeholderTextColor="#64748B" keyboardType="phone-pad" style={dkd_styles.dkd_input} /></View>
-                  <TextInput value={dkd_master_bio} onChangeText={dkd_set_master_bio} placeholder="Kısa not / bio" placeholderTextColor="#64748B" multiline style={dkd_styles.dkd_plain_input_tall} />
-
-                  <TouchableOpacity style={dkd_styles.dkd_primary_button} onPress={dkd_save_master_profile} disabled={dkd_master_loading}>
-                    <UserPlus color="#0F172A" size={18} strokeWidth={2.8} />
-                    <Text style={dkd_styles.dkd_primary_button_text}>{dkd_master_loading ? 'Kaydediliyor...' : 'Usta / Çalışan Ekle'}</Text>
-                  </TouchableOpacity>
-
-                  {dkd_master_team.length > 0 ? (
-                    <View style={dkd_styles.dkd_team_list}>
-                      <Text style={dkd_styles.dkd_team_title}>Ekibin</Text>
-                      {dkd_master_team.map((dkd_master_item) => (
-                        <View key={dkd_master_item.dkd_master_id} style={dkd_styles.dkd_team_card}>
-                          <View style={dkd_styles.dkd_icon_tile}><Scissors color="#06B6D4" size={21} strokeWidth={2.7} /></View>
-                          <View style={dkd_styles.dkd_role_content}>
-                            <Text style={dkd_styles.dkd_role_title}>{dkd_master_item.dkd_master_name}</Text>
-                            <Text style={dkd_styles.dkd_role_caption}>{dkd_master_item.dkd_master_specialty || 'Uzmanlık eklenmedi'}{dkd_master_item.dkd_master_phone ? ` • ${dkd_master_item.dkd_master_phone}` : ''}</Text>
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  ) : null}
-                </View>
-
-                <View style={dkd_styles.dkd_card}>
-                  <View style={dkd_styles.dkd_form_header_row}>
-                    <View style={dkd_styles.dkd_logo_bubble_small}><ListPlus color="#EC4899" size={22} strokeWidth={2.7} /></View>
-                    <View style={dkd_styles.dkd_role_content}>
-                      <Text style={dkd_styles.dkd_section_title}>Hizmet ekle</Text>
-                      <Text style={dkd_styles.dkd_status_text_dark}>Fiyat ve süre gir; müşteri randevu akışına hazırlansın.</Text>
-                    </View>
-                  </View>
-
-                  {!dkd_business_id ? <Text style={dkd_styles.dkd_warning_note}>Hizmet eklemek için önce işletme profilini kaydet.</Text> : null}
-
-                  <TextInput value={dkd_service_title} onChangeText={dkd_set_service_title} placeholder="Hizmet adı: Saç kesim, Sakal, Boya..." placeholderTextColor="#64748B" style={dkd_styles.dkd_plain_input} />
-                  <TextInput value={dkd_service_description} onChangeText={dkd_set_service_description} placeholder="Kısa hizmet açıklaması" placeholderTextColor="#64748B" multiline style={dkd_styles.dkd_plain_input_tall} />
-                  <View style={dkd_styles.dkd_input_shell}><BadgeDollarSign color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_service_price} onChangeText={dkd_set_service_price} placeholder="Fiyat TL: 250" placeholderTextColor="#64748B" keyboardType="numeric" style={dkd_styles.dkd_input} /></View>
-                  <View style={dkd_styles.dkd_input_shell}><Timer color="#06B6D4" size={19} strokeWidth={2.6} /><TextInput value={dkd_service_duration} onChangeText={dkd_set_service_duration} placeholder="Süre dakika: 30" placeholderTextColor="#64748B" keyboardType="numeric" style={dkd_styles.dkd_input} /></View>
-
-                  <TouchableOpacity style={dkd_styles.dkd_primary_button} onPress={dkd_save_service} disabled={dkd_service_loading}>
-                    <Save color="#0F172A" size={18} strokeWidth={2.8} />
-                    <Text style={dkd_styles.dkd_primary_button_text}>{dkd_service_loading ? 'Kaydediliyor...' : 'Hizmet Ekle'}</Text>
-                  </TouchableOpacity>
-
-                  {dkd_service_list.length > 0 ? (
-                    <View style={dkd_styles.dkd_team_list}>
-                      <Text style={dkd_styles.dkd_team_title}>Hizmetlerin</Text>
-                      {dkd_service_list.map((dkd_service_item) => (
-                        <View key={dkd_service_item.dkd_service_id} style={dkd_styles.dkd_team_card}>
-                          <View style={dkd_styles.dkd_icon_tile}><Scissors color="#06B6D4" size={21} strokeWidth={2.7} /></View>
-                          <View style={dkd_styles.dkd_role_content}>
-                            <Text style={dkd_styles.dkd_role_title}>{dkd_service_item.dkd_service_title}</Text>
-                            <Text style={dkd_styles.dkd_role_caption}>{dkd_format_price(dkd_service_item.dkd_price_cents)} • {dkd_service_item.dkd_duration_minutes} dk</Text>
-                          </View>
-                        </View>
-                      ))}
-                    </View>
-                  ) : null}
-                </View>
+                ) : null}
               </View>
             ) : null}
 
-            <View style={dkd_styles.dkd_footer_card}>
-              <Text style={dkd_styles.dkd_status_text_dark}>{dkd_status_text}</Text>
-              <Text style={dkd_styles.dkd_next}>Sıradaki adım: müşteri, işletme, usta ve admin hesap akışlarını test etmek.</Text>
-            </View>
+            {dkd_user_email && dkd_role && dkd_role !== 'business' ? (
+              <View style={dkd_styles.card}>
+                <Text style={dkd_styles.title}>{dkd_role_options.find((item) => item.key === dkd_role)?.title} Paneli</Text>
+                <Text style={dkd_styles.body}>Bu rolün temel hesap akışı çalışıyor. Detaylı panel v0.2+ adımlarında açılacak.</Text>
+              </View>
+            ) : null}
+
+            <View style={dkd_styles.footer}><Text style={dkd_styles.body}>{dkd_status}</Text></View>
           </ScrollView>
         </LinearGradient>
       </SafeAreaView>
@@ -642,61 +427,84 @@ export default function Dkd_DraBornStyleApp() {
   );
 }
 
+function DkdInput(dkd_props: any) {
+  const Icon = dkd_props.icon;
+  return (
+    <View style={dkd_styles.inputShell}>
+      <Icon color="#00A6B8" size={18} strokeWidth={2.6} />
+      <TextInput {...dkd_props} icon={undefined} placeholderTextColor="#8A94A6" style={dkd_styles.input} />
+    </View>
+  );
+}
+
+function DkdPlainInput(dkd_props: any) {
+  return <TextInput {...dkd_props} placeholderTextColor="#8A94A6" style={dkd_styles.plainInput} />;
+}
+
+function DkdSectionButton(dkd_props: { icon: Dkd_Icon; title: string; subtitle: string; active: boolean; onPress: () => void }) {
+  const Icon = dkd_props.icon;
+  return (
+    <TouchableOpacity style={dkd_props.active ? dkd_styles.sectionActive : dkd_styles.section} onPress={dkd_props.onPress}>
+      <View style={dkd_styles.iconBox}><Icon color="#00A6B8" size={23} strokeWidth={2.6} /></View>
+      <View style={dkd_styles.flex}>
+        <Text style={dkd_styles.itemTitle}>{dkd_props.title}</Text>
+        <Text style={dkd_styles.itemText}>{dkd_props.subtitle}</Text>
+      </View>
+      {dkd_props.active ? <ChevronDown color="#111827" size={20} /> : <ChevronRight color="#64748B" size={20} />}
+    </TouchableOpacity>
+  );
+}
+
+function DkdMiniRow(dkd_props: { title: string; subtitle: string }) {
+  return (
+    <View style={dkd_styles.miniRow}>
+      <Text style={dkd_styles.miniTitle}>{dkd_props.title}</Text>
+      <Text style={dkd_styles.miniSub}>{dkd_props.subtitle}</Text>
+    </View>
+  );
+}
+
 const dkd_styles = StyleSheet.create({
-  dkd_safe_area: { flex: 1, backgroundColor: '#8BE9FF' },
-  dkd_gradient: { flex: 1 },
-  dkd_sun_blob: { position: 'absolute', top: 24, right: -50, width: 170, height: 170, borderRadius: 85, backgroundColor: 'rgba(251, 146, 60, 0.35)' },
-  dkd_ocean_blob: { position: 'absolute', top: 230, left: -80, width: 210, height: 210, borderRadius: 105, backgroundColor: 'rgba(6, 182, 212, 0.28)' },
-  dkd_screen: { flexGrow: 1, padding: 20, paddingTop: 30, paddingBottom: 46 },
-  dkd_hero_card: { borderRadius: 36, padding: 25, marginBottom: 16, borderWidth: 1, borderColor: 'rgba(255,255,255,0.65)' },
-  dkd_card: { borderRadius: 30, padding: 20, backgroundColor: 'rgba(255, 255, 255, 0.92)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.82)', marginBottom: 16 },
-  dkd_footer_card: { borderRadius: 26, padding: 18, backgroundColor: 'rgba(255, 255, 255, 0.84)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.78)' },
-  dkd_brand_row: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
-  dkd_logo_bubble: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)' },
-  dkd_logo_bubble_small: { width: 44, height: 44, borderRadius: 22, backgroundColor: '#FFF7ED', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#FED7AA' },
-  dkd_overline: { color: '#FFFFFF', fontSize: 12, fontWeight: '900', letterSpacing: 1.8, flex: 1 },
-  dkd_title: { color: '#FFFFFF', fontSize: 42, fontWeight: '900', marginBottom: 10 },
-  dkd_hero_text: { color: '#F8FAFC', fontSize: 18, lineHeight: 27, fontWeight: '700' },
-  dkd_mini_row: { flexDirection: 'row', gap: 9, flexWrap: 'wrap', marginTop: 18 },
-  dkd_mini_pill: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: 'rgba(255,255,255,0.86)', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 999 },
-  dkd_mini_text: { color: '#0F172A', fontSize: 13, fontWeight: '900' },
-  dkd_status_banner: { flexDirection: 'row', gap: 12, alignItems: 'center', borderRadius: 28, padding: 16, backgroundColor: 'rgba(255,255,255,0.90)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.78)', marginBottom: 16 },
-  dkd_status_icon: { width: 46, height: 46, borderRadius: 23, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ECFEFF' },
-  dkd_label_dark: { color: '#64748B', fontSize: 14, fontWeight: '900', marginBottom: 6 },
-  dkd_success: { color: '#059669', fontSize: 17, fontWeight: '900' },
-  dkd_warning: { color: '#B45309', fontSize: 17, fontWeight: '900' },
-  dkd_warning_note: { color: '#B45309', fontSize: 14, lineHeight: 20, fontWeight: '800', marginBottom: 12 },
-  dkd_section_title: { color: '#0F172A', fontSize: 25, fontWeight: '900', marginBottom: 7 },
-  dkd_account_text: { color: '#0891B2', fontSize: 19, fontWeight: '900', marginBottom: 10 },
-  dkd_text_dark: { color: '#334155', fontSize: 16, lineHeight: 24 },
-  dkd_status_text_dark: { color: '#475569', fontSize: 14, lineHeight: 20 },
-  dkd_mode_row: { flexDirection: 'row', gap: 10, marginBottom: 14 },
-  dkd_mode_button: { flex: 1, padding: 13, borderRadius: 18, backgroundColor: '#F8FAFC', alignItems: 'center', borderWidth: 1, borderColor: '#E2E8F0' },
-  dkd_mode_active: { flex: 1, padding: 13, borderRadius: 18, backgroundColor: '#0EA5E9', alignItems: 'center' },
-  dkd_mode_text: { color: '#334155', fontSize: 15, fontWeight: '900' },
-  dkd_mode_text_active: { color: '#FFFFFF', fontSize: 15, fontWeight: '900' },
-  dkd_input_shell: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12, borderRadius: 18, paddingHorizontal: 14, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0' },
-  dkd_input: { flex: 1, paddingVertical: 14, color: '#0F172A', fontSize: 16 },
-  dkd_plain_input: { marginBottom: 12, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 14, color: '#0F172A', backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', fontSize: 16 },
-  dkd_plain_input_tall: { minHeight: 90, textAlignVertical: 'top', marginBottom: 12, borderRadius: 18, paddingHorizontal: 16, paddingVertical: 14, color: '#0F172A', backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', fontSize: 16 },
-  dkd_primary_button: { flexDirection: 'row', gap: 9, marginTop: 4, padding: 16, borderRadius: 20, backgroundColor: '#22D3EE', alignItems: 'center', justifyContent: 'center' },
-  dkd_primary_button_text: { color: '#0F172A', fontSize: 16, fontWeight: '900' },
-  dkd_secondary_button: { flexDirection: 'row', gap: 9, marginTop: 14, padding: 14, borderRadius: 18, backgroundColor: '#E0F2FE', alignItems: 'center', justifyContent: 'center' },
-  dkd_secondary_button_text: { color: '#0F172A', fontSize: 15, fontWeight: '900' },
-  dkd_role_card: { flexDirection: 'row', gap: 14, alignItems: 'center', marginTop: 12, padding: 16, borderRadius: 24, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0' },
-  dkd_role_card_selected: { flexDirection: 'row', gap: 14, alignItems: 'center', marginTop: 12, padding: 16, borderRadius: 24, backgroundColor: '#CCFBF1', borderWidth: 2, borderColor: '#06B6D4' },
-  dkd_icon_tile: { width: 48, height: 48, borderRadius: 19, backgroundColor: '#ECFEFF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#A5F3FC' },
-  dkd_icon_tile_selected: { width: 48, height: 48, borderRadius: 19, backgroundColor: '#FFFFFF', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#67E8F9' },
-  dkd_role_content: { flex: 1 },
-  dkd_role_title: { color: '#0F172A', fontSize: 18, fontWeight: '900', marginBottom: 4 },
-  dkd_role_caption: { color: '#475569', fontSize: 14, lineHeight: 20 },
-  dkd_form_header_row: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 16 },
-  dkd_upload_row: { flexDirection: 'row', gap: 12, marginBottom: 14 },
-  dkd_upload_box: { width: 104, height: 94, borderRadius: 24, backgroundColor: '#FFF1F2', borderWidth: 1, borderColor: '#FDA4AF', alignItems: 'center', justifyContent: 'center' },
-  dkd_upload_box_wide: { flex: 1, height: 94, borderRadius: 24, backgroundColor: '#ECFEFF', borderWidth: 1, borderColor: '#67E8F9', alignItems: 'center', justifyContent: 'center' },
-  dkd_upload_text: { marginTop: 8, color: '#334155', fontSize: 13, fontWeight: '900' },
-  dkd_team_list: { marginTop: 18 },
-  dkd_team_title: { color: '#0F172A', fontSize: 18, fontWeight: '900', marginBottom: 10 },
-  dkd_team_card: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 13, borderRadius: 20, backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', marginBottom: 10 },
-  dkd_next: { marginTop: 12, color: '#0E7490', fontSize: 15, lineHeight: 22, fontWeight: '900' }
+  safe: { flex: 1, backgroundColor: '#E0F7FA' },
+  bg: { flex: 1 },
+  screen: { padding: 18, paddingTop: 24, paddingBottom: 44 },
+  hero: { borderRadius: 30, padding: 22, marginBottom: 14 },
+  heroTop: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 14 },
+  logo: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center' },
+  heroTag: { color: 'white', fontSize: 12, fontWeight: '900', letterSpacing: 1.4, flex: 1 },
+  heroTitle: { color: 'white', fontSize: 39, fontWeight: '900', marginBottom: 8 },
+  heroText: { color: 'white', fontSize: 17, lineHeight: 25, fontWeight: '700' },
+  card: { backgroundColor: 'rgba(255,255,255,0.94)', borderRadius: 26, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: 'rgba(255,255,255,0.8)' },
+  statusCard: { flexDirection: 'row', gap: 12, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.88)', borderRadius: 24, padding: 14, marginBottom: 14 },
+  footer: { backgroundColor: 'rgba(255,255,255,0.82)', borderRadius: 22, padding: 14 },
+  title: { color: '#111827', fontSize: 24, fontWeight: '900', marginBottom: 8 },
+  body: { color: '#475569', fontSize: 15, lineHeight: 22 },
+  muted: { color: '#64748B', fontSize: 13, fontWeight: '800' },
+  good: { color: '#059669', fontSize: 16, fontWeight: '900' },
+  warn: { color: '#B45309', fontSize: 16, fontWeight: '900' },
+  accent: { color: '#00A6B8', fontSize: 18, fontWeight: '900', marginBottom: 6 },
+  flex: { flex: 1 },
+  tabs: { flexDirection: 'row', gap: 8, marginVertical: 12 },
+  tab: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 16, backgroundColor: '#F8FAFC' },
+  tabActive: { flex: 1, alignItems: 'center', padding: 12, borderRadius: 16, backgroundColor: '#00B8D4' },
+  tabText: { color: '#475569', fontWeight: '900' },
+  tabTextActive: { color: 'white', fontWeight: '900' },
+  inputShell: { flexDirection: 'row', alignItems: 'center', gap: 9, backgroundColor: '#F8FAFC', borderRadius: 17, paddingHorizontal: 13, marginBottom: 10, borderWidth: 1, borderColor: '#E2E8F0' },
+  input: { flex: 1, color: '#111827', fontSize: 16, paddingVertical: 13 },
+  plainInput: { backgroundColor: '#F8FAFC', borderRadius: 17, paddingHorizontal: 14, paddingVertical: 13, marginBottom: 10, color: '#111827', borderWidth: 1, borderColor: '#E2E8F0', fontSize: 16 },
+  primaryButton: { flexDirection: 'row', gap: 8, backgroundColor: '#8BE9FF', borderRadius: 18, padding: 15, alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  primaryText: { color: '#111827', fontSize: 15, fontWeight: '900' },
+  softButton: { flexDirection: 'row', gap: 8, backgroundColor: '#E0F2FE', borderRadius: 18, padding: 14, alignItems: 'center', justifyContent: 'center', marginTop: 12 },
+  softButtonText: { color: '#111827', fontWeight: '900' },
+  listItem: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14, borderRadius: 20, backgroundColor: 'white', borderWidth: 1, borderColor: '#E2E8F0', marginTop: 10 },
+  listItemActive: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14, borderRadius: 20, backgroundColor: '#E0FDFB', borderWidth: 2, borderColor: '#00B8D4', marginTop: 10 },
+  section: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14, borderRadius: 20, backgroundColor: 'white', borderWidth: 1, borderColor: '#E2E8F0', marginTop: 10 },
+  sectionActive: { flexDirection: 'row', gap: 12, alignItems: 'center', padding: 14, borderRadius: 20, backgroundColor: '#FFF7ED', borderWidth: 2, borderColor: '#FB923C', marginTop: 10 },
+  iconBox: { width: 44, height: 44, borderRadius: 17, alignItems: 'center', justifyContent: 'center', backgroundColor: '#ECFEFF' },
+  itemTitle: { color: '#111827', fontSize: 17, fontWeight: '900' },
+  itemText: { color: '#64748B', fontSize: 13, lineHeight: 18, marginTop: 2 },
+  detailBox: { marginTop: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: '#E2E8F0' },
+  miniRow: { padding: 12, borderRadius: 16, backgroundColor: 'white', borderWidth: 1, borderColor: '#E2E8F0', marginTop: 8 },
+  miniTitle: { color: '#111827', fontSize: 15, fontWeight: '900' },
+  miniSub: { color: '#64748B', marginTop: 2 }
 });
