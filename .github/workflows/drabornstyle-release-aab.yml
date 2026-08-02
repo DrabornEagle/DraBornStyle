@@ -1,0 +1,67 @@
+name: DraBornStyle Release AAB
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: drabornstyle-release-aab
+  cancel-in-progress: false
+
+jobs:
+  release-aab:
+    name: Build signed release AAB
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Require Expo token
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "EXPO_TOKEN repository secret is required."
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package.json
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Verify release metadata
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const packageJson = require('./package.json');
+          const appJson = require('./app.json');
+          if (packageJson.version !== '0.4.0') throw new Error(`package.json version must be 0.4.0, found ${packageJson.version}`);
+          if (appJson.expo.version !== '0.4.0') throw new Error(`Expo version must be 0.4.0, found ${appJson.expo.version}`);
+          if (appJson.expo.android?.versionCode !== 1) throw new Error(`Android versionCode must be 1, found ${appJson.expo.android?.versionCode}`);
+          NODE
+
+      - name: TypeScript check
+        run: npm run typecheck
+
+      - name: Expo Doctor
+        run: npx expo-doctor@latest
+
+      - name: Link EAS project when needed
+        run: eas init --non-interactive --force
+
+      - name: Build DraBornStyle release AAB
+        run: eas build --platform android --profile release-aab --non-interactive --wait
