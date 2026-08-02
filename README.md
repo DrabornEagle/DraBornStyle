@@ -1,53 +1,78 @@
-# DraBornStyle v0.1 Final
+# DraBornStyle v0.2.17 Final
 
-DraBornStyle; berber, kuaför ve salonlar için geliştirilecek randevu, işlem, müşteri akışı, ödeme ve raporlama sisteminin **ilk temel sürümüdür**.
+DraBornStyle; berber, kuaför ve salonların müşteriyi hızlıca sisteme almasını, işlemi tek tuşla başlatıp bitirmesini, hizmet fiyatlarını, platform bedelini, ödeme bildirimlerini, QR kaynaklarını ve özel müşteri indirimlerini yönetmesini gösteren **yerel demo uygulamasıdır**.
 
-Bu dalda yalnızca yol haritasındaki **v0.1 Final — Giriş, Kayıt, Rol ve Panel Omurgası** aktiftir. v0.2 ve sonraki özellikler ana akışta açılmamıştır.
+## Tasarım
 
-## v0.1 Final kapsamı
+İlk DraBornStyle tasarımındaki premium fotoğraflı görünüm geri getirildi:
 
-- Kayıt ve giriş ekranı
-- Kayıt olan kullanıcıya otomatik `customer` rolü
-- `dkd_user_role_access` rol erişim modeli
-- Usta başvurusu
-- İşletme sahibi başvurusu
-- Admin başvuru onayı ve reddi
-- Admin tarafından usta/işletme rolü ekleme ve kaldırma
-- Rol bazlı panel yönlendirme
-- Müşteri paneli
-- Usta paneli
-- İşletme paneli
-- Admin paneli
-- Birden fazla role sahip kullanıcı için panel değiştirme
-- Demo oturum, kullanıcı, rol ve başvuru verilerinin AsyncStorage içinde saklanması
-- `index.js → App.tsx` ana giriş yapısı
-- Modern ve responsive berber temalı arayüz
+- Büyük berber ve salon görselleri
+- Koyu premium kart yapısı
+- Pembe, mor, mavi ve turkuaz vurgu renkleri
+- Usta, işletme, müşteri ve admin panellerine özel görsel hero alanları
+- Basma, modal ve durum geçiş animasyonları
+- Dar Android ekranlara uygun responsive düzen
+
+## Güncel kapsam
+
+### Korunan v0.1 omurgası
+
+- Kayıt ve giriş
+- Otomatik müşteri rolü
+- `customer`, `master`, `business`, `admin`
+- `dkd_user_role_access`
+- Usta ve işletme başvuruları
+- Admin onayı/reddi
+- Rol bazlı panel yönlendirmesi
+- Birden fazla rol arasında geçiş
+
+### v0.2.17 işlem ve ödeme sistemi
+
+- Çat kapı müşteri
+- Direkt arayan müşteri
+- Favori müşteri
+- Randevulu kaynak seçimi
+- Tek tuşla `Tıraşa / İşleme Başladım`
+- Aktif işlem sırasında ustayı meşgul gösterme
+- Aynı ustada ikinci aktif işlemi engelleme
+- `Tıraş / İşlem Bitti`
+- Son fiyat düzenleme
+- Usta indirim kodu
+- Net fiyat hesaplama
+- Hizmet işlem kaydı
+- Varsayılan ₺20 platform bedeli
+- İşletme bazlı özel platform bedeli
+- Hizmet fiyatı düzenleme
+- İşletme borç raporu
+- Ödeme bildirimi
+- Admin ödeme onayı/reddi
+- Ödeme bekliyor / kısmi ödeme / ödendi durumları
+- QR kaynakları ve demo tarama
+- İşletme, usta ve admin raporları
+- AsyncStorage ile yerel kalıcılık
 
 ## Demo hesapları
 
-Tüm demo hesaplarının şifresi: `123456`
+Tüm hesapların şifresi `123456`:
 
-| Rol | E-posta |
-|---|---|
-| Müşteri | `musteri@demo.com` |
-| Usta | `usta@demo.com` |
-| İşletme | `isletme@demo.com` |
-| Admin | `draborneagle@gmail.com` |
+- Müşteri: `musteri@demo.com`
+- Usta: `usta@demo.com`
+- İşletme: `isletme@demo.com`
+- Admin: `draborneagle@gmail.com`
 
-Ek olarak `basvuru@demo.com` hesabında admin panelinden onaylanabilecek bekleyen usta başvurusu bulunur.
-
-## Expo Go ile ZIP üzerinden temiz test
-
-Termux tarafında `git pull`, Python, JDK, Perl, patch ve `/tmp` kullanılmaz.
+## ZIP yöntemiyle Expo Go testi
 
 ```bash
 cd ~
 rm -rf DraBornStyle DraBornStyle-main
-rm -f DraBornStyle-v0.1.zip
+rm -f DraBornStyle-v0.2.17.zip
 
 pkg install -y curl unzip
-curl -L "https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip" -o DraBornStyle-v0.1.zip
-unzip -q DraBornStyle-v0.1.zip
+
+curl -L "https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip" \
+  -o DraBornStyle-v0.2.17.zip
+
+unzip -q DraBornStyle-v0.2.17.zip
 mv DraBornStyle-main DraBornStyle
 
 cd DraBornStyle
@@ -56,24 +81,13 @@ npm install
 npx expo start --tunnel --clear
 ```
 
-Android telefonunda güncel Expo Go uygulamasını açıp QR kodunu okut.
+Bu akışta `git pull`, Python, JDK, Perl, patch ve `/tmp` kullanılmaz.
 
 ## Veri yapısı
 
-v0.1 demosunda Supabase yoktur. Demo veri ve oturum değişiklikleri şu anahtarda cihazda saklanır:
+- v0.1 rol ve başvuru verileri: `src/v01`
+- v0.2 işlem ve ödeme verileri: `src/v02`
+- v0.2 başlangıç demo verileri: `src/v02/demoData.ts`
+- v0.2 durum makinesi: `src/v02/state.ts`
 
-```text
-@drabornstyle/v0.1-final/demo-state
-```
-
-Gerçek Supabase entegrasyonunda rol erişim kaynağı `dkd_user_role_access` olarak korunacaktır.
-
-## Sürüm disiplini
-
-- Güncel uygulama sürümü: `0.1.0`
-- Aktif dallar: `main` ve `release/v0.1`
-- Önceki görsel demo: `archive/ui-demo-v0.3`
-- Sonraki geliştirme: `v0.2.17 Final`
-- v0.2 başlamadan önce v0.1 kullanıcı, rol, başvuru ve panel omurgası korunacaktır.
-
-Detaylı durum listesi için [ROADMAP.md](ROADMAP.md), test senaryoları için [docs/V0.1_TEST_PLAN.md](docs/V0.1_TEST_PLAN.md) dosyasına bakın.
+Supabase henüz bağlı değildir. Gerçek veri entegrasyonu başladığında demo durum katmanı Supabase servisleriyle değiştirilecektir.
