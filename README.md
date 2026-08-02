@@ -36,12 +36,20 @@ Tüm demo hesaplarının şifresi: `123456`
 
 Ek olarak `basvuru@demo.com` hesabında admin panelinden onaylanabilecek bekleyen usta başvurusu bulunur.
 
-## Expo Go ile temiz test
+## Expo Go ile ZIP üzerinden temiz test
+
+Termux tarafında `git pull`, Python, JDK, Perl, patch ve `/tmp` kullanılmaz.
 
 ```bash
 cd ~
-rm -rf DraBornStyle
-git clone https://github.com/DrabornEagle/DraBornStyle.git
+rm -rf DraBornStyle DraBornStyle-main
+rm -f DraBornStyle-v0.1.zip
+
+pkg install -y curl unzip
+curl -L "https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip" -o DraBornStyle-v0.1.zip
+unzip -q DraBornStyle-v0.1.zip
+mv DraBornStyle-main DraBornStyle
+
 cd DraBornStyle
 rm -rf node_modules package-lock.json .expo
 npm install
@@ -63,6 +71,8 @@ Gerçek Supabase entegrasyonunda rol erişim kaynağı `dkd_user_role_access` ol
 ## Sürüm disiplini
 
 - Güncel uygulama sürümü: `0.1.0`
+- Aktif dallar: `main` ve `release/v0.1`
+- Önceki görsel demo: `archive/ui-demo-v0.3`
 - Sonraki geliştirme: `v0.2.17 Final`
 - v0.2 başlamadan önce v0.1 kullanıcı, rol, başvuru ve panel omurgası korunacaktır.
 
