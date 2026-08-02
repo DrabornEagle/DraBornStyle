@@ -37,8 +37,9 @@ Yalnızca v0.4 sürümünden tamamen vazgeçileceği zaman kullanılır. Önce m
 cd "$HOME/projects/DraBornStyle" && \
 git fetch origin --prune && \
 git checkout main && \
-git branch -f "backup/v0.4-before-rollback-$(date +%Y%m%d-%H%M%S)" HEAD && \
-git push origin --all && \
+DKD_ROLLBACK_BACKUP="backup/v0.4-before-rollback-$(date +%Y%m%d-%H%M%S)" && \
+git branch -f "$DKD_ROLLBACK_BACKUP" HEAD && \
+git push origin "$DKD_ROLLBACK_BACKUP" && \
 git reset --hard origin/backup/v0.3-before-v0.4 && \
 git push --force-with-lease origin main && \
 npm install --no-audit --no-fund && \
