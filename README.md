@@ -1,36 +1,42 @@
-# DraBornStyle
+# DraBornStyle v0.1 Final
 
-DraBornStyle; berberleri keşfetme, hizmet seçme, randevu oluşturma ve Style Club deneyimini gösteren, **veritabanı kullanmayan Expo Go demo uygulamasıdır**.
+DraBornStyle; berber, kuaför ve salonlar için geliştirilecek randevu, işlem, müşteri akışı, ödeme ve raporlama sisteminin **ilk temel sürümüdür**.
 
-## Güncel sürüm
+Bu dalda yalnızca yol haritasındaki **v0.1 Final — Giriş, Kayıt, Rol ve Panel Omurgası** aktiftir. v0.2 ve sonraki özellikler ana akışta açılmamıştır.
 
-- **v0.3.0 — v0.1 + v0.2 + v0.3 toplu demo**
-- Expo SDK 57
-- React Native 0.86
-- React 19.2
-- Android Expo Go için hazırlanmıştır.
-- Supabase, backend ve API anahtarı yoktur.
-- Demo değişiklikleri yalnızca cihazdaki AsyncStorage alanında saklanır.
+## v0.1 Final kapsamı
 
-## Tamamlanan ana özellikler
+- Kayıt ve giriş ekranı
+- Kayıt olan kullanıcıya otomatik `customer` rolü
+- `dkd_user_role_access` rol erişim modeli
+- Usta başvurusu
+- İşletme sahibi başvurusu
+- Admin başvuru onayı ve reddi
+- Admin tarafından usta/işletme rolü ekleme ve kaldırma
+- Rol bazlı panel yönlendirme
+- Müşteri paneli
+- Usta paneli
+- İşletme paneli
+- Admin paneli
+- Birden fazla role sahip kullanıcı için panel değiştirme
+- Demo oturum, kullanıcı, rol ve başvuru verilerinin AsyncStorage içinde saklanması
+- `index.js → App.tsx` ana giriş yapısı
+- Modern ve responsive berber temalı arayüz
 
-- Animasyonlu onboarding
-- Modern renkli berber arayüzü
-- Arama, filtreleme ve favoriler
-- Canlı demo sıra ve ilk boş saat bilgisi
-- Hizmet + gün + saat seçilen randevu akışı
-- Yaklaşan/geçmiş randevu yönetimi
-- İptal ve yeniden planlama
-- Style Club puan, ödül ve görev ekranı
-- Bildirim paneli
-- Profil, bildirim tercihi ve demo sıfırlama
-- Cihazda kalıcı demo verileri
-- Dar Android ekranlar için responsive yerleşim
-- Safe-area uyumlu alt navigasyon ve rezervasyon paneli
+## Demo hesapları
 
-Tam kutucuklu sürüm planı için [ROADMAP.md](ROADMAP.md) dosyasına bakın.
+Tüm demo hesaplarının şifresi: `123456`
 
-## Expo Go ile temiz kurulum
+| Rol | E-posta |
+|---|---|
+| Müşteri | `musteri@demo.com` |
+| Usta | `usta@demo.com` |
+| İşletme | `isletme@demo.com` |
+| Admin | `draborneagle@gmail.com` |
+
+Ek olarak `basvuru@demo.com` hesabında admin panelinden onaylanabilecek bekleyen usta başvurusu bulunur.
+
+## Expo Go ile temiz test
 
 ```bash
 cd ~
@@ -42,24 +48,22 @@ npm install
 npx expo start --tunnel --clear
 ```
 
-Android telefonda güncel Expo Go uygulamasını açıp terminaldeki QR kodunu okutun.
+Android telefonunda güncel Expo Go uygulamasını açıp QR kodunu okut.
 
-> Termux ekranında görünen React Native DevTools `arm64` uyarısı Metro'yu durdurmuyorsa uygulamanın açılmasına engel değildir. QR kodu ve `Using Expo Go` satırı görünüyorsa Metro çalışmaktadır.
+## Veri yapısı
 
-## Sürüm geçmişi
+v0.1 demosunda Supabase yoktur. Demo veri ve oturum değişiklikleri şu anahtarda cihazda saklanır:
 
-### v0.1
+```text
+@drabornstyle/v0.1-final/demo-state
+```
 
-Temel Expo Go yapısı, modern ana sayfa, demo veriler, berber/hizmet kartları, navigasyon ve temel animasyonlar.
+Gerçek Supabase entegrasyonunda rol erişim kaynağı `dkd_user_role_access` olarak korunacaktır.
 
-### v0.2
+## Sürüm disiplini
 
-Keşfet, filtreler, favoriler, tam randevu paneli, randevu yönetimi ve Style Club.
+- Güncel uygulama sürümü: `0.1.0`
+- Sonraki geliştirme: `v0.2.17 Final`
+- v0.2 başlamadan önce v0.1 kullanıcı, rol, başvuru ve panel omurgası korunacaktır.
 
-### v0.3
-
-AsyncStorage kalıcılığı, onboarding, bildirimler, profil, demo sıfırlama, gelişmiş animasyonlar ve tüm ekranlarda responsive düzeltmeler.
-
-## Veri mimarisi
-
-`src/data/mockData.ts` demo berber, hizmet, tarih ve saat verilerini sağlar. Kullanıcı etkileşimleri `src/hooks/usePersistentDemo.ts` üzerinden AsyncStorage'a yazılır. Gerçek ürün aşamasında bu katman Supabase servisleriyle değiştirilecektir.
+Detaylı durum listesi için [ROADMAP.md](ROADMAP.md), test senaryoları için [docs/V0.1_TEST_PLAN.md](docs/V0.1_TEST_PLAN.md) dosyasına bakın.
