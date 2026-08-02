@@ -5,3 +5,15 @@ web-build/
 *.log
 .DS_Store
 .env
+.env.*
+!.env.example
+*.jks
+*.keystore
+*.p12
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+service-account*.json
+credentials.json
+android/
+ios/
