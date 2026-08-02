@@ -1,63 +1,65 @@
 # DraBornStyle
 
-DraBornStyle; berberleri keşfetme, hizmet seçme, randevu oluşturma ve sadakat ödüllerini deneyimleme odaklı, **veritabanı kullanmayan Expo Go demo uygulamasıdır**.
+DraBornStyle; berberleri keşfetme, hizmet seçme, randevu oluşturma ve Style Club deneyimini gösteren, **veritabanı kullanmayan Expo Go demo uygulamasıdır**.
 
 ## Güncel sürüm
 
-- **v0.3.0**
+- **v0.3.0 — v0.1 + v0.2 + v0.3 toplu demo**
 - Expo SDK 57
 - React Native 0.86
 - React 19.2
-- Android Expo Go ile test edilmek üzere hazırlanmıştır.
+- Android Expo Go için hazırlanmıştır.
 - Supabase, backend ve API anahtarı yoktur.
 - Demo değişiklikleri yalnızca cihazdaki AsyncStorage alanında saklanır.
 
-## Özellikler
+## Tamamlanan ana özellikler
 
-- 3 ekranlık animasyonlu onboarding
-- Renkli modern berber teması ve hareketli arka plan dokuları
-- Arama, filtreleme ve favori berberler
-- Canlı demo sıra bilgisi ve ilk müsait saat
-- Hizmet + gün + saat seçilen rezervasyon akışı
+- Animasyonlu onboarding
+- Modern renkli berber arayüzü
+- Arama, filtreleme ve favoriler
+- Canlı demo sıra ve ilk boş saat bilgisi
+- Hizmet + gün + saat seçilen randevu akışı
 - Yaklaşan/geçmiş randevu yönetimi
-- Style Club puan, ödül ve haftalık görev ekranı
+- İptal ve yeniden planlama
+- Style Club puan, ödül ve görev ekranı
 - Bildirim paneli
-- Profil, bildirim tercihi ve demo verilerini sıfırlama
-- Buton basma, sayfa geçişi, sheet, progress ve giriş animasyonları
+- Profil, bildirim tercihi ve demo sıfırlama
+- Cihazda kalıcı demo verileri
+- Dar Android ekranlar için responsive yerleşim
+- Safe-area uyumlu alt navigasyon ve rezervasyon paneli
 
-## Expo Go ile çalıştırma
+Tam kutucuklu sürüm planı için [ROADMAP.md](ROADMAP.md) dosyasına bakın.
 
-Termux veya bilgisayarda:
+## Expo Go ile temiz kurulum
 
 ```bash
+cd ~
+rm -rf DraBornStyle
 git clone https://github.com/DrabornEagle/DraBornStyle.git
 cd DraBornStyle
+rm -rf node_modules package-lock.json .expo
 npm install
-npx expo start --tunnel
+npx expo start --tunnel --clear
 ```
 
 Android telefonda güncel Expo Go uygulamasını açıp terminaldeki QR kodunu okutun.
 
+> Termux ekranında görünen React Native DevTools `arm64` uyarısı Metro'yu durdurmuyorsa uygulamanın açılmasına engel değildir. QR kodu ve `Using Expo Go` satırı görünüyorsa Metro çalışmaktadır.
+
 ## Sürüm geçmişi
 
 ### v0.1
-- Expo SDK 57 proje temeli
-- Modern ana sayfa
-- Demo berber ve hizmet verileri
-- Alt navigasyon ve temel animasyonlar
+
+Temel Expo Go yapısı, modern ana sayfa, demo veriler, berber/hizmet kartları, navigasyon ve temel animasyonlar.
 
 ### v0.2
-- Keşfet arama/filtre sistemi
-- Favoriler
-- Hizmet, gün ve saat seçilen rezervasyon paneli
-- Randevu listesi ve Style Club taslağı
+
+Keşfet, filtreler, favoriler, tam randevu paneli, randevu yönetimi ve Style Club.
 
 ### v0.3
-- AsyncStorage ile yerel demo kalıcılığı
-- Onboarding, bildirimler, profil ve demo sıfırlama
-- Ödül görevleri, canlı sıra, gelişmiş mikro animasyonlar
-- Arayüz ve akışların tam demo cilası
+
+AsyncStorage kalıcılığı, onboarding, bildirimler, profil, demo sıfırlama, gelişmiş animasyonlar ve tüm ekranlarda responsive düzeltmeler.
 
 ## Veri mimarisi
 
-`src/data/mockData.ts` içindeki berber, hizmet, tarih ve saat verileri kullanılır. Kullanıcı etkileşimleri `src/hooks/usePersistentDemo.ts` üzerinden AsyncStorage'a yazılır. Gerçek ürün aşamasında bu katman Supabase servisleriyle değiştirilebilir.
+`src/data/mockData.ts` demo berber, hizmet, tarih ve saat verilerini sağlar. Kullanıcı etkileşimleri `src/hooks/usePersistentDemo.ts` üzerinden AsyncStorage'a yazılır. Gerçek ürün aşamasında bu katman Supabase servisleriyle değiştirilecektir.
