@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { colors, gradients, spacing } from '../theme';
+import { colors, gradients, radii, spacing } from '../theme';
 import { AnimatedPressable } from '../components/AnimatedPressable';
 import { DemoUser, UserRole } from './types';
 import { roleIcon, roleLabel } from './state';
@@ -51,9 +51,9 @@ export function PanelShell({
       <View style={styles.versionRow}>
         <View style={styles.versionBadge}>
           <View style={styles.versionDot} />
-          <Text style={styles.versionText}>v0.1 Final · Demo Modu</Text>
+          <Text style={styles.versionText}>v0.2.17 Final · Demo Modu</Text>
         </View>
-        <Text style={styles.schema}>dkd_user_role_access</Text>
+        <Text style={styles.schema}>İşlem · Ödeme · QR</Text>
       </View>
       <View style={styles.body}>{children}</View>
     </SafeAreaView>
