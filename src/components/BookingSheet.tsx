@@ -77,7 +77,7 @@ export function BookingSheet({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={close} statusBarTranslucent>
       <View style={styles.overlay}>
-        <AnimatedPressable haptic={false} style={StyleSheet.absoluteFillObject} onPress={close} />
+        <AnimatedPressable haptic={false} style={StyleSheet.absoluteFill} onPress={close} />
         <Animated.View
           style={[
             styles.sheet,

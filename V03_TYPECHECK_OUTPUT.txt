@@ -1,0 +1,15 @@
+
+> drabornstyle@0.3.0 typecheck
+> tsc --noEmit
+
+src/components/BookingSheet.tsx(178,19): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/components/BookingSheet.tsx(179,19): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+src/components/Onboarding.tsx(59,29): error TS18048: 'slide' is possibly 'undefined'.
+src/components/Onboarding.tsx(66,33): error TS18048: 'slide' is possibly 'undefined'.
+src/components/Onboarding.tsx(66,86): error TS18048: 'slide' is possibly 'undefined'.
+src/components/Onboarding.tsx(67,39): error TS18048: 'slide' is possibly 'undefined'.
+src/components/Onboarding.tsx(68,37): error TS18048: 'slide' is possibly 'undefined'.
+src/components/Onboarding.tsx(69,43): error TS18048: 'slide' is possibly 'undefined'.
+src/components/Onboarding.tsx(72,35): error TS18048: 'slide' is possibly 'undefined'.

@@ -56,8 +56,8 @@ export function Onboarding({ onFinish }: { onFinish: () => void }) {
 
   return (
     <View style={styles.root}>
-      <Image source={{ uri: slide.image }} style={StyleSheet.absoluteFillObject} />
-      <LinearGradient colors={['rgba(9,11,18,0.08)', 'rgba(9,11,18,0.55)', colors.background]} locations={[0, 0.47, 0.82]} style={StyleSheet.absoluteFillObject} />
+      <Image source={{ uri: slide.image }} style={StyleSheet.absoluteFill} />
+      <LinearGradient colors={['rgba(9,11,18,0.08)', 'rgba(9,11,18,0.55)', colors.background]} locations={[0, 0.47, 0.82]} style={StyleSheet.absoluteFill} />
       <View style={styles.topBar}>
         <View style={styles.brand}><View style={styles.brandIcon}><Ionicons name="cut" size={19} color={colors.white} /></View><Text style={styles.brandText}>DraBornStyle</Text></View>
         <AnimatedPressable style={styles.skip} onPress={onFinish}><Text style={styles.skipText}>Geç</Text></AnimatedPressable>

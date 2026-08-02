@@ -40,7 +40,7 @@ export function V02BusinessPanel({
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <View style={styles.hero}>
         <Image source={{ uri: business.coverImage }} style={styles.heroImage} />
-        <LinearGradient colors={['rgba(7,9,15,0.02)', 'rgba(7,9,15,0.62)', 'rgba(7,9,15,0.98)']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFillObject} />
+        <LinearGradient colors={['rgba(7,9,15,0.02)', 'rgba(7,9,15,0.62)', 'rgba(7,9,15,0.98)']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
         <View style={styles.heroTop}>
           <View style={styles.heroBadge}><Ionicons name="storefront" size={15} color={colors.amber} /><Text style={styles.heroBadgeText}>İŞLETME MERKEZİ</Text></View>
           <StatusPill label={paymentLabel} status={paymentStatus} />

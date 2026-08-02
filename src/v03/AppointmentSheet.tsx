@@ -93,13 +93,13 @@ export function AppointmentSheet({
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
       <View style={styles.overlay}>
-        <AnimatedPressable haptic={false} style={StyleSheet.absoluteFillObject} onPress={onClose} />
+        <AnimatedPressable haptic={false} style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 12) }]}>
           <View style={styles.handle} />
           <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
             <View style={styles.header}>
               <Image source={{ uri: business.coverImage }} style={styles.headerImage} />
-              <LinearGradient colors={['rgba(8,10,16,0.08)', 'rgba(8,10,16,0.96)']} style={StyleSheet.absoluteFillObject} />
+              <LinearGradient colors={['rgba(8,10,16,0.08)', 'rgba(8,10,16,0.96)']} style={StyleSheet.absoluteFill} />
               <AnimatedPressable style={styles.close} onPress={onClose}>
                 <Ionicons name="close" size={23} color={colors.white} />
               </AnimatedPressable>

@@ -38,7 +38,7 @@ export function V02CustomerPanel({
     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
       <View style={styles.hero}>
         <Image source={{ uri: business?.coverImage }} style={styles.heroImage} />
-        <LinearGradient colors={['rgba(7,9,15,0.03)', 'rgba(7,9,15,0.7)', 'rgba(7,9,15,0.98)']} locations={[0, 0.54, 1]} style={StyleSheet.absoluteFillObject} />
+        <LinearGradient colors={['rgba(7,9,15,0.03)', 'rgba(7,9,15,0.7)', 'rgba(7,9,15,0.98)']} locations={[0, 0.54, 1]} style={StyleSheet.absoluteFill} />
         <View style={styles.heroBadge}><Ionicons name="sparkles" size={14} color={colors.primary} /><Text style={styles.heroBadgeText}>DRABORNSTYLE v0.2.17</Text></View>
         <View style={styles.heroBottom}>
           <Text style={styles.greeting}>Merhaba, {user.fullName.split(' ')[0]}</Text>

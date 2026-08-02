@@ -74,7 +74,7 @@ export function V02AdminPanel({
         <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
           <View style={styles.hero}>
             <Image source={{ uri: 'https://images.unsplash.com/photo-1503951914875-452162b0f3f1?auto=format&fit=crop&w=1200&q=85' }} style={styles.heroImage} />
-            <LinearGradient colors={['rgba(7,9,15,0.08)', 'rgba(7,9,15,0.65)', 'rgba(7,9,15,0.98)']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFillObject} />
+            <LinearGradient colors={['rgba(7,9,15,0.08)', 'rgba(7,9,15,0.65)', 'rgba(7,9,15,0.98)']} locations={[0, 0.5, 1]} style={StyleSheet.absoluteFill} />
             <View style={styles.heroBadge}><Ionicons name="shield-checkmark" size={15} color={colors.primary} /><Text style={styles.heroBadgeText}>ADMIN FİNANS MERKEZİ</Text></View>
             <View style={styles.heroBottom}><Text style={styles.heroTitle}>İşlem, ücret ve ödeme kontrolü</Text><Text style={styles.heroText}>İşletme bazlı platform bedellerini yönet, ödeme bildirimlerini onayla ve sistem gelirini takip et.</Text></View>
           </View>
