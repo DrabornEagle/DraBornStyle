@@ -1,11 +1,17 @@
 {
   "name": "drabornstyle",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "main": "index.ts",
-  "scripts": { "start": "expo start", "android": "expo start --android", "typecheck": "tsc --noEmit" },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit"
+  },
   "dependencies": {
     "@expo/vector-icons": "15.1.1",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "expo": "~57.0.9",
     "expo-font": "~57.0.1",
     "expo-haptics": "~57.0.1",
@@ -15,5 +21,8 @@
     "react-native": "0.86.2",
     "react-native-safe-area-context": "~5.7.0"
   },
-  "devDependencies": { "@types/react": "~19.2.2", "typescript": "~6.0.3" }
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "typescript": "~6.0.3"
+  }
 }
