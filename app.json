@@ -2,11 +2,11 @@
   "expo": {
     "name": "DraBornStyle",
     "slug": "drabornstyle",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "android": { "package": "com.draborneagle.drabornstyle", "edgeToEdgeEnabled": true },
-    "extra": { "demoMode": true, "release": "v0.1" }
+    "extra": { "demoMode": true, "release": "v0.2" }
   }
 }
