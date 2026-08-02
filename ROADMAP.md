@@ -1,109 +1,83 @@
 # DraBornStyle Geliştirme Yol Haritası
 
-- `[x]` Tamamlandı ve güncel sürümde aktif
-- `[ ]` İlgili sürüm geldiğinde geliştirilecek
+- `[x]` tamamlandı
+- `[ ]` sonraki sürüm
 
 ## v0.1 Final — Giriş, Rol ve Panel Omurgası
 
-- [x] `index.js → App.tsx`
-- [x] Kayıt / giriş
+- [x] Kayıt ve giriş
 - [x] Otomatik müşteri rolü
-- [x] `customer / business / master / admin`
+- [x] `customer / master / business / admin`
 - [x] `dkd_user_role_access`
-- [x] Müşteri paneli
-- [x] Usta paneli
-- [x] İşletme paneli
-- [x] Admin paneli
-- [x] Rol bazlı yönlendirme
-- [x] Usta başvurusu
-- [x] İşletme başvurusu
-- [x] Admin başvuru onayı/reddi
-- [x] Admin kullanıcı ve rol yönetimi
-- [x] Demo hesaplar ve yerel kalıcılık
+- [x] Dört ayrı panel
+- [x] Usta ve işletme başvuruları
+- [x] Admin onay/red sistemi
+- [x] Rol değiştirme
+- [x] AsyncStorage demo kalıcılığı
 
 ## v0.2.17 Final — İşlem, Ödeme, QR ve İndirim
 
-- [x] İlk tasarımdaki fotoğraflı premium UI geri getirildi
-- [x] Usta panelinde büyük berber/salon görselleri
-- [x] İşletme panelinde salon görseli
-- [x] Müşteri panelinde görsel keşif alanı
-- [x] Admin panelinde görsel finans merkezi
-- [x] Çat kapı müşteri girişi
-- [x] Direkt arayan müşteri girişi
-- [x] Favori müşteri kaynağı
-- [x] Randevulu müşteri kaynağı
+- [x] Çat kapı / direkt arayan / favori / randevulu işlem kaynağı
 - [x] Tek tuş işlem başlatma
-- [x] Ustayı işlem sırasında meşgul gösterme
-- [x] Aynı ustada ikinci aktif işlemi engelleme
-- [x] İşlem bitirme
-- [x] Son fiyat düzenleme
-- [x] Hizmet işlem kaydı
-- [x] İndirim kodu doğrulama
-- [x] Usta yeni indirim kodu oluşturma
-- [x] İndirim kodunu aktif/pasif yapma
-- [x] Varsayılan ₺20 platform bedeli
-- [x] İşletme bazlı özel platform bedeli
-- [x] Admin platform bedeli düzenleme
-- [x] Hizmet fiyatı düzenleme
-- [x] İşletme kazanç raporu
-- [x] Usta kazanç ve işlem raporu
-- [x] Admin platform gelir raporu
-- [x] İşletme borç hesaplama
+- [x] İşlem bitirme ve son fiyat
+- [x] Usta meşgul durumu
+- [x] İşlem kaydı
+- [x] Varsayılan 20 TL platform bedeli
+- [x] İşletmeye özel platform bedeli
+- [x] Hizmet fiyat yönetimi
 - [x] Ödeme bildirimi
 - [x] Admin ödeme onayı
-- [x] Admin ödeme reddi
-- [x] Ödeme bekliyor durumu
-- [x] Kısmi ödeme durumu
-- [x] Ödendi durumu
-- [x] QR müşteri kayıt kaynağı
-- [x] QR usta profil kaynağı
-- [x] QR hızlı işlem kaynağı
-- [x] QR demo tarama sayacı
-- [x] v0.2 içeriğine uygun güncel demo veriler
-- [x] AsyncStorage ile v0.2 kalıcılığı
-- [x] TypeScript/TSX sözdizimi testi
-- [x] Strict tip kontrolü
-- [x] v0.2 genişletilmiş durum makinesi 13/13 testi
-- [ ] Kullanıcının Android cihazında son görsel onay testi
+- [x] QR kaynakları
+- [x] Usta indirim kodları
+- [x] İşletme ve admin finans raporları
 
-## v0.3.0 — Randevu, Takvim ve Müşteri Akışı
+## v0.3.0 Final — Randevu, Takvim ve Müşteri Akışı
 
-- [ ] İşletme seçimi
-- [ ] Usta seçimi
-- [ ] Hizmet seçimi
-- [ ] Uygun saat seçimi
-- [ ] Randevu oluşturma
-- [ ] Randevu kodu
-- [ ] Randevu event tablosu
-- [ ] Usta takvimi
-- [ ] Usta müsaitlik takibi
-- [ ] Yoldayım
-- [ ] Geldim
-- [ ] Geldi
-- [ ] İşlemde
-- [ ] Tamamlandı
-- [ ] Gelmedi
-- [ ] İptal
-- [ ] Müşteri–usta mesaj/not/fotoğraf alanı
-- [ ] v0.3 içeriğine uygun yeni demo veriler
+- [x] Randevu oluşturma
+- [x] Randevu kodu
+- [x] Müşteri adı ve telefonu
+- [x] İşletme seçimi
+- [x] Usta seçimi
+- [x] Hizmet seçimi
+- [x] Gün ve saat seçimi
+- [x] Saat çakışma kontrolü
+- [x] Ustaya istek notu
+- [x] Appointment event kayıtları
+- [x] Usta günlük takvimi
+- [x] İşletme yoğunluk takvimi
+- [x] Admin randevu raporu
+- [x] Yoldayım
+- [x] Geldim
+- [x] Geldi
+- [x] İşlemde
+- [x] Tamamlandı
+- [x] Gelmedi
+- [x] İptal
+- [x] Randevunun v0.2 işlem kaydına bağlanması
+- [x] Randevu tamamlandığında platform bedeline yansıma
+- [x] Ana sayfa görseli üzerinde okunabilir metin düzeni
+- [x] v0.3 demo verilerine uygun yeni randevular
+- [x] Durum makinesi otomatik testleri
+- [ ] Kullanıcının Android cihazında son görsel onay
 
 ## v0.4 — Canlı Usta ve Çat Kapı Akışını Güçlendirme
 
-- [ ] Tahmini bitiş
-- [ ] Meşgule al
-- [ ] Favori müşteri hızlı seçimi
-- [ ] İşletme içi canlı yoğunluk
+- [ ] Tahmini bitiş süresi
+- [ ] Daha hızlı bilinen müşteri seçimi
+- [ ] İşletme içi anlık sıra
+- [ ] Tek ekranda hızlı müşteri kabulü
 
 ## v0.5 — Bildirim ve Ödeme Disiplini
 
-- [ ] Ödeme günü bildirimi
-- [ ] Geciken ödeme takibi
-- [ ] Randevu hatırlatmaları
+- [ ] Gerçek push notification
+- [ ] Ödeme günü hatırlatmaları
+- [ ] Randevu yaklaşma bildirimi
+- [ ] Kısmi/geciken ödeme takibi
 
-## v0.6–v1.0
+## v0.6 ve sonrası
 
 - [ ] Web senkron
-- [ ] Sadakat ve usta link sistemi
+- [ ] Sadakat ve usta davet linki
 - [ ] Gelişmiş raporlama
-- [ ] Pazaryeri/keşfetme
-- [ ] Google Play için stabil MVP
+- [ ] Pazaryeri ve harita
+- [ ] v1.0 stabil MVP

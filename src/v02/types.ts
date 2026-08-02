@@ -51,6 +51,7 @@ export interface V02QrSource {
   purpose: 'customer_registration' | 'master_profile' | 'quick_transaction';
   code: string;
   scans: number;
+  scanCount?: number;
 }
 
 export interface V02Transaction {

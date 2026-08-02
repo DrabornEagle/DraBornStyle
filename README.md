@@ -1,55 +1,31 @@
-# DraBornStyle v0.2.17 Final
+# DraBornStyle v0.3.0 Final
 
-DraBornStyle; berber, kuaför ve salonların müşteriyi hızlıca sisteme almasını, işlemi tek tuşla başlatıp bitirmesini, hizmet fiyatlarını, platform bedelini, ödeme bildirimlerini, QR kaynaklarını ve özel müşteri indirimlerini yönetmesini gösteren **yerel demo uygulamasıdır**.
-
-## Tasarım
-
-İlk DraBornStyle tasarımındaki premium fotoğraflı görünüm geri getirildi:
-
-- Büyük berber ve salon görselleri
-- Koyu premium kart yapısı
-- Pembe, mor, mavi ve turkuaz vurgu renkleri
-- Usta, işletme, müşteri ve admin panellerine özel görsel hero alanları
-- Basma, modal ve durum geçiş animasyonları
-- Dar Android ekranlara uygun responsive düzen
+DraBornStyle; berber, kuaför ve salonlar için rol bazlı giriş, işlem/ödeme takibi ve gerçek randevu–takvim–müşteri geliş akışını birleştiren Expo Go demo uygulamasıdır.
 
 ## Güncel kapsam
 
-### Korunan v0.1 omurgası
+- **v0.1 korunuyor:** kayıt, giriş, `dkd_user_role_access`, müşteri/usta/işletme/admin panelleri ve admin başvuru onayı.
+- **v0.2.17 korunuyor:** işlem başlat/bitir, son fiyat, işletmeye özel platform bedeli, ödeme bildirimi/onayı, QR ve indirim kodu.
+- **v0.3.0 aktif:** randevu oluşturma, saat çakışma kontrolü, takvim, müşteri geliş durumları ve randevuyu işleme bağlama.
 
-- Kayıt ve giriş
-- Otomatik müşteri rolü
-- `customer`, `master`, `business`, `admin`
-- `dkd_user_role_access`
-- Usta ve işletme başvuruları
-- Admin onayı/reddi
-- Rol bazlı panel yönlendirmesi
-- Birden fazla rol arasında geçiş
+## v0.3 özellikleri
 
-### v0.2.17 işlem ve ödeme sistemi
+- İşletme, usta, hizmet, gün ve saat seçerek randevu oluşturma
+- Otomatik randevu kodu
+- Usta saat çakışma kontrolü
+- Müşteri notu
+- `Yoldayım → Geldim → Geldi → İşlemde → Tamamlandı` akışı
+- `Gelmedi` ve `İptal` durumları
+- Her durum değişikliğinde appointment event kaydı
+- Usta günlük takvimi ve tek tuşla randevulu işlemi başlatma
+- İşletme günlük yoğunluk görünümü
+- Admin randevu/event raporu
+- Randevu tamamlanınca v0.2 işlem ve platform bedeli kaydına bağlanma
+- AsyncStorage ile yerel demo kalıcılığı
 
-- Çat kapı müşteri
-- Direkt arayan müşteri
-- Favori müşteri
-- Randevulu kaynak seçimi
-- Tek tuşla `Tıraşa / İşleme Başladım`
-- Aktif işlem sırasında ustayı meşgul gösterme
-- Aynı ustada ikinci aktif işlemi engelleme
-- `Tıraş / İşlem Bitti`
-- Son fiyat düzenleme
-- Usta indirim kodu
-- Net fiyat hesaplama
-- Hizmet işlem kaydı
-- Varsayılan ₺20 platform bedeli
-- İşletme bazlı özel platform bedeli
-- Hizmet fiyatı düzenleme
-- İşletme borç raporu
-- Ödeme bildirimi
-- Admin ödeme onayı/reddi
-- Ödeme bekliyor / kısmi ödeme / ödendi durumları
-- QR kaynakları ve demo tarama
-- İşletme, usta ve admin raporları
-- AsyncStorage ile yerel kalıcılık
+## Görsel düzeltme
+
+Ana sayfadaki salon fotoğrafı korunmuştur. Yazılar artık daha güçlü karartma, yarı saydam koyu bilgi kartı, beyaz metin ve metin gölgesi üzerinde gösterilir. Yeni görsel üretilmemiştir.
 
 ## Demo hesapları
 
@@ -60,19 +36,18 @@ Tüm hesapların şifresi `123456`:
 - İşletme: `isletme@demo.com`
 - Admin: `draborneagle@gmail.com`
 
-## ZIP yöntemiyle Expo Go testi
+## ZIP ile Expo Go testi
+
+Termux tarafında `git pull`, Python, JDK, Perl, patch ve `/tmp` kullanılmaz.
 
 ```bash
 cd ~
 rm -rf DraBornStyle DraBornStyle-main
-rm -f DraBornStyle-v0.2.17.zip
+rm -f DraBornStyle-v0.3.0.zip
 
 pkg install -y curl unzip
-
-curl -L "https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip" \
-  -o DraBornStyle-v0.2.17.zip
-
-unzip -q DraBornStyle-v0.2.17.zip
+curl -L "https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip" -o DraBornStyle-v0.3.0.zip
+unzip -q DraBornStyle-v0.3.0.zip
 mv DraBornStyle-main DraBornStyle
 
 cd DraBornStyle
@@ -81,13 +56,11 @@ npm install
 npx expo start --tunnel --clear
 ```
 
-Bu akışta `git pull`, Python, JDK, Perl, patch ve `/tmp` kullanılmaz.
+## Aktif sürüm dalları
 
-## Veri yapısı
+- `main`
+- `release/v0.1`
+- `release/v0.2`
+- `release/v0.3`
 
-- v0.1 rol ve başvuru verileri: `src/v01`
-- v0.2 işlem ve ödeme verileri: `src/v02`
-- v0.2 başlangıç demo verileri: `src/v02/demoData.ts`
-- v0.2 durum makinesi: `src/v02/state.ts`
-
-Supabase henüz bağlı değildir. Gerçek veri entegrasyonu başladığında demo durum katmanı Supabase servisleriyle değiştirilecektir.
+Geçici çalışma ve eski arşiv dalları final yayın sırasında silinir.

@@ -19,14 +19,22 @@ import { StartTransactionInput, V02ActionResult, V02DemoState } from './types';
 const STORAGE_KEY = '@drabornstyle/v0.2.17-final/demo-state';
 type Result = { ok: boolean; message: string };
 
+function normalizeState(state: V02DemoState): V02DemoState {
+  return {
+    ...state,
+    qrSources: state.qrSources.map((source) => ({ ...source, scanCount: source.scans })),
+  };
+}
+
 export function useV02Demo() {
-  const [state, setState] = useState<V02DemoState>(initialV02State);
+  const [state, setState] = useState<V02DemoState>(() => normalizeState(initialV02State));
   const stateRef = useRef(state);
   const [hydrated, setHydrated] = useState(false);
 
-  const commit = useCallback((next: V02DemoState) => {
-    stateRef.current = next;
-    setState(next);
+  const commit = useCallback((nextState: V02DemoState) => {
+    const normalized = normalizeState(nextState);
+    stateRef.current = normalized;
+    setState(normalized);
   }, []);
 
   useEffect(() => {
@@ -70,19 +78,5 @@ export function useV02Demo() {
     return { ok: true, message: action.message };
   }, [commit]);
 
-  return useMemo(() => ({
-    state,
-    hydrated,
-    start,
-    finish,
-    cancel,
-    setServicePrice,
-    setPlatformFee,
-    sendPaymentNotice,
-    decidePayment,
-    addDiscountCode,
-    toggleDiscount,
-    scanQr,
-    reset,
-  }), [state, hydrated, start, finish, cancel, setServicePrice, setPlatformFee, sendPaymentNotice, decidePayment, addDiscountCode, toggleDiscount, scanQr, reset]);
+  return useMemo(() => ({ state, hydrated, start, finish, cancel, setServicePrice, setPlatformFee, sendPaymentNotice, decidePayment, addDiscountCode, toggleDiscount, scanQr, reset }), [state, hydrated, start, finish, cancel, setServicePrice, setPlatformFee, sendPaymentNotice, decidePayment, addDiscountCode, toggleDiscount, scanQr, reset]);
 }

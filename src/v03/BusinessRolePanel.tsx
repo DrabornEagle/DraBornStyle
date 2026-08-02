@@ -1,0 +1,31 @@
+import { Ionicons } from '@expo/vector-icons';
+import React, { useState } from 'react';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { AnimatedPressable } from '../components/AnimatedPressable';
+import { colors, radii, spacing } from '../theme';
+import { SectionHeader, StatusPill } from '../v01/PanelWidgets';
+import { V02BusinessPanel } from '../v02/BusinessPanel';
+import { getBusinessForOwner } from '../v02/state';
+import { V02DemoState } from '../v02/types';
+import { getBusinessAppointments, statusLabel, statusTone } from './state';
+import { V03DemoState } from './types';
+
+type OperationsProps = React.ComponentProps<typeof V02BusinessPanel>;
+export function V03BusinessPanel({ operationsProps, appointmentState, operationsState }: { operationsProps: OperationsProps; appointmentState: V03DemoState; operationsState: V02DemoState; }) {
+  const [area,setArea]=useState<'calendar'|'operations'>('calendar');
+  const business=getBusinessForOwner(operationsState,operationsProps.user.id);
+  const appointments=business?getBusinessAppointments(appointmentState,business.id,'2026-08-02'):[];
+  if(area==='operations') return <View style={styles.root}><Tabs area={area} onChange={setArea}/><View style={styles.fill}><V02BusinessPanel {...operationsProps}/></View></View>;
+  const waiting=appointments.filter((item)=>['scheduled','on_the_way','customer_arrived'].includes(item.status)).length;
+  const active=appointments.filter((item)=>['arrived','in_service'].includes(item.status)).length;
+  const completed=appointments.filter((item)=>item.status==='completed').length;
+  return <View style={styles.root}><Tabs area={area} onChange={setArea}/><ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+    <View style={styles.hero}><View style={styles.icon}><Ionicons name="people" size={27} color={colors.white}/></View><View style={styles.copy}><Text style={styles.eyebrow}>İŞLETME YOĞUNLUĞU</Text><Text style={styles.title}>Anlık salon akışı</Text><Text style={styles.text}>Randevular, gelen müşteriler ve aktif işlemler aynı takvimde.</Text></View></View>
+    <View style={styles.metrics}><Metric label="Bekleyen" value={waiting} accent={colors.amber}/><Metric label="İşlemde" value={active} accent={colors.primary}/><Metric label="Bitti" value={completed} accent={colors.green}/></View>
+    <SectionHeader title="Günlük zaman çizelgesi" meta={`${appointments.length} randevu`}/>
+    <View style={styles.list}>{appointments.map((appointment)=>{const service=operationsState.services.find((item)=>item.id===appointment.serviceId);return <View key={appointment.id} style={styles.row}><View style={styles.timeColumn}><Text style={styles.time}>{appointment.time}</Text><View style={styles.line}/></View><View style={styles.card}><View style={styles.cardTop}><View style={styles.info}><Text style={styles.customer}>{appointment.customerName}</Text><Text style={styles.service}>{service?.title??'Hizmet'} · {appointment.durationMinutes} dk</Text></View><StatusPill label={statusLabel(appointment.status)} status={statusTone(appointment.status)}/></View>{!!appointment.note&&<Text style={styles.note}>{appointment.note}</Text>}</View></View>;})}</View>
+  </ScrollView></View>;
+}
+function Tabs({area,onChange}:{area:'calendar'|'operations';onChange:(v:'calendar'|'operations')=>void}){return <View style={styles.tabs}><AnimatedPressable style={[styles.tab,area==='calendar'&&styles.tabActive]} onPress={()=>onChange('calendar')}><Ionicons name="calendar-outline" size={17} color={area==='calendar'?colors.white:colors.textMuted}/><Text style={[styles.tabText,area==='calendar'&&styles.tabTextActive]}>Takvim</Text></AnimatedPressable><AnimatedPressable style={[styles.tab,area==='operations'&&styles.tabActive]} onPress={()=>onChange('operations')}><Ionicons name="storefront-outline" size={17} color={area==='operations'?colors.white:colors.textMuted}/><Text style={[styles.tabText,area==='operations'&&styles.tabTextActive]}>İşletme Merkezi</Text></AnimatedPressable></View>}
+function Metric({label,value,accent}:{label:string;value:number;accent:string}){return <View style={styles.metric}><Text style={[styles.metricValue,{color:accent}]}>{value}</Text><Text style={styles.metricLabel}>{label}</Text></View>}
+const styles=StyleSheet.create({root:{flex:1},fill:{flex:1},tabs:{flexDirection:'row',gap:6,paddingHorizontal:spacing.md,paddingBottom:8},tab:{flex:1,minHeight:44,flexDirection:'row',alignItems:'center',justifyContent:'center',gap:6,borderRadius:15,backgroundColor:colors.card,borderWidth:1,borderColor:colors.border},tabActive:{backgroundColor:colors.surfaceElevated},tabText:{color:colors.textMuted,fontSize:10.5,fontWeight:'900'},tabTextActive:{color:colors.white},content:{paddingHorizontal:spacing.md,paddingTop:3,paddingBottom:34},hero:{minHeight:122,flexDirection:'row',alignItems:'center',gap:12,padding:15,borderRadius:24,backgroundColor:'rgba(255,182,72,0.08)',borderWidth:1,borderColor:'rgba(255,182,72,0.2)'},icon:{width:54,height:54,borderRadius:19,alignItems:'center',justifyContent:'center',backgroundColor:colors.amber},copy:{flex:1},eyebrow:{color:colors.textMuted,fontSize:8.5,fontWeight:'900'},title:{color:colors.white,fontSize:18,fontWeight:'900',marginTop:4},text:{color:colors.textMuted,fontSize:9.5,lineHeight:14,marginTop:5},metrics:{flexDirection:'row',gap:8,marginTop:11},metric:{flex:1,minHeight:70,alignItems:'center',justifyContent:'center',borderRadius:18,backgroundColor:colors.card,borderWidth:1,borderColor:colors.border},metricValue:{fontSize:20,fontWeight:'900'},metricLabel:{color:colors.textMuted,fontSize:8.5,marginTop:3},list:{gap:8},row:{flexDirection:'row',gap:10},timeColumn:{width:52,alignItems:'center'},time:{color:colors.cyan,fontSize:11,fontWeight:'900',marginTop:14},line:{width:2,flex:1,backgroundColor:colors.border,marginTop:6},card:{flex:1,padding:12,borderRadius:radii.lg,backgroundColor:colors.card,borderWidth:1,borderColor:colors.border},cardTop:{flexDirection:'row',alignItems:'center',gap:8},info:{flex:1,minWidth:0},customer:{color:colors.white,fontSize:12,fontWeight:'900'},service:{color:colors.textMuted,fontSize:9,marginTop:3},note:{color:colors.textMuted,fontSize:9,lineHeight:13,marginTop:8}});

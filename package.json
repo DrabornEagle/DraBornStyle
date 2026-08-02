@@ -1,6 +1,6 @@
 {
   "name": "drabornstyle",
-  "version": "0.2.17",
+  "version": "0.3.0",
   "private": true,
   "main": "index.js",
   "scripts": {

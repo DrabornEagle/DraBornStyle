@@ -2,7 +2,7 @@
   "expo": {
     "name": "DraBornStyle",
     "slug": "drabornstyle",
-    "version": "0.2.17",
+    "version": "0.3.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -20,9 +20,10 @@
     },
     "extra": {
       "demoMode": true,
-      "release": "v0.2.17-final",
+      "release": "v0.3.0-final",
       "roleSource": "dkd_user_role_access",
-      "defaultPlatformFeeTl": 20
+      "defaultPlatformFeeTl": 20,
+      "appointmentEventSource": "dkd_appointment_events"
     }
   }
 }

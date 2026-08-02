@@ -10,27 +10,30 @@ import { PanelShell } from './src/v01/PanelShell';
 import { RoleSwitcherSheet } from './src/v01/RoleSwitcherSheet';
 import { ApplicationRole } from './src/v01/types';
 import { useV01Demo } from './src/v01/useV01Demo';
-import { V02AdminPanel } from './src/v02/AdminPanel';
-import { V02BusinessPanel } from './src/v02/BusinessPanel';
-import { V02CustomerPanel } from './src/v02/CustomerPanel';
-import { V02MasterPanel } from './src/v02/MasterPanel';
 import { PaymentSheet } from './src/v02/PaymentSheet';
 import { getActiveTransaction, getBusinessFinancials, getBusinessForOwner } from './src/v02/state';
 import { TransactionSheet } from './src/v02/TransactionSheet';
 import { StartTransactionInput } from './src/v02/types';
 import { useV02Demo } from './src/v02/useV02Demo';
+import { AppointmentSheet } from './src/v03/AppointmentSheet';
+import { V03CustomerPanel } from './src/v03/CustomerPanel';
+import { V03AdminPanel, V03BusinessPanel, V03MasterPanel } from './src/v03/RolePanels';
+import { V03Appointment } from './src/v03/types';
+import { useV03Demo } from './src/v03/useV03Demo';
 
 type ToastState = { message: string; success: boolean } | null;
 type Result = { ok: boolean; message: string };
 
-function DraBornStyleV02() {
+function DraBornStyleV03() {
   const access = useV01Demo();
   const operations = useV02Demo();
+  const appointments = useV03Demo();
   const [roleSheetVisible, setRoleSheetVisible] = useState(false);
   const [applicationVisible, setApplicationVisible] = useState(false);
   const [applicationRole, setApplicationRole] = useState<ApplicationRole>('master');
   const [transactionVisible, setTransactionVisible] = useState(false);
   const [paymentVisible, setPaymentVisible] = useState(false);
+  const [appointmentVisible, setAppointmentVisible] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
   const toastY = useRef(new Animated.Value(-100)).current;
 
@@ -46,12 +49,12 @@ function DraBornStyleV02() {
 
   const showMessage = (message: string, success = true) => setToast({ message, success });
 
-  if (!access.hydrated || !operations.hydrated) {
+  if (!access.hydrated || !operations.hydrated || !appointments.hydrated) {
     return (
       <View style={styles.loading}>
-        <View style={styles.loadingIcon}><Ionicons name="cut" size={31} color={colors.white} /></View>
+        <View style={styles.loadingIcon}><Ionicons name="calendar" size={31} color={colors.white} /></View>
         <Text style={styles.loadingTitle}>DraBornStyle</Text>
-        <Text style={styles.loadingText}>v0.2.17 işlem ve ödeme merkezi hazırlanıyor…</Text>
+        <Text style={styles.loadingText}>v0.3 randevu, takvim ve müşteri akışı hazırlanıyor…</Text>
       </View>
     );
   }
@@ -63,21 +66,47 @@ function DraBornStyleV02() {
   const ownerFinancials = ownerBusiness ? getBusinessFinancials(operations.state, ownerBusiness.id) : null;
 
   const startTransaction = (input: StartTransactionInput): Result => {
-    const result = operations.start(input);
-    if (result.ok) access.changeMasterPresence('busy');
-    return result;
+    const response = operations.start(input);
+    if (response.ok) access.changeMasterPresence('busy');
+    return response;
+  };
+
+  const startAppointment = (appointment: V03Appointment): Result => {
+    const response = startTransaction({
+      masterUserId: appointment.masterUserId,
+      customerName: appointment.customerName,
+      customerPhone: appointment.customerPhone,
+      serviceId: appointment.serviceId,
+      source: 'appointment',
+    });
+    if (!response.ok) return response;
+    const statusResponse = appointments.setStatus(appointment.id, 'in_service', 'master', 'Usta tek tuşla işlemi başlattı.');
+    if (!statusResponse.ok) return statusResponse;
+    return { ok: true, message: `${appointment.customerName} için işlem başlatıldı ve randevu İşlemde oldu.` };
   };
 
   const finishTransaction = (transactionId: string, editedPriceTl: number, discountCode?: string): Result => {
-    const result = operations.finish(transactionId, editedPriceTl, discountCode);
-    if (result.ok) access.changeMasterPresence('available');
-    return result;
+    const response = operations.finish(transactionId, editedPriceTl, discountCode);
+    if (!response.ok) return response;
+    access.changeMasterPresence('available');
+    const transaction = operations.state.transactions.find((item) => item.id === transactionId);
+    const linked = appointments.state.appointments.find(
+      (item) => item.status === 'in_service' && item.masterUserId === transaction?.masterUserId && item.customerPhone === transaction?.customerPhone,
+    );
+    if (linked) appointments.setStatus(linked.id, 'completed', 'master', 'İşlem tamamlandı ve v0.2 işlem kaydına yansıdı.');
+    return response;
   };
 
   const cancelTransaction = (transactionId: string): Result => {
-    const result = operations.cancel(transactionId);
-    if (result.ok) access.changeMasterPresence('available');
-    return result;
+    const response = operations.cancel(transactionId);
+    if (!response.ok) return response;
+    access.changeMasterPresence('available');
+    const transaction = operations.state.transactions.find((item) => item.id === transactionId);
+    const linked = appointments.state.appointments.find(
+      (item) => item.status === 'in_service' && item.masterUserId === transaction?.masterUserId && item.customerPhone === transaction?.customerPhone,
+    );
+    if (linked) appointments.setStatus(linked.id, 'cancelled', 'master', 'Aktif işlem iptal edildi.');
+    return response;
   };
 
   return (
@@ -93,15 +122,18 @@ function DraBornStyleV02() {
           activeRole={activeRole}
           onRolePress={() => setRoleSheetVisible(true)}
           onLogout={() => {
-            const result = access.signOut();
-            showMessage(result.message, result.ok);
+            const response = access.signOut();
+            showMessage(response.messae, response.ok);
           }}
         >
           {activeRole === 'customer' && (
-            <V02CustomerPanel
+            <V03CustomerPanel
               user={user}
               applications={access.state.applications.filter((item) => item.userId === user.id)}
-              state={operations.state}
+              operationsState={operations.state}
+              appointmentState={appointments.state}
+              onOpenAppointment={() => setAppointmentVisible(true)}
+              onStatus={(appointmentId, status) => appointments.setStatus(appointmentId, status, 'customer')}
               onApplyMaster={() => {
                 setApplicationRole('master');
                 setApplicationVisible(true);
@@ -113,48 +145,65 @@ function DraBornStyleV02() {
               onScanQr={operations.scanQr}
               onMessage={showMessage}
             />
-          )}
+         )}
 
           {activeRole === 'master' && (
-            <V02MasterPanel
-              user={user}
-              presence={activeTransaction ? 'busy' : access.state.masterPresenceByUser[user.id] ?? 'offline'}
-              state={operations.state}
-              onPresence={access.changeMasterPresence}
-              onOpenTransaction={() => setTransactionVisible(true)}
-              onAddDiscount={(code, percent) => operations.addDiscountCode(user.id, code, percent)}
-              onToggleDiscount={operations.toggleDiscount}
-              onScanQr={operations.scanQr}
+            <V03MasterPanel
+              operationsProps={{
+                user,
+                presence: access.state.masterPresenceByUser[user.id] ?? 'offline',
+                state: operations.state,
+                onPresence: access.changeMasterPresence,
+                onOpenTransaction: () => setTransactionVisible(true),
+                onAddDiscount: (code, percent) => operations.addDiscountCode(user.id, code, percent),
+                onToggleDiscount: operations.toggleDiscount,
+                onScanQr: operations.scanQr,
+                onMessage: showMessage,
+              }}
+              appointmentState={appointments.state}
+              operationsState={operations.state}
+              onStatus={(appointmentId, status) => appointments.setStatus(appointmentId, status, 'master')}
+              onStartAppointment={startAppointment}
               onMessage={showMessage}
             />
-          )}
+         )}
 
           {activeRole === 'business' && (
-            <V02BusinessPanel
-              user={user}
-              state={operations.state}
-              onChangeServicePrice={operations.setServicePrice}
-              onOpenPayment={() => setPaymentVisible(true)}
-              onScanQr={operations.scanQr}
-              onMessage={showMessage}
+            <V03BusinessPanel
+              operationsProps={{
+                user,
+                state: operations.state,
+                onChangeServicePrice: operations.setServicePrice,
+                onOpenPayment: () => setPaymentVisible(true),
+                onScanQr: operations.scanQr,
+                onMessage: showMessage,
+              }}
+              appointmentState={appointments.state}
+              operationsState={operations.state}
             />
           )}
 
           {activeRole === 'admin' && (
-            <V02AdminPanel
-              v01State={access.state}
-              v02State={operations.state}
-              adminUserId={user.id}
-              onApplicationDecision={access.decideApplication}
-              onGrantRole={access.addRole}
-              onRevokeRole={access.removeRole}
-              onResetV01={access.resetDemo}
-              onPaymentDecision={operations.decidePayment}
-              onPlatformFee={operations.setPlatformFee}
-              onResetV02={operations.reset}
+            <V03AdminPanel
+              operationsProps={{
+                v01State: access.state,
+                v02State: operations.state,
+                adminUserId: user.id,
+                onApplicationDecision: access.decideApplication,
+                onGrantRole: access.addRole,
+                onRevokeRole: access.removeRole,
+                onResetV01: access.resetDemo,
+                onPaymentDecision: operations.decidePayment,
+                onPlatformFee: operations.setPlatformFee,
+                onResetV02: operations.reset,
+                onMessage: showMessage,
+              }}
+              appointmentState={appointments.state}
+              operationsState={operations.state}
+              onResetV03={appointments.reset}
               onMessage={showMessage}
             />
-          )}
+         )}
         </PanelShell>
       )}
 
@@ -165,8 +214,8 @@ function DraBornStyleV02() {
             roles={access.currentRoles}
             activeRole={activeRole}
             onSelect={(role) => {
-              const result = access.changeRole(role);
-              showMessage(result.message, result.ok);
+              const response = access.changeRole(role);
+              showMessage(response.message, response.ok);
             }}
             onClose={() => setRoleSheetVisible(false)}
           />
@@ -178,6 +227,18 @@ function DraBornStyleV02() {
             onMessage={showMessage}
           />
         </>
+      )}
+
+      {user && activeRole === 'customer' && (
+        <AppointmentSheet
+          visible={appointmentVisible}
+          user={user}
+          operationsState={operations.state}
+          appointmentState={appointments.state}
+          onClose={() => setAppointmentVisible(false)}
+          onCreate={appointments.create}
+          onMessage={showMessage}
+        />
       )}
 
       {user && activeRole === 'master' && (
@@ -227,7 +288,7 @@ function DraBornStyleV02() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <DraBornStyleV02 />
+      <DraBornStyleV03 />
     </SafeAreaProvider>
   );
 }
