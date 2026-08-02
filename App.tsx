@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { PrivacyCenterSheet } from './src/components/PrivacyCenterSheet';
 import { colors } from './src/theme';
 import { ApplicationSheet } from './src/v01/ApplicationSheet';
 import { AuthScreen } from './src/v01/AuthScreen';
@@ -24,7 +25,7 @@ import { useV03Demo } from './src/v03/useV03Demo';
 type ToastState = { message: string; success: boolean } | null;
 type Result = { ok: boolean; message: string };
 
-function DraBornStyleV03() {
+function DraBornStyleV04() {
   const access = useV01Demo();
   const operations = useV02Demo();
   const appointments = useV03Demo();
@@ -34,6 +35,7 @@ function DraBornStyleV03() {
   const [transactionVisible, setTransactionVisible] = useState(false);
   const [paymentVisible, setPaymentVisible] = useState(false);
   const [appointmentVisible, setAppointmentVisible] = useState(false);
+  const [privacyVisible, setPrivacyVisible] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
   const toastY = useRef(new Animated.Value(-100)).current;
 
@@ -52,9 +54,9 @@ function DraBornStyleV03() {
   if (!access.hydrated || !operations.hydrated || !appointments.hydrated) {
     return (
       <View style={styles.loading}>
-        <View style={styles.loadingIcon}><Ionicons name="calendar" size={31} color={colors.white} /></View>
+        <View style={styles.loadingIcon}><Ionicons name="shield-checkmark" size={31} color={colors.white} /></View>
         <Text style={styles.loadingTitle}>DraBornStyle</Text>
-        <Text style={styles.loadingText}>v0.3 randevu, takvim ve müşteri akışı hazırlanıyor…</Text>
+        <Text style={styles.loadingText}>v0.4 gizlilik, randevu ve işlem merkezi hazırlanıyor…</Text>
       </View>
     );
   }
@@ -109,6 +111,14 @@ function DraBornStyleV03() {
     return response;
   };
 
+  const deleteLocalData = async () => {
+    await appointments.reset();
+    await operations.reset();
+    await access.resetDemo();
+    setPrivacyVisible(false);
+    showMessage('Yerel hesap ve kullanıcı verileri silindi; başlangıç demo durumu geri yüklendi.', true);
+  };
+
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
@@ -121,6 +131,7 @@ function DraBornStyleV03() {
           roles={access.currentRoles}
           activeRole={activeRole}
           onRolePress={() => setRoleSheetVisible(true)}
+          onPrivacyPress={() => setPrivacyVisible(true)}
           onLogout={() => {
             const response = access.signOut();
             showMessage(response.message, response.ok);
@@ -145,7 +156,7 @@ function DraBornStyleV03() {
               onScanQr={operations.scanQr}
               onMessage={showMessage}
             />
-         )}
+          )}
 
           {activeRole === 'master' && (
             <V03MasterPanel
@@ -166,7 +177,7 @@ function DraBornStyleV03() {
               onStartAppointment={startAppointment}
               onMessage={showMessage}
             />
-         )}
+          )}
 
           {activeRole === 'business' && (
             <V03BusinessPanel
@@ -203,7 +214,7 @@ function DraBornStyleV03() {
               onResetV03={appointments.reset}
               onMessage={showMessage}
             />
-         )}
+          )}
         </PanelShell>
       )}
 
@@ -266,6 +277,12 @@ function DraBornStyleV03() {
         />
       )}
 
+      <PrivacyCenterSheet
+        visible={privacyVisible}
+        onClose={() => setPrivacyVisible(false)}
+        onDeleteLocalData={deleteLocalData}
+      />
+
       {toast && (
         <Animated.View
           pointerEvents="none"
@@ -288,7 +305,7 @@ function DraBornStyleV03() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <DraBornStyleV03 />
+      <DraBornStyleV04 />
     </SafeAreaProvider>
   );
 }
