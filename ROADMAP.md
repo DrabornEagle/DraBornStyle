@@ -63,7 +63,7 @@
 - [x] AsyncStorage ile v0.2 kalıcılığı
 - [x] TypeScript/TSX sözdizimi testi
 - [x] Strict tip kontrolü
-- [x] v0.2 durum makinesi 11/11 testi
+- [x] v0.2 genişletilmiş durum makinesi 13/13 testi
 - [ ] Kullanıcının Android cihazında son görsel onay testi
 
 ## v0.3.0 — Randevu, Takvim ve Müşteri Akışı
