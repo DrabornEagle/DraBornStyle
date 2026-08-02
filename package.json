@@ -1,13 +1,15 @@
 {
   "name": "drabornstyle",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "main": "index.js",
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "doctor": "npx expo-doctor@latest",
+    "verify:release": "npm run typecheck && npm run doctor"
   },
   "dependencies": {
     "@expo/vector-icons": "15.1.1",
