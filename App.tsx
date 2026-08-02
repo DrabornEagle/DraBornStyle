@@ -123,7 +123,7 @@ function DraBornStyleV03() {
           onRolePress={() => setRoleSheetVisible(true)}
           onLogout={() => {
             const response = access.signOut();
-            showMessage(response.messae, response.ok);
+            showMessage(response.message, response.ok);
           }}
         >
           {activeRole === 'customer' && (

@@ -58,7 +58,7 @@ export function BarberCard({
       <LinearGradient
         colors={['rgba(6,7,12,0.02)', 'rgba(6,7,12,0.52)', 'rgba(6,7,12,0.98)']}
         locations={[0, 0.48, 1]}
-        style={StyleSheet.absoluteFillObject}
+        style={StyleSheet.absoluteFill}
       />
 
       <View style={styles.topRow}>

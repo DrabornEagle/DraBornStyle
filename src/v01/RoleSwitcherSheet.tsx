@@ -31,7 +31,7 @@ export function RoleSwitcherSheet({
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <View style={styles.overlay}>
-        <AnimatedPressable haptic={false} style={StyleSheet.absoluteFillObject} onPress={onClose} />
+        <AnimatedPressable haptic={false} style={StyleSheet.absoluteFill} onPress={onClose} />
         <View style={[styles.sheet, { paddingBottom: Math.max(insets.bottom, 14) + 14 }]}>
           <View style={styles.handle} />
           <View style={styles.header}>

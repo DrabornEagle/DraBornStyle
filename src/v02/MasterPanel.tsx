@@ -53,7 +53,7 @@ export function V02MasterPanel({
     <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
       <View style={styles.hero}>
         <Image source={{ uri: business.coverImage }} style={styles.heroImage} />
-        <LinearGradient colors={['rgba(8,10,16,0.05)', 'rgba(8,10,16,0.55)', 'rgba(8,10,16,0.98)']} locations={[0, 0.48, 1]} style={StyleSheet.absoluteFillObject} />
+        <LinearGradient colors={['rgba(8,10,16,0.05)', 'rgba(8,10,16,0.55)', 'rgba(8,10,16,0.98)']} locations={[0, 0.48, 1]} style={StyleSheet.absoluteFill} />
         <View style={styles.heroTop}>
           <View style={styles.heroBadge}><Ionicons name="cut" size={15} color={colors.cyan} /><Text style={styles.heroBadgeText}>USTA OPERASYON</Text></View>
           <StatusPill label={active ? 'İşlemde' : presence === 'available' ? 'Uygun' : presence === 'busy' ? 'Meşgul' : 'Çevrimdışı'} status={active || presence === 'busy' ? 'warning' : presence === 'available' ? 'success' : 'neutral'} />
