@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   fix-and-verify:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout trigger branch
@@ -17,7 +18,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Replace invalid React Native StyleSheet property
+      - name: Replace known TypeScript mistakes
         shell: bash
         run: |
           set -euo pipefail
@@ -30,20 +31,45 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Run strict TypeScript check
-        run: npm run typecheck
+      - name: Run TypeScript and capture diagnostics
+        id: typecheck
+        shell: bash
+        run: |
+          set +e
+          npm run typecheck > V03_TYPECHECK_OUTPUT.txt 2>&1
+          code=$?
+          cat V03_TYPECHECK_OUTPUT.txt
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit 0
 
-      - name: Remove one-time workflow
-        run: rm -f .github/workflows/fix-v03-types.yml
-
-      - name: Commit verified fixes
+      - name: Publish diagnostics when errors remain
+        if: steps.typecheck.outputs.exit_code != '0'
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add App.tsx src .github/workflows/fix-v03-types.yml
-          git commit -m "fix: replace invalid StyleSheet property and pass v0.3 typecheck"
+          git add App.tsx src V03_TYPECHECK_OUTPUT.txt
+          git commit -m "diagnostics: capture remaining v0.3 TypeScript errors"
+          git push origin HEAD:fix-v03-types-trigger
+
+      - name: Stop when errors remain
+        if: steps.typecheck.outputs.exit_code != '0'
+        run: exit 1
+
+      - name: Remove one-time workflow
+        if: steps.typecheck.outputs.exit_code == '0'
+        run: rm -f .github/workflows/fix-v03-types.yml V03_TYPECHECK_OUTPUT.txt
+
+      - name: Commit verified fixes
+        if: steps.typecheck.outputs.exit_code == '0'
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx src .github/workflows/fix-v03-types.yml V03_TYPECHECK_OUTPUT.txt
+          git commit -m "fix: repair v0.3 TypeScript and pass strict typecheck"
           git push origin HEAD:main
           git push --force origin HEAD:release/v0.3
           git push origin --delete fix-v03-types-trigger || true
