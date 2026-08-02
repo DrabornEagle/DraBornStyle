@@ -1,40 +1,20 @@
-name: One-time v0.3 typecheck
+name: Final temporary branch cleanup
 
 on:
   push:
     branches:
-      - verify-v03-trigger
+      - cleanup-final
 
 permissions:
   contents: write
 
 jobs:
-  typecheck:
+  cleanup:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Run checks and save diagnostics
-        shell: bash
+      - name: Delete verification branches
         run: |
-          set +e
-          npm install --no-audit --no-fund > typecheck.log 2>&1
-          status=$?
-          if [ "$status" -eq 0 ]; then
-            npm run typecheck >> typecheck.log 2>&1
-            status=$?
-          fi
-          echo "EXIT_STATUS=$status" >> typecheck.log
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add typecheck.log
-          git commit -m "ci: save v0.3 typecheck diagnostics" || true
-          git push origin HEAD:verify-v03-trigger
-          if [ "$status" -eq 0 ]; then
-            git push origin --delete verify-v03-trigger
-          else
-            exit "$status"
-          fi
+          git push origin --delete verify-v03-trigger || true
+          git push origin --delete cleanup-final || true
