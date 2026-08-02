@@ -1,13 +1,15 @@
-# DraBornStyle v0.1
+# DraBornStyle v0.2
 
-İlk çalışan Expo Go demo sürümü.
+İkinci Expo Go demo sürümü.
 
-- Expo SDK 57
-- Modern berber temalı ana sayfa
-- Demo hizmet ve berber kartları
-- Temel navigasyon
-- Basma ve arka plan animasyonları
-- Veritabanı ve Supabase yok
+- v0.1 ana sayfa ve modern UI temeli
+- Arama ve gelişmiş filtreler
+- Favori berberler
+- Hizmet, gün ve saat seçilen rezervasyon paneli
+- Yaklaşan/geçmiş randevular
+- Style Club ödül ekranı
+- Yerel React state demo verileri
+- Supabase ve veritabanı yok
 
 ```bash
 npm install
