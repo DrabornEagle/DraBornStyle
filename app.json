@@ -2,11 +2,25 @@
   "expo": {
     "name": "DraBornStyle",
     "slug": "drabornstyle",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
-    "android": { "package": "com.draborneagle.drabornstyle", "edgeToEdgeEnabled": true },
-    "extra": { "demoMode": true, "release": "v0.2" }
+    "android": {
+      "package": "com.draborneagle.drabornstyle",
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.draborneagle.drabornstyle"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "extra": {
+      "demoMode": true,
+      "release": "v0.3"
+    }
   }
 }
