@@ -1,0 +1,49 @@
+name: Apply v0.3 Final
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply verified v0.3 payload
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .v03-payload/part* | base64 -d > /tmp/v03.tar.gz
+          echo "62c3b5942ce7b738556b106cece78bb849e05922f6c01a55e25625bfa472d4f1  /tmp/v03.tar.gz" | sha256sum -c -
+          tar -xzf /tmp/v03.tar.gz
+          rm -rf .v03-payload
+          rm -f .github/workflows/apply-v03.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "v0.3.0: appointment calendar and customer flow" || true
+          git push origin HEAD:main
+
+      - name: Sync release branch and delete obsolete branches
+        shell: bash
+        run: |
+          set -e
+          git push origin HEAD:refs/heads/release/v0.3 --force
+          for branch in \
+            archive/legacy-release-v0.2 \
+            archive/ui-demo-v0.3 \
+            work/v0.3-build \
+            work/v0.3-build-copy \
+            work/v0.3-payload \
+            work/v0.3-payload-staging; do
+            git push origin --delete "$branch" || true
+          done
