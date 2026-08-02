@@ -2,7 +2,7 @@
   "expo": {
     "name": "DraBornStyle",
     "slug": "drabornstyle",
-    "version": "0.3.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "newArchEnabled": true,
@@ -20,7 +20,8 @@
     },
     "extra": {
       "demoMode": true,
-      "release": "v0.3"
+      "release": "v0.1-final",
+      "roleSource": "dkd_user_role_access"
     }
   }
 }
