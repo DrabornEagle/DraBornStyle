@@ -7,11 +7,9 @@
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "backgroundColor": "#090B12",
-    "newArchEnabled": true,
     "android": {
       "package": "com.draborneagle.drabornstyle",
       "versionCode": 1,
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "blockedPermissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
