@@ -38,7 +38,7 @@ export function Onboarding({ onFinish }: { onFinish: () => void }) {
   const [index, setIndex] = useState(0);
   const opacity = useRef(new Animated.Value(1)).current;
   const translateX = useRef(new Animated.Value(0)).current;
-  const slide = slides[index] ?? slides[0];
+  const slide = slides[index] ?? slides[0]!;
 
   useEffect(() => {
     opacity.setValue(0);
