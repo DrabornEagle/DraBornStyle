@@ -1,0 +1,49 @@
+name: Fix and verify v0.3 TypeScript
+
+on:
+  push:
+    branches:
+      - fix-v03-types-trigger
+
+permissions:
+  contents: write
+
+jobs:
+  fix-and-verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout trigger branch
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Replace invalid React Native StyleSheet property
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(grep -RIl --include='*.ts' --include='*.tsx' 'StyleSheet\.absoluteFillObject' . --exclude-dir=node_modules --exclude-dir=.git || true)
+          if [ "${#files[@]}" -gt 0 ]; then
+            sed -i 's/StyleSheet\.absoluteFillObject/StyleSheet.absoluteFill/g' "${files[@]}"
+          fi
+          sed -i 's/response\.messae/response.message/g' App.tsx
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run strict TypeScript check
+        run: npm run typecheck
+
+      - name: Remove one-time workflow
+        run: rm -f .github/workflows/fix-v03-types.yml
+
+      - name: Commit verified fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.tsx src .github/workflows/fix-v03-types.yml
+          git commit -m "fix: replace invalid StyleSheet property and pass v0.3 typecheck"
+          git push origin HEAD:main
+          git push --force origin HEAD:release/v0.3
+          git push origin --delete fix-v03-types-trigger || true
