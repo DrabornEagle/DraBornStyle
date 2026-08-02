@@ -2,119 +2,146 @@ import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
-import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { AppointmentsScreen } from './src/screens/AppointmentsScreen';
-import { ExploreScreen } from './src/screens/ExploreScreen';
-import { HomeScreen } from './src/screens/HomeScreen';
-import { ProfileScreen } from './src/screens/ProfileScreen';
-import { RewardsScreen } from './src/screens/RewardsScreen';
-import { BookingSheet } from './src/components/BookingSheet';
-import { BottomNav } from './src/components/BottomNav';
-import { GlowOrbs } from './src/components/GlowOrbs';
-import { NotificationsSheet } from './src/components/NotificationsSheet';
-import { Onboarding } from './src/components/Onboarding';
-import { usePersistentDemo } from './src/hooks/usePersistentDemo';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { colors } from './src/theme';
-import { RootTab } from './src/types';
+import { AuthScreen } from './src/v01/AuthScreen';
+import { ApplicationSheet } from './src/v01/ApplicationSheet';
+import { AdminPanel } from './src/v01/AdminPanel';
+import { BusinessPanel } from './src/v01/BusinessPanel';
+import { CustomerPanel } from './src/v01/CustomerPanel';
+import { MasterPanel } from './src/v01/MasterPanel';
+import { PanelShell } from './src/v01/PanelShell';
+import { RoleSwitcherSheet } from './src/v01/RoleSwitcherSheet';
+import { ApplicationRole } from './src/v01/types';
+import { useV01Demo } from './src/v01/useV01Demo';
 
-function DraBornStyleApp() {
-  const { state, hydrated, update, toggleFavorite, addAppointment, cancelAppointment, resetDemo } = usePersistentDemo();
-  const [tab, setTab] = useState<RootTab>('home');
-  const [bookingBarberId, setBookingBarberId] = useState<string | null>(null);
-  const [notificationsVisible, setNotificationsVisible] = useState(false);
-  const [toastVisible, setToastVisible] = useState(false);
-  const toastTranslate = useRef(new Animated.Value(-90)).current;
-  const pageOpacity = useRef(new Animated.Value(1)).current;
+type ToastState = { message: string; success: boolean } | null;
+
+function DraBornStyleV01() {
+  const demo = useV01Demo();
+  const [roleSheetVisible, setRoleSheetVisible] = useState(false);
+  const [applicationVisible, setApplicationVisible] = useState(false);
+  const [applicationRole, setApplicationRole] = useState<ApplicationRole>('master');
+  const [toast, setToast] = useState<ToastState>(null);
+  const toastY = useRef(new Animated.Value(-100)).current;
 
   useEffect(() => {
-    if (!toastVisible) return;
+    if (!toast) return;
+    toastY.setValue(-100);
     Animated.sequence([
-      Animated.spring(toastTranslate, { toValue: 0, useNativeDriver: true, speed: 18, bounciness: 5 }),
-      Animated.delay(1900),
-      Animated.timing(toastTranslate, { toValue: -90, duration: 240, useNativeDriver: true }),
-    ]).start(() => setToastVisible(false));
-  }, [toastTranslate, toastVisible]);
+      Animated.spring(toastY, { toValue: 0, useNativeDriver: true, speed: 22, bounciness: 3 }),
+      Animated.delay(2200),
+      Animated.timing(toastY, { toValue: -100, duration: 220, useNativeDriver: true }),
+    ]).start(() => setToast(null));
+  }, [toast, toastY]);
 
-  const changeTab = (nextTab: RootTab) => {
-    if (nextTab === tab) return;
-    Animated.timing(pageOpacity, { toValue: 0, duration: 110, useNativeDriver: true }).start(() => {
-      setTab(nextTab);
-      Animated.timing(pageOpacity, { toValue: 1, duration: 220, useNativeDriver: true }).start();
-    });
-  };
+  const showMessage = (message: string, success = true) => setToast({ message, success });
 
-  if (!hydrated) {
+  if (!demo.hydrated) {
     return (
       <View style={styles.loading}>
-        <View style={styles.loadingLogo}><Ionicons name="cut" size={32} color={colors.white} /></View>
+        <View style={styles.loadingIcon}><Ionicons name="cut" size={31} color={colors.white} /></View>
         <Text style={styles.loadingTitle}>DraBornStyle</Text>
-        <Text style={styles.loadingText}>Demo deneyimi hazırlanıyor…</Text>
+        <Text style={styles.loadingText}>v0.1 rol ve panel omurgası hazırlanıyor…</Text>
       </View>
     );
   }
 
-  if (!state.onboardingCompleted) {
-    return <Onboarding onFinish={() => update({ onboardingCompleted: true })} />;
-  }
-
-  const commonProps = {
-    favorites: state.favoriteBarberIds,
-    onToggleFavorite: toggleFavorite,
-    onBook: (id: string) => setBookingBarberId(id),
-  };
+  const user = demo.currentUser;
+  const activeRole = demo.activeRole;
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
-      <GlowOrbs />
-      <SafeAreaView edges={['top']} style={styles.safeArea}>
-        <Animated.View style={[styles.page, { opacity: pageOpacity }]}>
-          {tab === 'home' && (
-            <HomeScreen
-              {...commonProps}
-              onTab={changeTab}
-              onNotifications={() => setNotificationsVisible(true)}
+
+      {!user || !activeRole ? (
+        <AuthScreen onLogin={demo.login} onRegister={demo.register} onMessage={showMessage} />
+      ) : (
+        <PanelShell
+          user={user}
+          roles={demo.currentRoles}
+          activeRole={activeRole}
+          onRolePress={() => setRoleSheetVisible(true)}
+          onLogout={() => {
+            const result = demo.signOut();
+            showMessage(result.message, result.ok);
+          }}
+        >
+          {activeRole === 'customer' && (
+            <CustomerPanel
+              user={user}
+              applications={demo.state.applications.filter((item) => item.userId === user.id)}
+              onApplyMaster={() => {
+                setApplicationRole('master');
+                setApplicationVisible(true);
+              }}
+              onApplyBusiness={() => {
+                setApplicationRole('business');
+                setApplicationVisible(true);
+              }}
             />
           )}
-          {tab === 'explore' && <ExploreScreen {...commonProps} />}
-          {tab === 'appointments' && (
-            <AppointmentsScreen
-              appointments={state.appointments}
-              onCancel={cancelAppointment}
-              onBookNew={() => setBookingBarberId('arda')}
+
+          {activeRole === 'master' && (
+            <MasterPanel
+              user={user}
+              presence={demo.state.masterPresenceByUser[user.id] ?? 'offline'}
+              onPresence={demo.changeMasterPresence}
+              onMessage={showMessage}
             />
           )}
-          {tab === 'rewards' && <RewardsScreen points={state.rewardPoints} />}
-          {tab === 'profile' && (
-            <ProfileScreen
-              favoriteCount={state.favoriteBarberIds.length}
-              appointmentCount={state.appointments.length}
-              notificationsEnabled={state.notificationsEnabled}
-              onNotificationsChange={(value) => update({ notificationsEnabled: value })}
-              onResetDemo={resetDemo}
+
+          {activeRole === 'business' && <BusinessPanel user={user} />}
+
+          {activeRole === 'admin' && (
+            <AdminPanel
+              state={demo.state}
+              adminUserId={user.id}
+              onDecision={demo.decideApplication}
+              onGrantRole={demo.addRole}
+              onRevokeRole={demo.removeRole}
+              onResetDemo={demo.resetDemo}
+              onMessage={showMessage}
             />
           )}
-        </Animated.View>
-      </SafeAreaView>
+        </PanelShell>
+      )}
 
-      <BottomNav active={tab} onChange={changeTab} />
+      {user && activeRole && (
+        <>
+          <RoleSwitcherSheet
+            visible={roleSheetVisible}
+            roles={demo.currentRoles}
+            activeRole={activeRole}
+            onSelect={(role) => {
+              const result = demo.changeRole(role);
+              showMessage(result.message, result.ok);
+            }}
+            onClose={() => setRoleSheetVisible(false)}
+          />
+          <ApplicationSheet
+            visible={applicationVisible}
+            initialRole={applicationRole}
+            onClose={() => setApplicationVisible(false)}
+            onSubmit={demo.applyForRole}
+            onMessage={showMessage}
+          />
+        </>
+      )}
 
-      <BookingSheet
-        barberId={bookingBarberId}
-        visible={bookingBarberId !== null}
-        onClose={() => setBookingBarberId(null)}
-        onConfirm={(appointment) => {
-          addAppointment(appointment);
-          setTab('appointments');
-          setToastVisible(true);
-        }}
-      />
-      <NotificationsSheet visible={notificationsVisible} onClose={() => setNotificationsVisible(false)} />
-
-      {toastVisible && (
-        <Animated.View style={[styles.toast, { transform: [{ translateY: toastTranslate }] }]}>
-          <View style={styles.toastIcon}><Ionicons name="checkmark" size={18} color={colors.white} /></View>
-          <View><Text style={styles.toastTitle}>Randevun oluşturuldu</Text><Text style={styles.toastText}>120 Style Puanı hesabına eklendi.</Text></View>
+      {toast && (
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.toast,
+            toast.success ? styles.toastSuccess : styles.toastError,
+            { transform: [{ translateY: toastY }] },
+          ]}
+        >
+          <View style={[styles.toastIcon, { backgroundColor: toast.success ? colors.green : colors.red }]}>
+            <Ionicons name={toast.success ? 'checkmark' : 'alert'} size={18} color={colors.white} />
+          </View>
+          <Text style={styles.toastText}>{toast.message}</Text>
         </Animated.View>
       )}
     </View>
@@ -124,21 +151,20 @@ function DraBornStyleApp() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <DraBornStyleApp />
+      <DraBornStyleV01 />
     </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.background },
-  safeArea: { flex: 1 },
-  page: { flex: 1 },
-  loading: { flex: 1, backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' },
-  loadingLogo: { width: 76, height: 76, borderRadius: 26, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
-  loadingTitle: { color: colors.white, fontSize: 26, fontWeight: '900', marginTop: 16 },
-  loadingText: { color: colors.textMuted, fontSize: 12, marginTop: 5 },
-  toast: { position: 'absolute', top: 54, left: 18, right: 18, minHeight: 66, padding: 12, borderRadius: 19, backgroundColor: colors.surfaceElevated, borderWidth: 1, borderColor: 'rgba(53,225,161,0.3)', flexDirection: 'row', alignItems: 'center', gap: 11 },
-  toastIcon: { width: 40, height: 40, borderRadius: 14, backgroundColor: colors.green, alignItems: 'center', justifyContent: 'center' },
-  toastTitle: { color: colors.white, fontSize: 13, fontWeight: '900' },
-  toastText: { color: colors.textMuted, fontSize: 10, marginTop: 3 },
+  loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
+  loadingIcon: { width: 76, height: 76, borderRadius: 26, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.primary },
+  loadingTitle: { color: colors.white, fontSize: 25, fontWeight: '900', marginTop: 15 },
+  loadingText: { color: colors.textMuted, fontSize: 11, marginTop: 5 },
+  toast: { position: 'absolute', top: 52, left: 14, right: 14, zIndex: 100, minHeight: 64, flexDirection: 'row', alignItems: 'center', gap: 10, padding: 11, borderRadius: 18, backgroundColor: colors.surfaceElevated, borderWidth: 1 },
+  toastSuccess: { borderColor: 'rgba(53,225,161,0.32)' },
+  toastError: { borderColor: 'rgba(255,94,108,0.32)' },
+  toastIcon: { width: 40, height: 40, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
+  toastText: { flex: 1, color: colors.white, fontSize: 11, lineHeight: 16, fontWeight: '800' },
 });
