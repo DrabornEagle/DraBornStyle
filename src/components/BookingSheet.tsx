@@ -20,6 +20,8 @@ import { AnimatedPressable } from './AnimatedPressable';
 
 const GAP = 9;
 const SHEET_PADDING = 18;
+const DEFAULT_DATE_LABEL = 'Bugün';
+const DEFAULT_TIME = '09:00';
 
 export function BookingSheet({
   barberId,
@@ -39,16 +41,16 @@ export function BookingSheet({
     () => services.filter((service) => barber?.serviceIds.includes(service.id)),
     [barber],
   );
-  const [serviceId, setServiceId] = useState(availableServices[0]?.id ?? 'haircut');
-  const [dateLabel, setDateLabel] = useState(dateOptions[0]);
-  const [time, setTime] = useState(barber?.nextSlot ?? timeOptions[0]);
+  const [serviceId, setServiceId] = useState<string>(availableServices[0]?.id ?? 'haircut');
+  const [dateLabel, setDateLabel] = useState<string>(dateOptions[0] ?? DEFAULT_DATE_LABEL);
+  const [time, setTime] = useState<string>(barber?.nextSlot ?? timeOptions[0] ?? DEFAULT_TIME);
   const translateY = useRef(new Animated.Value(height)).current;
 
   useEffect(() => {
     if (!visible) return;
     setServiceId(availableServices[0]?.id ?? 'haircut');
-    setDateLabel(dateOptions[0]);
-    setTime(barber?.nextSlot ?? timeOptions[0]);
+    setDateLabel(dateOptions[0] ?? DEFAULT_DATE_LABEL);
+    setTime(barber?.nextSlot ?? timeOptions[0] ?? DEFAULT_TIME);
     translateY.setValue(height);
     Animated.spring(translateY, {
       toValue: 0,
