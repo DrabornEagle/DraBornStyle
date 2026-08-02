@@ -4,24 +4,33 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { colors } from './src/theme';
-import { AuthScreen } from './src/v01/AuthScreen';
 import { ApplicationSheet } from './src/v01/ApplicationSheet';
-import { AdminPanel } from './src/v01/AdminPanel';
-import { BusinessPanel } from './src/v01/BusinessPanel';
-import { CustomerPanel } from './src/v01/CustomerPanel';
-import { MasterPanel } from './src/v01/MasterPanel';
+import { AuthScreen } from './src/v01/AuthScreen';
 import { PanelShell } from './src/v01/PanelShell';
 import { RoleSwitcherSheet } from './src/v01/RoleSwitcherSheet';
 import { ApplicationRole } from './src/v01/types';
 import { useV01Demo } from './src/v01/useV01Demo';
+import { V02AdminPanel } from './src/v02/AdminPanel';
+import { V02BusinessPanel } from './src/v02/BusinessPanel';
+import { V02CustomerPanel } from './src/v02/CustomerPanel';
+import { V02MasterPanel } from './src/v02/MasterPanel';
+import { PaymentSheet } from './src/v02/PaymentSheet';
+import { getActiveTransaction, getBusinessFinancials, getBusinessForOwner } from './src/v02/state';
+import { TransactionSheet } from './src/v02/TransactionSheet';
+import { StartTransactionInput } from './src/v02/types';
+import { useV02Demo } from './src/v02/useV02Demo';
 
 type ToastState = { message: string; success: boolean } | null;
+type Result = { ok: boolean; message: string };
 
-function DraBornStyleV01() {
-  const demo = useV01Demo();
+function DraBornStyleV02() {
+  const access = useV01Demo();
+  const operations = useV02Demo();
   const [roleSheetVisible, setRoleSheetVisible] = useState(false);
   const [applicationVisible, setApplicationVisible] = useState(false);
   const [applicationRole, setApplicationRole] = useState<ApplicationRole>('master');
+  const [transactionVisible, setTransactionVisible] = useState(false);
+  const [paymentVisible, setPaymentVisible] = useState(false);
   const [toast, setToast] = useState<ToastState>(null);
   const toastY = useRef(new Animated.Value(-100)).current;
 
@@ -30,47 +39,69 @@ function DraBornStyleV01() {
     toastY.setValue(-100);
     Animated.sequence([
       Animated.spring(toastY, { toValue: 0, useNativeDriver: true, speed: 22, bounciness: 3 }),
-      Animated.delay(2200),
+      Animated.delay(2400),
       Animated.timing(toastY, { toValue: -100, duration: 220, useNativeDriver: true }),
     ]).start(() => setToast(null));
   }, [toast, toastY]);
 
   const showMessage = (message: string, success = true) => setToast({ message, success });
 
-  if (!demo.hydrated) {
+  if (!access.hydrated || !operations.hydrated) {
     return (
       <View style={styles.loading}>
         <View style={styles.loadingIcon}><Ionicons name="cut" size={31} color={colors.white} /></View>
         <Text style={styles.loadingTitle}>DraBornStyle</Text>
-        <Text style={styles.loadingText}>v0.1 rol ve panel omurgası hazırlanıyor…</Text>
+        <Text style={styles.loadingText}>v0.2.17 işlem ve ödeme merkezi hazırlanıyor…</Text>
       </View>
     );
   }
 
-  const user = demo.currentUser;
-  const activeRole = demo.activeRole;
+  const user = access.currentUser;
+  const activeRole = access.activeRole;
+  const activeTransaction = user && activeRole === 'master' ? getActiveTransaction(operations.state, user.id) : null;
+  const ownerBusiness = user && activeRole === 'business' ? getBusinessForOwner(operations.state, user.id) : null;
+  const ownerFinancials = ownerBusiness ? getBusinessFinancials(operations.state, ownerBusiness.id) : null;
+
+  const startTransaction = (input: StartTransactionInput): Result => {
+    const result = operations.start(input);
+    if (result.ok) access.changeMasterPresence('busy');
+    return result;
+  };
+
+  const finishTransaction = (transactionId: string, editedPriceTl: number, discountCode?: string): Result => {
+    const result = operations.finish(transactionId, editedPriceTl, discountCode);
+    if (result.ok) access.changeMasterPresence('available');
+    return result;
+  };
+
+  const cancelTransaction = (transactionId: string): Result => {
+    const result = operations.cancel(transactionId);
+    if (result.ok) access.changeMasterPresence('available');
+    return result;
+  };
 
   return (
     <View style={styles.root}>
       <StatusBar style="light" />
 
       {!user || !activeRole ? (
-        <AuthScreen onLogin={demo.login} onRegister={demo.register} onMessage={showMessage} />
+        <AuthScreen onLogin={access.login} onRegister={access.register} onMessage={showMessage} />
       ) : (
         <PanelShell
           user={user}
-          roles={demo.currentRoles}
+          roles={access.currentRoles}
           activeRole={activeRole}
           onRolePress={() => setRoleSheetVisible(true)}
           onLogout={() => {
-            const result = demo.signOut();
+            const result = access.signOut();
             showMessage(result.message, result.ok);
           }}
         >
           {activeRole === 'customer' && (
-            <CustomerPanel
+            <V02CustomerPanel
               user={user}
-              applications={demo.state.applications.filter((item) => item.userId === user.id)}
+              applications={access.state.applications.filter((item) => item.userId === user.id)}
+              state={operations.state}
               onApplyMaster={() => {
                 setApplicationRole('master');
                 setApplicationVisible(true);
@@ -79,28 +110,48 @@ function DraBornStyleV01() {
                 setApplicationRole('business');
                 setApplicationVisible(true);
               }}
-            />
-          )}
-
-          {activeRole === 'master' && (
-            <MasterPanel
-              user={user}
-              presence={demo.state.masterPresenceByUser[user.id] ?? 'offline'}
-              onPresence={demo.changeMasterPresence}
+              onScanQr={operations.scanQr}
               onMessage={showMessage}
             />
           )}
 
-          {activeRole === 'business' && <BusinessPanel user={user} />}
+          {activeRole === 'master' && (
+            <V02MasterPanel
+              user={user}
+              presence={activeTransaction ? 'busy' : access.state.masterPresenceByUser[user.id] ?? 'offline'}
+              state={operations.state}
+              onPresence={access.changeMasterPresence}
+              onOpenTransaction={() => setTransactionVisible(true)}
+              onAddDiscount={(code, percent) => operations.addDiscountCode(user.id, code, percent)}
+              onToggleDiscount={operations.toggleDiscount}
+              onScanQr={operations.scanQr}
+              onMessage={showMessage}
+            />
+          )}
+
+          {activeRole === 'business' && (
+            <V02BusinessPanel
+              user={user}
+              state={operations.state}
+              onChangeServicePrice={operations.setServicePrice}
+              onOpenPayment={() => setPaymentVisible(true)}
+              onScanQr={operations.scanQr}
+              onMessage={showMessage}
+            />
+          )}
 
           {activeRole === 'admin' && (
-            <AdminPanel
-              state={demo.state}
+            <V02AdminPanel
+              v01State={access.state}
+              v02State={operations.state}
               adminUserId={user.id}
-              onDecision={demo.decideApplication}
-              onGrantRole={demo.addRole}
-              onRevokeRole={demo.removeRole}
-              onResetDemo={demo.resetDemo}
+              onApplicationDecision={access.decideApplication}
+              onGrantRole={access.addRole}
+              onRevokeRole={access.removeRole}
+              onResetV01={access.resetDemo}
+              onPaymentDecision={operations.decidePayment}
+              onPlatformFee={operations.setPlatformFee}
+              onResetV02={operations.reset}
               onMessage={showMessage}
             />
           )}
@@ -111,10 +162,10 @@ function DraBornStyleV01() {
         <>
           <RoleSwitcherSheet
             visible={roleSheetVisible}
-            roles={demo.currentRoles}
+            roles={access.currentRoles}
             activeRole={activeRole}
             onSelect={(role) => {
-              const result = demo.changeRole(role);
+              const result = access.changeRole(role);
               showMessage(result.message, result.ok);
             }}
             onClose={() => setRoleSheetVisible(false)}
@@ -123,10 +174,35 @@ function DraBornStyleV01() {
             visible={applicationVisible}
             initialRole={applicationRole}
             onClose={() => setApplicationVisible(false)}
-            onSubmit={demo.applyForRole}
+            onSubmit={access.applyForRole}
             onMessage={showMessage}
           />
         </>
+      )}
+
+      {user && activeRole === 'master' && (
+        <TransactionSheet
+          visible={transactionVisible}
+          state={operations.state}
+          masterUserId={user.id}
+          activeTransaction={activeTransaction}
+          onClose={() => setTransactionVisible(false)}
+          onStart={startTransaction}
+          onFinish={finishTransaction}
+          onCancel={cancelTransaction}
+          onMessage={showMessage}
+        />
+      )}
+
+      {ownerBusiness && ownerFinancials && (
+        <PaymentSheet
+          visible={paymentVisible}
+          businessName={ownerBusiness.name}
+          outstandingTl={ownerFinancials.outstandingTl}
+          onClose={() => setPaymentVisible(false)}
+          onSubmit={(amountTl) => operations.sendPaymentNotice(ownerBusiness.id, amountTl)}
+          onMessage={showMessage}
+        />
       )}
 
       {toast && (
@@ -151,7 +227,7 @@ function DraBornStyleV01() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <DraBornStyleV01 />
+      <DraBornStyleV02 />
     </SafeAreaProvider>
   );
 }
