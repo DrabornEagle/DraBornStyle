@@ -1,0 +1,43 @@
+name: Verify DraBornStyle v0.4 Once
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/verify-v04-once.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Verify release metadata
+        run: |
+          node - <<'NODE'
+          const pkg = require('./package.json');
+          const app = require('./app.json').expo;
+          if (pkg.version !== '0.4.0') throw new Error(`package version: ${pkg.version}`);
+          if (app.version !== '0.4.0') throw new Error(`Expo version: ${app.version}`);
+          if (app.android?.versionCode !== 1) throw new Error(`versionCode: ${app.android?.versionCode}`);
+          NODE
+
+      - name: TypeScript check
+        run: npm run typecheck
+
+      - name: Expo Doctor
+        run: npx expo-doctor@latest
