@@ -2,14 +2,34 @@
   "expo": {
     "name": "DraBornStyle",
     "slug": "drabornstyle",
-    "version": "0.3.0",
+    "owner": "draborneagle",
+    "version": "0.4.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
+    "backgroundColor": "#090B12",
     "newArchEnabled": true,
     "android": {
       "package": "com.draborneagle.drabornstyle",
+      "versionCode": 1,
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "blockedPermissions": [
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS",
+        "android.permission.READ_PHONE_STATE",
+        "android.permission.CALL_PHONE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW"
+      ]
     },
     "ios": {
       "supportsTablet": true,
@@ -20,10 +40,12 @@
     },
     "extra": {
       "demoMode": true,
-      "release": "v0.3.0-final",
+      "release": "v0.4.0",
       "roleSource": "dkd_user_role_access",
       "defaultPlatformFeeTl": 20,
-      "appointmentEventSource": "dkd_appointment_events"
+      "appointmentEventSource": "dkd_appointment_events",
+      "privacyPolicyUrl": "https://raw.githubusercontent.com/DrabornEagle/DraBornStyle/main/PRIVACY_POLICY.md",
+      "accountDeletionUrl": "https://raw.githubusercontent.com/DrabornEagle/DraBornStyle/main/ACCOUNT_DELETION.md"
     }
   }
 }
