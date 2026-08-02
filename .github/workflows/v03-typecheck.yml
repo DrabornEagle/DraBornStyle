@@ -1,0 +1,22 @@
+name: One-time v0.3 typecheck
+
+on:
+  push:
+    branches:
+      - verify-v03-trigger
+
+permissions:
+  contents: write
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: TypeScript strict check
+        run: npm run typecheck
+      - name: Mark verification complete
+        run: git push origin --delete verify-v03-trigger
