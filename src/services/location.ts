@@ -1,12 +1,13 @@
 import * as Location from "expo-location";
 import * as TaskManager from "expo-task-manager";
-import Constants from "expo-constants";
+import { isRunningInExpoGo } from "expo";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { command } from "./api";
 import { supabase } from "../lib/supabase";
 import { Row } from "../types";
 const task = "db_style_background_location";
+const supportsBackground = Platform.OS !== "web" && !isRunningInExpoGo();
 let watcher: Location.LocationSubscription | null = null;
 let expiry: ReturnType<typeof setTimeout> | null = null;
 let generation = 0;
@@ -47,19 +48,20 @@ async function send(
             : "on_way",
   });
 }
-TaskManager.defineTask(task, async ({ data, error }) => {
-  if (error) return;
-  const json = await AsyncStorage.getItem("db_style_location_appointment");
-  if (!json) return;
-  const appointment = JSON.parse(json);
-  if (Date.now() > new Date(appointment.ends_at).getTime()) {
-    await stopSharing();
-    return;
-  }
-  const positions = (data as any)?.locations as Location.LocationObject[];
-  if (positions?.length)
-    await send(appointment, positions[positions.length - 1]);
-});
+if (supportsBackground)
+  TaskManager.defineTask(task, async ({ data, error }) => {
+    if (error) return;
+    const json = await AsyncStorage.getItem("db_style_location_appointment");
+    if (!json) return;
+    const appointment = JSON.parse(json);
+    if (Date.now() > new Date(appointment.ends_at).getTime()) {
+      await stopSharing();
+      return;
+    }
+    const positions = (data as any)?.locations as Location.LocationObject[];
+    if (positions?.length)
+      await send(appointment, positions[positions.length - 1]);
+  });
 export async function startSharing(
   appointment: Row,
   onError: (message: string) => void,
@@ -105,7 +107,7 @@ export async function startSharing(
 export async function enableBackgroundSharing() {
   if (Platform.OS === "web")
     throw new Error("Arka plan konumu Android development build gerektirir.");
-  if (Constants.executionEnvironment === "storeClient")
+  if (!supportsBackground)
     throw new Error(
       "Arka plan konumu Expo Go içinde çalışmaz. Development build gerekir.",
     );
@@ -177,8 +179,7 @@ export async function stopSharing() {
     }
   }
   if (
-    Platform.OS !== "web" &&
-    Constants.executionEnvironment !== "storeClient" &&
+    supportsBackground &&
     (await Location.hasStartedLocationUpdatesAsync(task))
   )
     await Location.stopLocationUpdatesAsync(task);

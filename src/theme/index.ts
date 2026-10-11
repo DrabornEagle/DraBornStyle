@@ -18,7 +18,8 @@ export const surface = {
   ink: "#ffffff",
   cream: "#fff4e6",
 };
-export const appVersion = "0.3.0";
+export const appVersion = "0.4.0";
+export const versionCode = 1;
 export const statusNames: Record<string, string> = {
   available: "Müsait",
   waiting: "Müşteri bekliyorum",

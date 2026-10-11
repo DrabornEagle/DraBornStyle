@@ -253,7 +253,7 @@ export function FinanceScreen() {
                       }
                     }}
                   />
-                )}{" "}
+                )}
                 {admin && c.state === "pending" && (
                   <>
                     <Txt muted size={12}>

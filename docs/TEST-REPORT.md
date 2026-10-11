@@ -1,8 +1,25 @@
-# DraBornStyle v0.3.0 doğrulama raporu
+# DraBornStyle v0.4.0 doğrulama raporu
 
 11 Ekim 2026 · Mevcut Supabase projesi: `xpdiwyxnnrmyvpcqwuyb` (DraBorn-Park-Garage-Series).
 
 Bu rapor gerçek veritabanı, HTTP API, web arayüzü ve paket üretimini birbirinden ayırır. Web ekran testleri fiziksel Android / Expo Go testi değildir. Demo içindeki finans verileri açıkça örnek olarak etiketlenir; gerçek ödeme tahsilatı yapılmadı.
+
+## v0.4.0 / version code 1 · Sadeleştirme
+
+- Expo yapılandırması `version: 0.4.0`, `android.versionCode: 1`; paket ve kilit dosyası sürümleri de `0.4.0`.
+- TypeScript, 16 birim/regresyon testi, yerel çevrimdışı Expo bağımlılık kontrolü, Android Hermes ve Web paket üretimi geçti. Çevrimdışı bağımlılık kontrolü uzak manifest doğrulaması değildir; CI çevrimiçi kontrol çalıştırır.
+- Giriş logosu ve eşit genişlikli yakın seçenekler, karşılama düğmeleri, geçişte kaydırmanın sıfırlanması, profil grupları ve menü yönlendirmeleri yerel Web paketinde örnek hesap/API verileriyle kontrol edilir. 21 kontrol grubu geçti; yakalanmamış tarayıcı hatası yok. Genişlikler 320, 360, 414 ve 1120 piksel. Kanıt: [ui-v04-results.json](ui-v04-results.json) ve `screens/v04-*.png`.
+- Örnek arayüz oturumu gerçek bir Supabase hesabı değildir. HTTP ve WebSocket istekleri tarayıcı içinde karşılanır/engellenir; bu sonuçlar canlı sunucu kimlik doğrulamasını veya veritabanı işlevlerini doğrulamaz.
+- Canlı hesaba giriş kontrolü otomatik onay incelemesi tarafından, bu görevde hesap erişim yetkisi doğrulanamadığı gerekçesiyle engellendi; sürdürülmedi. Önceki sürümlerdeki canlı giriş sonuçları bu sürümde yeniden elde edilmiş gibi gösterilmez.
+- Fiziksel Android/Expo Go/Termux, klavye/izin/GPS ve APK/AAB testi yapılmadı. `export:android`, APK/AAB değil Hermes/JavaScript paketi üretir. Bu sürümde veritabanı migration değişikliği yok.
+
+### Android hata düzeltmeleri
+
+- Finans tahsilat kartında `Card`/`LinearGradient` altında kalan `{" "}` kaldırıldı. Bu metin Android'deki `<Text>` hatasını doğuruyordu. Bütün kaynak JSX dosyaları için literal metin/sayı kontrolü ve raporlanan boşluğu yakalayan regresyon testi eklendi. Harita koordinatı `0` olduğunda koşullu render'ın ham sayı döndürmesi de önlendi.
+- `ImageBackground` kullanımları `View` + mutlak konumlu `Image` olarak değiştirildi.
+- Konum servisi Expo'nun `isRunningInExpoGo()` kontrolünü kullanır; Expo Go/Web görev tanımlamaz ve arka plan konum durumunu sorgulamaz. Ön plan paylaşımı/kapatma, sunucudaki paylaşım izninin geri alınması, development build arka plan başlangıç/bitişi ve izin reddi yerel native API taklitleriyle test edilir.
+- `npm run start:termux`, Expo CLI 58'in `EXPO_UNSTABLE_HEADLESS=1` seçeneğini kullanır. CLI kaynaklarında bu ayar `enableStandaloneFuseboxShell` değerini kapatır; Android/arm64 için olmayan masaüstü uygulama kurulumunu başlatmaz. Bağımlılık ve yeni mimari doğrulaması açık tutulur. Regresyon testi kurulu CLI middleware'inin gerçek seçeneklerini kontrol eder. IPv4 DNS önceliğiyle Metro `127.0.0.1` üzerinden hazır durum yanıtı verdi; masaüstü kurulum hatası oluşmadı (yerel Linux başlangıç kontrolü, fiziksel Termux testi değil). Üretim modu veya LogBox kapatma kullanılmaz.
+- Bu testler fiziksel Android çalıştırması değildir. Termux'a özgü native sistem davranışı gerçek cihazda ayrıca kontrol edilmelidir.
 
 ## v0.3.0 · Gönderilen mockuplara göre yeniden kurulan arayüz
 

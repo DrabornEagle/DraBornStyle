@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   StyleSheet,
   Image,
-  ImageBackground,
   Animated,
   StyleProp,
   ViewStyle,
@@ -26,7 +25,7 @@ import { Entrance, useMotionEnabled, nativeAnimation } from "./motion";
 
 export const art: Record<string, any> = {
   hero: require("../../assets/art/miami-hero.webp"),
-  backdrop: require("../../assets/art/neon-salon.webp"),
+  backdrop: require("../../assets/art/miami-calm-v04.webp"),
   logo: require("../../assets/art/neon-logo.webp"),
   barber: require("../../assets/art/miami-hero.webp"),
   salon: require("../../assets/art/salon.webp"),
@@ -96,9 +95,11 @@ export function RowView({
 export function Page({
   children,
   keyboardAvoiding = true,
+  contentStyle,
 }: {
   children: React.ReactNode;
   keyboardAvoiding?: boolean;
+  contentStyle?: StyleProp<ViewStyle>;
 }) {
   return (
     <KeyboardAvoidingView
@@ -110,7 +111,7 @@ export function Page({
       <ScrollView
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.page}
+        contentContainerStyle={[styles.page, contentStyle]}
       >
         {React.Children.toArray(children).map((child, i) => (
           <Entrance
@@ -181,25 +182,89 @@ export function Section({
 export function Card({
   children,
   tone = "purple",
+  quiet = false,
   style,
 }: {
   children: React.ReactNode;
   tone?: Tone;
+  quiet?: boolean;
   style?: StyleProp<ViewStyle>;
 }) {
   return (
     <LinearGradient
-      colors={[colors[tone] + "22", "#0a1022f5", "#060d19fa"]}
+      colors={
+        quiet
+          ? ["#10192b", "#0b1424"]
+          : [colors[tone] + "22", "#0a1022f5", "#060d19fa"]
+      }
       start={{ x: 0, y: 0 }}
       end={{ x: 0.7, y: 1 }}
       style={[
         styles.card,
         { borderColor: colors[tone] + "85", shadowColor: colors[tone] },
+        quiet && { borderColor: "#29334a", shadowOpacity: 0 },
         style,
       ]}
     >
       {children}
     </LinearGradient>
+  );
+}
+export function SegmentedControl({
+  items,
+  value,
+  onChange,
+  disabled = false,
+  label,
+}: {
+  items: { value: string; label: string }[];
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  label: string;
+}) {
+  return (
+    <View accessibilityLabel={label} style={styles.segmented}>
+      {items.map((item) => {
+        const selected = item.value === value;
+        return (
+          <Pressable
+            key={item.value}
+            accessibilityRole="button"
+            accessibilityLabel={item.label}
+            accessibilityState={{ selected, disabled }}
+            {...(Platform.OS === "web"
+              ? { "aria-pressed": selected, "aria-disabled": disabled }
+              : {})}
+            disabled={disabled}
+            onPress={() => onChange(item.value)}
+            style={({ pressed }) => [
+              styles.segment,
+              {
+                backgroundColor: selected
+                  ? "#342140"
+                  : pressed
+                    ? "#172238"
+                    : "transparent",
+                borderColor: selected ? "#be5baf" : "transparent",
+                opacity: disabled ? 0.5 : 1,
+              },
+            ]}
+          >
+            <Txt
+              size={12}
+              bold={selected}
+              style={{
+                textAlign: "center",
+                color: selected ? "#fff" : colors.muted,
+              }}
+            >
+              {item.label}
+            </Txt>
+          </Pressable>
+        );
+      })}
+    </View>
   );
 }
 export function Btn({
@@ -766,8 +831,7 @@ export function Hero({
     </View>
   );
   return image ? (
-    <ImageBackground
-      source={imageSource(image)}
+    <View
       style={{
         borderRadius: 20,
         overflow: "hidden",
@@ -775,12 +839,19 @@ export function Hero({
         borderColor: colors.pink + "85",
       }}
     >
+      <Image
+        accessible={false}
+        source={imageSource(image)}
+        resizeMode="cover"
+        style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
+      />
       <LinearGradient
-        colors={["#03071618", "#040b18ee"]}
+        pointerEvents="none"
+        colors={["#040b1870", "#040b18f5"]}
         style={StyleSheet.absoluteFill}
       />
       {content}
-    </ImageBackground>
+    </View>
   ) : (
     content
   );
@@ -989,6 +1060,26 @@ export function Bars({
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 10 },
   page: { padding: 14, paddingBottom: 28, gap: 20 },
+  segmented: {
+    flexDirection: "row",
+    gap: 4,
+    padding: 4,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#29334a",
+    backgroundColor: "#070f1f",
+  },
+  segment: {
+    flex: 1,
+    minWidth: 0,
+    minHeight: 44,
+    paddingVertical: 10,
+    paddingHorizontal: 7,
+    borderRadius: 11,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   card: {
     borderWidth: 1,
     borderRadius: 18,

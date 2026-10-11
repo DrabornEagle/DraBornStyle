@@ -12,7 +12,12 @@ export function MapPanel({
 }) {
   const lat = Number(business.latitude),
     lon = Number(business.longitude);
-  if (!business.latitude || !business.longitude)
+  if (
+    business.latitude == null ||
+    business.longitude == null ||
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lon)
+  )
     return (
       <Card>
         <Txt muted>İşletme henüz harita konumu eklemedi.</Txt>
@@ -34,16 +39,20 @@ export function MapPanel({
           title={business.name || business.business_name}
           pinColor="#ff4ecb"
         />
-        {location?.shared && location.latitude && (
-          <Marker
-            coordinate={{
-              latitude: Number(location.latitude),
-              longitude: Number(location.longitude),
-            }}
-            title="Müşteri"
-            pinColor="#24d6ed"
-          />
-        )}
+        {Boolean(location?.shared) &&
+          location?.latitude != null &&
+          location?.longitude != null &&
+          Number.isFinite(Number(location.latitude)) &&
+          Number.isFinite(Number(location.longitude)) && (
+            <Marker
+              coordinate={{
+                latitude: Number(location.latitude),
+                longitude: Number(location.longitude),
+              }}
+              title="Müşteri"
+              pinColor="#24d6ed"
+            />
+          )}
       </MapView>
       <View style={{ padding: 14, gap: 8 }}>
         <Txt muted>{business.address}</Txt>

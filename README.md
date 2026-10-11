@@ -1,12 +1,12 @@
-# DraBornStyle · v0.3.0
+# DraBornStyle · v0.4.0
 
-Android için React Native / Expo ile geliştirilen berber ve kuaför randevu, günlük çalışma ve işletme yönetimi uygulaması. Müşteri, usta, işletme sahibi ve platform Admin'i ayrı çalışma ekranları kullanır. v0.3.0 gönderilen on mockup esas alınarak yeniden kurulmuştur: fotoğraf ağırlıklı neon salon, cam paneller, el yazısı Style markası, magenta–mor–turuncu düğmeler ve tutarlı alt menü. Önceki Miami çizimi kaldırılmıştır. Animasyonlar hareket azaltma tercihine uyar ve uygulama arka plandayken durur.
+Android için React Native / Expo ile geliştirilen berber ve kuaför randevu, günlük çalışma ve işletme yönetimi uygulaması. Müşteri, usta, işletme sahibi ve platform Admin'i ayrı çalışma ekranları kullanır. **v0.4.0 / Android version code 1** giriş logosunu aşağı taşır, Giriş / Hesap Oluştur seçeneklerini yakın ve eşit genişlikte bir seçim alanına yerleştirir, sayfa üstlerinde sade Miami görseli kullanır. Profil işlemleri açıklamalı satırlarla Randevular ve işlemler, Hesap ve izinler, İşletme gruplarına ayrılır. Finans kartındaki `<Text>` dışı boşluk kaldırılır; eski `ImageBackground` yerine mutlak konumlu `Image` kullanılır. Expo Go arka plan konum API'lerine çağrı yapmadan ön plan paylaşımını kullanır. v0.3.0 marka renkleri ve mevcut işlevler korunur. Animasyonlar hareket azaltma tercihine uyar ve uygulama arka plandayken durur.
 
 Keşfet, yönetici/işletme/usta panelleri, aylık randevu takvimi, çalışan zaman çizelgesi ve sabit mesaj alanı yeni düzene taşınmıştır. Bütün fiyatlar, yorumlar ve saatler gerçek kayıttan gelir. [Mockup eşleştirmesi ve görsel yönergeleri](docs/DESIGN.md). v0.1.1'deki Expo Go 58.0.2 `ExpoTopicSubscriptionModule` açılış düzeltmesi korunur: [EXPO-GO-FIX.md](docs/EXPO-GO-FIX.md).
 
-![Yeni karşılama ekranı](docs/screens/welcome.png)
+![v0.4 giriş ekranı](docs/screens/v04-login-414.png)
 
-![Keşfet ekranı](docs/screens/customer-reference.png)
+![v0.4 sade profil ekranı](docs/screens/v04-profile-414.png)
 
 ## Çalıştırma
 
@@ -30,36 +30,38 @@ Termux ve Expo Go aynı telefonda kullanılabilir. Önce eski Metro sunucusunu t
 ```bash
 pkg update -y
 pkg install nodejs-lts npm curl unzip -y
-mkdir -p "$HOME/DraBornStyle-v0.3.0"
-cd "$HOME/DraBornStyle-v0.3.0"
-curl -fL https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip -o DraBornStyle-v0.3.0.zip
-unzip -q -o DraBornStyle-v0.3.0.zip
+mkdir -p "$HOME/DraBornStyle-v0.4.0"
+cd "$HOME/DraBornStyle-v0.4.0"
+curl -fL https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip -o DraBornStyle-v0.4.0.zip
+unzip -q -o DraBornStyle-v0.4.0.zip
 cd DraBornStyle-main
 npm ci
-npx expo start --go --localhost --port 8081 --clear
+npm run start:termux
 ```
+
+`start:termux`, SDK 58'in headless seçeneğiyle Android/Termux için bulunmayan masaüstü DevTools kurulumunu atlar; bağımlılık ve mimari kontrolleri açık kalır. Metro geliştirme modu ve uygulama hata bildirimleri çalışmaya devam eder. IPv4 önceliği, aynı telefon bağlantısını `127.0.0.1` adresinde tutar.
 
 Termux'u açık bırakın. Expo Go **58.0.2** içinden `exp://127.0.0.1:8081` adresini açın; aynı telefon için QR okutmanız gerekmez. Terminalde sunucu hazır olmadan Expo Go'yu açmayın. Daha sonra yeniden başlatmak için:
 
 ```bash
-cd "$HOME/DraBornStyle-v0.3.0/DraBornStyle-main"
-npx expo start --go --localhost --port 8081 --clear
+cd "$HOME/DraBornStyle-v0.4.0/DraBornStyle-main"
+npm run start:termux
 ```
 
 Bu, hazırlanan cihaz deneme yoludur; fiziksel Termux/Expo Go testi bu çalışma ortamında yapılmadı. Bilgisayardan çalıştırırken yukarıdaki genel kurulum ve aynı ağdaki QR yolu kullanılabilir.
 
-Güncel Termux paketinde npm ayrı paket olduğundan kurulum satırında açıkça yer alır: [resmî nodejs-lts paket notu](https://github.com/termux/termux-packages/blob/master/packages/nodejs-lts/build.sh). `--go`, `--localhost` ve port seçenekleri [resmî Expo CLI](https://docs.expo.dev/more/expo-cli/) davranışıdır. Eski proje klasörünüz silinmez; v0.3.0 ayrı klasörde çalışır.
+Güncel Termux paketinde npm ayrı paket olduğundan kurulum satırında açıkça yer alır: [resmî nodejs-lts paket notu](https://github.com/termux/termux-packages/blob/master/packages/nodejs-lts/build.sh). `--go`, `--localhost` ve port seçenekleri [resmî Expo CLI](https://docs.expo.dev/more/expo-cli/) davranışıdır. Eski proje klasörünüz silinmez; v0.4.0 ayrı klasörde çalışır.
 
 ## İlk deneme
 
-1. `draborneagle@gmail.com` hesabıyla giriş yapın. İstenen mevcut şifreyle canlı Auth API ve gerçek giriş formu test edildi; Admin çalışma alanı açıldı. E-postanın çevresindeki boşluklar ve büyük harfler normalize edilir. Şifreyi göster/gizle ve Enter ile giriş kullanılabilir. Şifre hiçbir kaynak veya migration dosyasına yazılmadı. Profil → **Şifremi Güncelle** ile yeni şifre belirlenebilir.
+1. `draborneagle@gmail.com` hesabıyla giriş yapın. Önceki sürümlerde canlı Auth API ve giriş formu doğrulandı; v0.4.0 kontrolü yerel örnek oturumla yapıldı. E-postanın çevresindeki boşluklar ve büyük harfler normalize edilir. Şifreyi göster/gizle ve Enter ile giriş kullanılabilir. Şifre hiçbir kaynak veya migration dosyasına yazılmadı. Profil → **Şifremi Güncelle** ile yeni şifre belirlenebilir.
 2. Admin panelinde **Demo Verileri Yükle** düğmesini kullanın. Üç işletme, dokuz usta, hizmetler, müşteri, randevular, sohbetler, 36 örnek tamamlanmış işlem ve kısmi ödeme bildirimi oluşur.
 3. Profil → Çalışma alanım bölümünden Müşteri / Usta / İşletme / Admin ekranlarına geçin. Demo içindeki bu geçişler aynı yetkili Admin hesabının arayüz denemesidir; bağımsız kullanıcıların RLS testleri veritabanı testinde ayrıca yapılmıştır.
 4. Müşteri olarak işletme, hizmet, usta ve boş saat seçin. Usta olarak **Tıraşa Başla**, misafir müşteri ve hizmet seçerek hızlı işlem deneyin.
 5. İşlem sonunda hizmet tutarı, indirim, platform bedeli ve toplamı kontrol edip tamamlayın. Finans bölümünde ödeme bildirin; Admin rolünde banka/nakit kontrolünden sonra onaylayın veya reddedin.
 6. **Demo Verileri Kaldır** yalnızca aktif demo grubuna bağlı işletme kayıtlarını kaldırır. Denetim geçmişi korunur. Ortak Auth kullanıcıları veya gerçek işletmeler silinmez.
 
-Demo veriler aktifken görünür bir DEMO bandı vardır; örnek işletmeler ve raporlar ayrıca etiketlenir. Demo işlemler seçili rapor toplamlarına dahildir. Ekran görüntüleri mevcut etiketli demo verilerle alınmıştır; v0.3.0 görsel kontrolü bunları değiştirmez veya temizlemez.
+Demo veriler aktifken görünür bir DEMO bandı vardır; örnek işletmeler ve raporlar ayrıca etiketlenir. Demo işlemler seçili rapor toplamlarına dahildir. Eski sürüm ekran görüntüleri etiketli demo verilerle alınmıştır. v0.4.0 ekran görüntüleri yerel örnek hesap/API verilerinden üretilir; mevcut sunucu kayıtları değiştirilmez.
 
 ## İşlevler
 
@@ -112,7 +114,7 @@ Ortak projede `supabase db reset`, genel schema temizleme veya diğer uygulamala
 
 Resmî kaynaklar: [Expo bildirim sınırları](https://docs.expo.dev/versions/latest/sdk/notifications/), [SDK 58 konum](https://docs.expo.dev/versions/v58.0.0/sdk/location/), [TaskManager](https://docs.expo.dev/versions/v58.0.0/sdk/task-manager/), [Expo sürüm manifesti](https://exp.host/--/api/v2/versions).
 
-v0.3.0 TypeScript, 8 birim/regresyon testi, Android/Web paket üretimi ve 13 canlı veriyle çalışan, uygulama kayıtlarını değiştirmeyen arayüz kontrolünde geçti. 360, 414, 864 ve 1120 pikselde görsel inceleme yapıldı. Kanıt: [ui-design-results.json](docs/ui-design-results.json). Önceki v0.2.0 için 17 yazma/gerçek zamanlı senaryo tarihsel sonuç olarak korunur. Güncel uzaktan kontroller: [GitHub Actions](https://github.com/DrabornEagle/DraBornStyle/actions).
+v0.4.0 TypeScript, 16 birim/regresyon testi ve Android/Web paket üretiminden geçti. Giriş ve profil 320, 360, 414 ve 1120 pikselde yerel örnek hesap/API verileriyle kontrol edilir; yeni sonuçlar [ui-v04-results.json](docs/ui-v04-results.json) içindedir. Canlı hesaba giriş bu sürümde doğrulanmadı: otomatik onay incelemesi bu görevde hesap erişim yetkisini doğrulayamadığı için kontrolü engelledi. v0.3.0'ın 13 canlı okuma kontrolü ve v0.2.0'ın 17 yazma/gerçek zamanlı senaryosu tarihsel sonuçlardır. Güncel uzaktan kontroller: [GitHub Actions](https://github.com/DrabornEagle/DraBornStyle/actions).
 
 ## Kontroller
 
@@ -132,9 +134,9 @@ node tests/live-api.mjs
 
 `DB_STYLE_TEST_EMAIL`, `DB_STYLE_TEST_PASSWORD` veya dışarıdaki özel `DB_STYLE_TEST_SESSION_FILE` kullanılır. Bunları Git'e eklemeyin. Ayrıntılı sonuçlar ve gerçek cihaz deneme listesi: [docs/TEST-REPORT.md](docs/TEST-REPORT.md).
 
-Güncel tasarım kontrolü: `npm run export:web`, `npx playwright install chromium` ve dışarıdaki özel Admin oturum dosyasıyla `node tests/ui-design.cjs`. Mevcut demo verilerinden okur; command RPC'lerini durdurur, mesaj göndermez, demo yüklemez/kaldırmaz. Sonuçlar `docs/ui-design-results.json` içindedir.
+v0.3.0 kapsamlı tasarım kontrolü: `npm run export:web`, `npx playwright install chromium` ve dışarıdaki özel Admin oturum dosyasıyla `node tests/ui-design.cjs`. Mevcut demo verilerinden okur; command RPC'lerini durdurur, mesaj göndermez, demo yüklemez/kaldırmaz. Tarihsel sonuçlar `docs/ui-design-results.json` içindedir. v0.4.0 görsel/menü kontrolü için `npx playwright install chromium` ardından `npm run test:ui:v04` kullanılır. Bütün dış HTTP/WebSocket istekleri yerel örnek veriyle karşılanır veya engellenir; gerçek hesap/şifre gerekmez. Sonuçlar `docs/ui-v04-results.json` içindedir; canlı API testi olarak raporlanmaz.
 
-Yazma içeren uçtan uca test için `node tests/ui-smoke.cjs` kullanılır. Bu test yalnız boş işletme dizini ve aktif demo bulunmayan test ortamında çalışır; kendi demo grubunu oluşturur ve sonunda temizler. Mevcut demo veya gerçek işletmelere dokunmamak için başka durumda başlamayı reddeder. Önceki sonuçlar `docs/ui-test-results.json` içindedir; bu dosya v0.3.0 tasarım testi sonucu değildir.
+Yazma içeren uçtan uca test için `node tests/ui-smoke.cjs` kullanılır. Bu test yalnız boş işletme dizini ve aktif demo bulunmayan test ortamında çalışır; kendi demo grubunu oluşturur ve sonunda temizler. Mevcut demo veya gerçek işletmelere dokunmamak için başka durumda başlamayı reddeder. Önceki sonuçlar `docs/ui-test-results.json` içindedir; bu dosya v0.4.0 tasarım testi sonucu değildir.
 
 ## Dizinler
 

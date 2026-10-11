@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import * as AppLinking from "expo-linking";
-import { View, ImageBackground, StyleSheet } from "react-native";
+import { View, Image, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Brand } from "../components/Brand";
 import { supabase } from "../lib/supabase";
@@ -14,7 +14,7 @@ import {
   Field,
   RowView,
   Icon,
-  Chip,
+  SegmentedControl,
   imageSource,
 } from "../components/ui";
 import { appVersion, colors } from "../theme";
@@ -96,13 +96,16 @@ export function AuthScreen() {
   }
   if (mode === "welcome")
     return (
-      <Page>
-        <ImageBackground
-          source={imageSource("asset:hero")}
-          resizeMode="cover"
-          style={{ height: 340, margin: -14, marginBottom: -8 }}
-        >
+      <Page key={mode}>
+        <View style={{ height: 340, margin: -14, marginBottom: -8 }}>
+          <Image
+            accessible={false}
+            source={imageSource("asset:backdrop")}
+            resizeMode="cover"
+            style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
+          />
           <LinearGradient
+            pointerEvents="none"
             colors={["#040b1800", "#040b1800", "#040b18"]}
             style={StyleSheet.absoluteFill}
           />
@@ -117,7 +120,7 @@ export function AuthScreen() {
           >
             <Brand large />
           </View>
-        </ImageBackground>
+        </View>
         <Txt muted size={14} style={{ textAlign: "center" }}>
           Akıllı Berber ve Kuaför Yönetim Platformu
         </Txt>
@@ -148,17 +151,19 @@ export function AuthScreen() {
             </Card>
           ))}
         </RowView>
-        <Btn
-          title="Giriş Yap"
-          icon="log-in-outline"
-          onPress={() => switchMode("login")}
-        />
-        <Btn
-          title="Kayıt Ol"
-          icon="person-add-outline"
-          outline
-          onPress={() => switchMode("signup")}
-        />
+        <View style={{ gap: 8 }}>
+          <Btn
+            title="Giriş Yap"
+            icon="log-in-outline"
+            onPress={() => switchMode("login")}
+          />
+          <Btn
+            title="Hesap Oluştur"
+            icon="person-add-outline"
+            outline
+            onPress={() => switchMode("signup")}
+          />
+        </View>
         <RowView
           style={{ justifyContent: "center", flexWrap: "wrap", gap: 12 }}
         >
@@ -206,11 +211,11 @@ export function AuthScreen() {
       </Page>
     );
   return (
-    <Page>
-      <View style={{ alignItems: "center", paddingTop: 18, paddingBottom: 18 }}>
+    <Page key={mode} contentStyle={{ gap: 16 }}>
+      <View style={{ alignItems: "center", paddingTop: 40, paddingBottom: 14 }}>
         <Brand large />
       </View>
-      <Card tone="pink" style={{ gap: 18 }}>
+      <Card quiet style={{ gap: 18 }}>
         <View style={{ gap: 5 }}>
           <Txt size={25} bold style={{ letterSpacing: -0.8 }}>
             {mode === "login"
@@ -228,21 +233,16 @@ export function AuthScreen() {
           </Txt>
         </View>
         {mode !== "reset" && (
-          <RowView style={{ gap: 8 }}>
-            {[
-              ["login", "Giriş"],
-              ["signup", "Hesap oluştur"],
-            ].map(([value, label]) => (
-              <View key={value} style={{ flex: 1 }}>
-                <Chip
-                  label={label}
-                  selected={mode === value}
-                  onPress={() => !pending && switchMode(value as typeof mode)}
-                  tone={value === "login" ? "pink" : "cyan"}
-                />
-              </View>
-            ))}
-          </RowView>
+          <SegmentedControl
+            label="Giriş veya hesap oluştur"
+            items={[
+              { value: "login", label: "Giriş" },
+              { value: "signup", label: "Hesap Oluştur" },
+            ]}
+            value={mode}
+            onChange={(value) => switchMode(value as typeof mode)}
+            disabled={pending}
+          />
         )}
         {mode === "signup" && (
           <Field
@@ -301,7 +301,7 @@ export function AuthScreen() {
               : mode === "login"
                 ? "Giriş Yap"
                 : mode === "signup"
-                  ? "Kayıt Ol"
+                  ? "Hesap Oluştur"
                   : "Sıfırlama Bağlantısı Gönder"
           }
           onPress={submit}

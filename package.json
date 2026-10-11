@@ -1,14 +1,16 @@
 {
   "name": "drabornstyle",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "main": "index.ts",
   "scripts": {
     "start": "expo start",
+    "start:termux": "EXPO_UNSTABLE_HEADLESS=1 EXPO_NO_DEPENDENCY_VALIDATION=0 EXPO_NO_NEW_ARCH_COMPAT_CHECK=0 node --dns-result-order=ipv4first node_modules/expo/bin/cli start --go --localhost --port 8081 --clear",
     "android": "expo start --android",
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
+    "test:ui:v04": "npm run export:web && node tests/ui-v04.cjs",
     "export:android": "expo export --platform android --output-dir dist-android",
     "export:web": "expo export --platform web --output-dir dist-web",
     "check": "npm run typecheck && npm test && expo install --check"

@@ -1,0 +1,32 @@
+{
+  "version": "0.4.0",
+  "versionCode": 1,
+  "date": "2026-10-11T18:45:31.984Z",
+  "passed": [
+    "Login logo, adjacent equal tabs and no horizontal overflow at 320 px",
+    "Login logo, adjacent equal tabs and no horizontal overflow at 360 px",
+    "Login logo, adjacent equal tabs and no horizontal overflow at 414 px",
+    "Login logo, adjacent equal tabs and no horizontal overflow at 1120 px",
+    "Mode switch resets scroll, signup name field works, validation and simulated login navigate correctly",
+    "Grouped profile, four work areas and no horizontal overflow at 320 px",
+    "Grouped profile, four work areas and no horizontal overflow at 360 px",
+    "Grouped profile, four work areas and no horizontal overflow at 414 px",
+    "Grouped profile, four work areas and no horizontal overflow at 1120 px",
+    "Profile navigation opens: Profilimi düzenle",
+    "Profile navigation opens: Şifremi güncelle",
+    "Profile navigation opens: Randevularım",
+    "Profile navigation opens: Boş saat ve ek süre",
+    "Profile navigation opens: İşlem geçmişim",
+    "Profile navigation opens: Davet ve indirim kodu",
+    "Profile navigation opens: Tercih izinlerim",
+    "Profile navigation opens: İşletmemi oluştur",
+    "Notification action gives the web fallback without a native module error",
+    "Reported payment card renders with a pending claim fixture; no payment action invoked",
+    "Work area switches to customer and remains selected",
+    "Logout returns to login and clears the simulated account session"
+  ],
+  "errors": [],
+  "blockedWrites": [],
+  "scope": "Local exported web UI with simulated account and API fixtures; all external HTTP and WebSocket requests intercepted. No live account access, no physical Android test.",
+  "liveLogin": "Not verified; automatic approval review rejected real-account access because task authorization was not established."
+}

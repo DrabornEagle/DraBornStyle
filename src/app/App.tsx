@@ -195,13 +195,21 @@ function Shell() {
       <StatusBar barStyle="light-content" />
       <View style={styles.frame}>
         <Image
-          source={require("../../assets/art/neon-salon.webp")}
+          source={require("../../assets/art/miami-calm-v04.webp")}
           resizeMode="cover"
-          style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
+          accessible={false}
+          style={{
+            position: "absolute",
+            top: 0,
+            width: "100%",
+            height: 320,
+            opacity: 0.7,
+          }}
         />
         <LinearGradient
-          colors={["#040b1830", "#040b1845", "#040b1835"]}
-          style={StyleSheet.absoluteFill}
+          colors={["#040b1830", "#040b18b0", colors.bg]}
+          style={{ position: "absolute", top: 0, width: "100%", height: 340 }}
+          pointerEvents="none"
         />
         {!authView && (
           <View style={styles.header}>
@@ -492,6 +500,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+    backgroundColor: "#07101ee8",
+    borderBottomWidth: 1,
+    borderBottomColor: "#202a3d",
   },
   headerButton: {
     width: 40,

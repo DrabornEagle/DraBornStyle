@@ -1,4 +1,18 @@
-# DraBornStyle v0.3.0 · Mockup uygulaması
+# DraBornStyle v0.4.0 · Okunaklı giriş ve sade profil
+
+## v0.4.0 / sürüm kodu 1
+
+- Girişte marka üst boşluğu 40 piksele çıkarıldı. Karşılama/giriş/kayıt/sıfırlama arasında geçişte sayfa yeniden başlar; önceki kaydırma konumu logoyu üstten kesmez.
+- Giriş ve Hesap Oluştur, aynı koyu zemin üzerinde eşit genişlikli ve 4 piksel aralıklı seçimlerdir. Karşılama ekranının ana iki düğmesi de tek grup içinde 8 piksel aralıkla durur.
+- Tam ekran parlak salon yerine yalnızca üst 320 pikselde sakin bir Miami fotoğrafı ve aşağı doğru koyulaşan geçiş kullanılır. İçerik alanının zemini tek renktir; giriş ve profil kartları opaktır. İşletmelerin kendi kapak fotoğrafları korunur ve üst yazılarının altındaki koyu katman güçlendirilir.
+- Profil: kısa başlık, yardımcı açıklama, sade ikon ve yön oku. Randevular ve işlemler / Hesap ve izinler / İşletme grupları, tek çerçeve ve ince ayırıcılar kullanır. Çıkış işlemi ayrı bir satırdır. Çalışma alanı seçimi de aynı kompakt seçim bileşenini kullanır.
+- `assets/art/miami-calm-v04.webp`: 1536 × 1024, 53.108 bayt. Yerleşik imagegen aracıyla üretildi, WebP formatına dönüştürüldü ve proje varlığı olarak eklendi. Yeni görselde yazı, arayüz veya logo yoktur.
+
+Yeni görselin üretim yönergesi: photorealistic-natural; DraBornStyle için minimalist Miami berber salonu, mavi saat ışığı, sağ kenarda tek koyu berber koltuğu ve dar pencere, dışarıda iki palmiye ve uzakta hafif şehir silueti. Sol ve orta %75 alan lacivert, düşük kontrastlı boşluk; pembe/turkuaz ışık yalnız sağ kenarda. İnsan, aynalar, koltuk sıraları, parlak gün batımı, tabela, yazı, logo ve filigran yok. Uygulama mockupu değil yalnız arka plan fotoğrafı.
+
+Yeni ekran kanıtları `screens/v04-*.png`, yerel örnek veriyle yapılan kontrol sonuçları `ui-v04-results.json` içindedir. Canlı giriş ve fiziksel Android kontrolü bu sürümde yapılmış olarak gösterilmez.
+
+## v0.3.0 · Tarihsel mockup uygulaması
 
 Gönderilen on görselin fotoğraf, neon ışık, cam panel ve bölüm hiyerarşisi çalışan React Native bileşenlerine taşındı. Önceki kodla çizilmiş Miami sahnesi kaldırıldı. Ekran görüntüsü bir düğme/kartın yerine kullanılmıyor; bütün arayüz öğeleri gerçek veri ve mevcut işlemlerle çalışıyor.
 
