@@ -96,7 +96,7 @@ Takvim randevu, aktif işlem, meşgul blok ve ekstra saat bekletmelerini tek ara
 - `db_style_reminders`: 5 dakikada bir, randevu/vade hatırlatmaları ve süre sonlandırma.
 - `db_style_push`: dakikada bir, yalnızca uygulamanın kayıtlı cihazları için gönderim/teslimat kuyruğu.
 
-Migration dosyaları **mevcut veritabanına uygulanmıştır** ve uzaktaki sürüm kimlikleriyle eşleştirilmiştir. `.github/workflows/check.yml` tip/test/Expo paket kontrollerini çalıştırır. Gelecek migration'ların CI'dan uygulanması için repository secret olarak `SUPABASE_ACCESS_TOKEN` gerekir; tek projeye ve Database Read-write iznine sahip 90 günlük tokenin kapsamı inceleme ekranında hazırdır, henüz oluşturulmadı veya repository secret olarak kaydedilmedi. CI deployment hazırlığı ile mevcut migration uygulaması aynı şey değildir. `scripts/apply-migrations.mjs` yalnızca bu uygulamanın sürümlerini işler; ortak projenin diğer migration geçmişini eşitlemez.
+Migration dosyaları **mevcut veritabanına uygulanmıştır** ve uzaktaki sürüm kimlikleriyle eşleştirilmiştir. `.github/workflows/check.yml` tip/test/Expo paket kontrollerini çalıştırır. Gelecek migration'lar için tek projeye ve Database Read-write iznine sahip, 90 gün geçerli `SUPABASE_ACCESS_TOKEN` repository secret olarak kaydedilmiştir. `scripts/apply-migrations.mjs` yalnızca bu uygulamanın sürümlerini işler; ortak projenin diğer migration geçmişini eşitlemez.
 
 Ortak projede `supabase db reset`, genel schema temizleme veya diğer uygulamaların eksik migration'larını değiştiren bir `db push` kullanmayın.
 
@@ -110,7 +110,7 @@ Ortak projede `supabase db reset`, genel schema temizleme veya diğer uygulamala
 
 Resmî kaynaklar: [Expo bildirim sınırları](https://docs.expo.dev/versions/latest/sdk/notifications/), [SDK 58 konum](https://docs.expo.dev/versions/v58.0.0/sdk/location/), [TaskManager](https://docs.expo.dev/versions/v58.0.0/sdk/task-manager/), [Expo sürüm manifesti](https://exp.host/--/api/v2/versions).
 
-v0.2.0 yerel TypeScript, 8 test, Android/Web paket üretimi ve 17 canlı arayüz senaryosunda geçti. Güncel uzaktan kontroller: [GitHub Actions](https://github.com/DrabornEagle/DraBornStyle/actions). CI migration uygulaması için repository secret henüz kaydedilmedi; mevcut migration’lar daha önce uygulanmıştır.
+v0.2.0 yerel TypeScript, 8 test, Android/Web paket üretimi ve 17 canlı arayüz senaryosunda geçti. Güncel uzaktan kontroller: [GitHub Actions](https://github.com/DrabornEagle/DraBornStyle/actions). Secret kurulumundan sonraki [CI #6](https://github.com/DrabornEagle/DraBornStyle/actions/runs/38144678520) çalışmasında doğrulama ve migration işleri başarıyla tamamlandı.
 
 ## Kontroller
 

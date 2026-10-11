@@ -11,7 +11,8 @@ Bu rapor gerçek veritabanı, HTTP API, web arayüzü ve paket üretimini birbir
 - TypeScript, 8 birim/regresyon testi, çevrimdışı SDK paket kontrolü, Android Hermes ve Web paket üretimi geçti.
 - 17 canlı Chromium arayüz senaryosu geçti; sonuçlar [ui-test-results.json](ui-test-results.json), görseller [screens](screens) altında. Demo yükleme, tüm roller, randevu oluşturma/iptali, çat kapı işlemi başlatma/tamamlama, çalışan ekleme, gerçek zamanlı mesaj, çevrimdışı yazmanın engellenmesi ve yeniden bağlantıda tek mesaj doğrulandı. 360 ve 414 piksel yerleşimleri kontrol edildi.
 - Test demo verileri temizlendi. 45 uygulama tablosunun 45’inde RLS etkin. Mevcut Admin kaydı korunuyor. v0.2.0 için yeni migration yok.
-- `SUPABASE_ACCESS_TOKEN` için tek proje, Database Read-write, 90 gün kapsamı Supabase inceleme ekranında hazır; token oluşturma ve GitHub Actions secret kaydı henüz tamamlanmadı. Token şema düzeyinde değil, proje veritabanı düzeyinde erişim taşır. Migration scripti yalnız `db_style` dosyalarını uygular.
+- `SUPABASE_ACCESS_TOKEN` tek proje, Database Read-write ve 90 gün kapsamıyla oluşturulup GitHub Actions repository secret olarak kaydedildi. Token şema düzeyinde değil, proje veritabanı düzeyinde erişim taşır. Migration scripti yalnız `db_style` dosyalarını uygular.
+- Secret kurulumundan sonraki [CI #6](https://github.com/DrabornEagle/DraBornStyle/actions/runs/38144678520) çalışmasında `validate` ve `migrations` işleri başarıyla tamamlandı; secret eksikliği adımı atlandı.
 - Fiziksel Android / Termux / Expo Go testi bu çalışma ortamında yapılmadı. Aşağıdaki v0.1 ve v0.1.1 bölümleri tarihsel doğrulama kanıtlarıdır.
 
 ## v0.1.1 · Expo Go açılış düzeltmesi
@@ -109,7 +110,7 @@ REST schema önbelleğini engelleyen, veritabanında bulunmayan eski `drabornsty
 - Fiziksel Android Expo Go 58.0.2: v0.2.0 açılışı, giriş, ekran geçişi, düşük güçlü cihaz akıcılığı, GPS izinleri, native harita, görsel/dekont seçme ve uçak modu testi. Android yerel/uzaktan cihaz bildirimleri development build testine ayrılmıştır.
 - Android uzaktan push ve arka plan konumu: Expo Go sınırları nedeniyle development build, EAS/FCM yapılandırması ve gerçek cihaz testi gerekir; sunucu kuyrukları hazırdır, teslimat doğrulanmadı.
 - Yeni hesap e-posta doğrulama/SMTP teslimatı ve parola kurtarma deep link'i. Ortak projenin SMTP/redirect listesi değiştirilmedi.
-- Gelecek migration'ların GitHub Actions üzerinden otomatik uygulaması için `SUPABASE_ACCESS_TOKEN` secret gerekir. Mevcut 12 migration uygulanmıştır; CI dağıtım kimliği bu çalışma sırasında kurulmadı.
+- Gelecek migration'lar GitHub Actions üzerinden otomatik uygulanır. Tek proje kapsamlı `SUPABASE_ACCESS_TOKEN` secret kurulmuştur; mevcut 12 migration uygulanmış ve CI migration işi doğrulanmıştır.
 - Çoklu şube yönetim ekranı, tekrar eden randevu kuralı, ziyaret sıklığına göre otomatik hatırlatma kampanyası, rota/trafik bazlı ETA, görsel/sesli sohbet sonraki sürümdedir. Mesai değişikliklerinin tarihsel raporlaması henüz sürümlü değildir.
 
 ## Yeniden çalıştırma
