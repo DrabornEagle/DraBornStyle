@@ -84,11 +84,9 @@ const { chromium } = require("playwright"),
   const text = (t) => page.getByText(t, { exact: true });
   const wait = (t) => text(t).first().waitFor({ timeout: 30000 });
   const screenshot = async (name) => {
-    await page.waitForFunction(() =>
-      [...document.querySelectorAll('div[style*="opacity"]')]
-        .filter((el) => el.style.gap === "16px")
-        .every((el) => Number(el.style.opacity) >= 0.999),
-    );
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    const dismiss = button("Bildirimi kapat");
+    if (await dismiss.isVisible()) await dismiss.click();
     await page.evaluate(() => {
       for (const el of document.querySelectorAll("div"))
         if (el.scrollHeight > el.clientHeight) el.scrollTop = 0;
@@ -120,6 +118,59 @@ const { chromium } = require("playwright"),
     return json;
   }
   try {
+    const loginPage = await browser.newPage({
+      ignoreHTTPSErrors: true,
+      viewport: { width: 360, height: 800 },
+    });
+    loginPage.on("pageerror", (e) => errors.push(e.message));
+    await loginPage.emulateMedia({ reducedMotion: "reduce" });
+    await loginPage.goto("http://127.0.0.1:" + server.address().port, {
+      waitUntil: "networkidle",
+    });
+    await loginPage.getByLabel("E-posta", { exact: true }).waitFor();
+    await loginPage.screenshot({
+      path: path.join(screenshotRoot, "login.png"),
+    });
+    await loginPage
+      .getByLabel("E-posta", { exact: true })
+      .fill("invalid-email");
+    await loginPage
+      .getByRole("button", { name: "Giriş Yap", exact: true })
+      .click();
+    await loginPage
+      .getByText("Geçerli bir e-posta adresi yazın.", { exact: true })
+      .waitFor();
+    passed.push("Login validates invalid email without submitting credentials");
+    if (process.env.DB_STYLE_TEST_EMAIL && process.env.DB_STYLE_TEST_PASSWORD) {
+      await loginPage
+        .getByLabel("E-posta", { exact: true })
+        .fill("  " + process.env.DB_STYLE_TEST_EMAIL.toUpperCase() + "  ");
+      await loginPage
+        .getByLabel("Şifre", { exact: true })
+        .fill(process.env.DB_STYLE_TEST_PASSWORD);
+      await loginPage
+        .getByRole("button", { name: "Şifreyi göster", exact: true })
+        .click();
+      if (
+        (await loginPage
+          .getByLabel("Şifre", { exact: true })
+          .getAttribute("type")) !== "text"
+      )
+        throw new Error("Password visibility control failed");
+      await loginPage
+        .getByRole("button", { name: "Şifreyi gizle", exact: true })
+        .click();
+      await loginPage.getByLabel("Şifre", { exact: true }).press("Enter");
+      await loginPage
+        .getByText("Platform genel görünümü · İşin ritmini takip et.", {
+          exact: true,
+        })
+        .waitFor({ timeout: 30000 });
+      passed.push(
+        "Admin logs in through actual form and Enter with padded uppercase email",
+      );
+    }
+    await loginPage.close();
     await page.goto("http://127.0.0.1:" + server.address().port, {
       waitUntil: "networkidle",
       timeout: 30000,
@@ -150,6 +201,7 @@ const { chromium } = require("playwright"),
     await wait(
       "DEMO VERİLER ETKİN · Demo işlemler rapor toplamlarına dahildir.",
     );
+    await text("3").first().waitFor({ timeout: 15000 });
     await screenshot("admin");
     passed.push("Admin dashboard renders live data");
     await button("Raporlar").first().click();

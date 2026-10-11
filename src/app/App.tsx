@@ -7,15 +7,17 @@ import {
   ActivityIndicator,
   BackHandler,
   StyleSheet,
-  ScrollView,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { AppProvider, useApp } from "./Context";
 import { useData } from "../hooks/useData";
 import { colors } from "../theme";
 import { Row } from "../types";
-import { Txt, RowView, Chip } from "../components/ui";
+import { Txt, RowView } from "../components/ui";
+import { BarberPole } from "../components/MiamiScene";
+import { MotionProvider } from "../components/motion";
 import { AuthScreen, ResetPasswordScreen } from "../screens/Auth";
 import {
   DiscoverScreen,
@@ -162,23 +164,30 @@ function Shell() {
       edges={["top", "bottom"]}
     >
       <StatusBar barStyle="light-content" />
+      <LinearGradient
+        colors={["#252b47", colors.bg, "#15363b"]}
+        style={StyleSheet.absoluteFill}
+      />
       <View style={styles.frame}>
         <View style={styles.header}>
           <RowView>
             {name !== "home" && (
-              <Pressable onPress={app.back} accessibilityLabel="Geri">
+              <Pressable
+                onPress={app.back}
+                accessibilityLabel="Geri"
+                accessibilityRole="button"
+                style={styles.headerButton}
+              >
                 <Ionicons name="chevron-back" size={24} color={colors.text} />
               </Pressable>
             )}
-            <View style={styles.logo}>
-              <Ionicons name="cut" size={29} color={colors.pink} />
-            </View>
+            <BarberPole size={25} animated={false} />
             <View>
               <Text style={styles.wordmark}>
                 DraBorn<Text style={{ color: colors.pink }}>Style</Text>
               </Text>
-              <Txt size={8} muted style={{ letterSpacing: 2.1 }}>
-                TARZININ YENİ ADRESİ
+              <Txt size={8} tone="cyan" style={{ letterSpacing: 1.8 }}>
+                BERBER · KUAFÖR · STİL
               </Txt>
             </View>
           </RowView>
@@ -187,7 +196,8 @@ function Shell() {
               <Pressable
                 onPress={() => app.nav("notifications")}
                 accessibilityLabel="Bildirimler"
-                style={{ position: "relative" }}
+                style={styles.headerButton}
+                accessibilityRole="button"
               >
                 <Ionicons
                   name="notifications-outline"
@@ -206,10 +216,12 @@ function Shell() {
             <Pressable
               onPress={() => app.nav("profile")}
               accessibilityLabel="Profil ve roller"
+              accessibilityRole="button"
+              style={styles.headerButton}
             >
               <Ionicons
                 name="person-circle-outline"
-                size={29}
+                size={23}
                 color={colors.cyan}
               />
             </Pressable>
@@ -247,14 +259,34 @@ function Shell() {
         )}
         {app.message && (
           <View
+            accessibilityLiveRegion="polite"
             style={[
               styles.toast,
               { borderColor: app.message.error ? colors.red : colors.green },
             ]}
           >
-            <Txt size={12} tone={app.message.error ? "red" : "green"}>
-              {app.message.text}
-            </Txt>
+            <RowView>
+              <Txt
+                size={12}
+                tone={app.message.error ? "red" : "green"}
+                style={{ flex: 1 }}
+              >
+                {app.message.text}
+              </Txt>
+              <Pressable
+                onPress={app.dismissMessage}
+                accessibilityRole="button"
+                accessibilityLabel="Bildirimi kapat"
+                style={{
+                  minWidth: 38,
+                  minHeight: 38,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons name="close-outline" size={22} color={colors.muted} />
+              </Pressable>
+            </RowView>
           </View>
         )}
         {app.busy && (
@@ -270,22 +302,39 @@ function Shell() {
               onPress={() => app.nav(target)}
               accessibilityRole="button"
               accessibilityLabel={label}
+              accessibilityState={{
+                selected:
+                  name === target || (target === "home" && name === "discover"),
+              }}
               style={{
                 flex: 1,
                 alignItems: "center",
-                gap: 4,
-                paddingVertical: 12,
+                gap: 5,
+                paddingVertical: 9,
+                borderRadius: 18,
+                backgroundColor:
+                  name === target || (target === "home" && name === "discover")
+                    ? colors.cyan + "18"
+                    : "transparent",
               }}
             >
               <Ionicons
                 name={icon as any}
                 size={22}
-                color={name === target ? colors.pink : colors.muted}
+                color={
+                  name === target || (target === "home" && name === "discover")
+                    ? colors.cyan
+                    : colors.muted
+                }
               />
               <Text
                 style={{
                   fontSize: 10,
-                  color: name === target ? colors.pink : colors.muted,
+                  color:
+                    name === target ||
+                    (target === "home" && name === "discover")
+                      ? colors.cyan
+                      : colors.muted,
                   fontWeight: name === target ? "700" : "400",
                 }}
               >
@@ -301,44 +350,46 @@ function Shell() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <AppProvider>
-        <Shell />
-      </AppProvider>
+      <MotionProvider>
+        <AppProvider>
+          <Shell />
+        </AppProvider>
+      </MotionProvider>
     </SafeAreaProvider>
   );
 }
 const styles = StyleSheet.create({
-  frame: { flex: 1, maxWidth: 680, width: "100%", alignSelf: "center" },
+  frame: { flex: 1, maxWidth: 720, width: "100%", alignSelf: "center" },
   header: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 13,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderBottomColor: "#29233d",
+    borderBottomColor: colors.border + "65",
   },
-  logo: {
-    width: 39,
-    height: 39,
-    borderRadius: 13,
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 15,
     borderWidth: 1,
-    borderColor: colors.pink + "85",
-    backgroundColor: "#292040",
+    borderColor: colors.border,
+    backgroundColor: colors.panel,
     alignItems: "center",
     justifyContent: "center",
   },
   wordmark: {
     fontWeight: "800",
-    fontSize: 22,
+    fontSize: 20,
     color: colors.text,
-    letterSpacing: -0.8,
+    letterSpacing: -1,
   },
   notification: {
     position: "absolute",
     top: -5,
     right: -6,
-    backgroundColor: colors.pink,
+    backgroundColor: "#b84266",
     borderRadius: 12,
     minWidth: 17,
     height: 17,
@@ -347,9 +398,14 @@ const styles = StyleSheet.create({
   },
   tabs: {
     flexDirection: "row",
-    borderTopColor: "#342b4b",
-    borderTopWidth: 1,
-    backgroundColor: "#0d1229",
+    gap: 2,
+    padding: 6,
+    marginHorizontal: 14,
+    marginBottom: 8,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: 25,
+    backgroundColor: "#172238fa",
   },
   toast: {
     position: "absolute",
@@ -359,7 +415,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 15,
     padding: 14,
-    backgroundColor: "#14192af5",
+    backgroundColor: "#172238fa",
   },
   busy: {
     position: "absolute",

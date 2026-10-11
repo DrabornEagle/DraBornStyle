@@ -19,6 +19,7 @@ import {
   Bars,
   State,
   Field,
+  QuickAction,
 } from "../components/ui";
 import { money } from "../utils/money";
 import {
@@ -134,7 +135,7 @@ export function DashboardScreen() {
       <Hero
         title={
           admin
-            ? "DraBornStyle Admin"
+            ? "İşin ritmi,\nsenin elinde."
             : staff
               ? `Merhaba, ${s?.name || "Usta"}`
               : `Merhaba, ${b.data?.name || "İşletmen"}`
@@ -147,6 +148,13 @@ export function DashboardScreen() {
               : "İşletmeni, ekibini ve kazancını tek yerden yönet."
         }
         image={b.data?.cover_url}
+        eyebrow={
+          admin
+            ? "ADMIN · PLATFORMUN NABZI"
+            : staff
+              ? "USTALIĞIN SAHNESİ"
+              : "İŞLETMENİN RİTMİ"
+        }
       />
       {!admin && <BusinessPicker staff={staff} />}
       {!admin && !app.businessId && (
@@ -392,13 +400,19 @@ export function DashboardScreen() {
               ["customers", "Müşteri Defteri", "people-outline"],
               ["reports", "Raporlar", "bar-chart-outline"],
             ].map(([name, label, icon]) => (
-              <Btn
+              <QuickAction
                 key={name}
                 title={label}
-                outline
-                small
                 icon={icon}
-                tone="cyan"
+                tone={
+                  name === "finance"
+                    ? "gold"
+                    : name === "reports"
+                      ? "purple"
+                      : name === "management"
+                        ? "pink"
+                        : "cyan"
+                }
                 onPress={() => app.nav(name)}
               />
             ))}

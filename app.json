@@ -2,7 +2,7 @@
   "expo": {
     "name": "DraBornStyle",
     "slug": "drabornstyle",
-    "version": "0.1.1",
+    "version": "0.2.0",
     "scheme": "drabornstyle",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -24,6 +24,8 @@
       "expo-document-picker",
       "expo-image-picker"
     ],
-    "web": { "bundler": "metro" }
+    "web": {
+      "bundler": "metro"
+    }
   }
 }

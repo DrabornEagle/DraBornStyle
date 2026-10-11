@@ -31,6 +31,7 @@ type AppContextType = {
   back: () => void;
   online: boolean;
   toast: (message: string, error?: boolean) => void;
+  dismissMessage: () => void;
   message: { text: string; error: boolean } | null;
   busy: boolean;
   run: (action: string, payload?: Row, success?: string) => Promise<any>;
@@ -367,6 +368,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         back,
         online,
         toast,
+        dismissMessage: () => setMessage(null),
         message,
         busy,
         run,

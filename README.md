@@ -1,8 +1,10 @@
-# DraBornStyle · v0.1.1
+# DraBornStyle · v0.2.0
 
-Android için React Native / Expo ile geliştirilen berber ve kuaför randevu, günlük çalışma ve işletme yönetimi uygulaması. Müşteri, usta, işletme sahibi ve platform Admin'i ayrı çalışma ekranları kullanır. Arayüz Türkçe, koyu renkli, pembe/camgöbeği neon vurgulu ve özgün Miami esintili görsellerle hazırlanmıştır.
+Android için React Native / Expo ile geliştirilen berber ve kuaför randevu, günlük çalışma ve işletme yönetimi uygulaması. Müşteri, usta, işletme sahibi ve platform Admin'i ayrı çalışma ekranları kullanır. Arayüz Türkçe; gece mavisi zemin, mercan pembe, turkuaz ve gün batımı tonlarıyla baştan tasarlanmıştır. Hareketli berber direği, Miami palmiyesi, yeni giriş düzeni, kartlar, hızlı işlemler ve alt gezinme çubuğu bütün çalışma alanlarında kullanılır. Animasyonlar hareket azaltma tercihine uyar ve uygulama arka plandayken durur.
 
-v0.1.1, Expo Go 58.0.2'deki `ExpoTopicSubscriptionModule` açılış hatasını giderir. Düzeltme ve test kapsamı: [EXPO-GO-FIX.md](docs/EXPO-GO-FIX.md).
+v0.2.0 yeni arayüzü ve giriş deneyimini içerir. v0.1.1'deki düzeltme korunur: Expo Go 58.0.2'deki `ExpoTopicSubscriptionModule` açılış hatasını giderir. Düzeltme ve test kapsamı: [EXPO-GO-FIX.md](docs/EXPO-GO-FIX.md).
+
+![Giriş ekranı](docs/screens/login.png)
 
 ![Admin paneli](docs/screens/admin.png)
 
@@ -28,10 +30,10 @@ Termux ve Expo Go aynı telefonda kullanılabilir. Önce eski Metro sunucusunu t
 ```bash
 pkg update -y
 pkg install nodejs-lts curl unzip -y
-mkdir -p "$HOME/DraBornStyle-v0.1.1"
-cd "$HOME/DraBornStyle-v0.1.1"
-curl -fL https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip -o DraBornStyle-v0.1.1.zip
-unzip -q -o DraBornStyle-v0.1.1.zip
+mkdir -p "$HOME/DraBornStyle-v0.2.0"
+cd "$HOME/DraBornStyle-v0.2.0"
+curl -fL https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip -o DraBornStyle-v0.2.0.zip
+unzip -q -o DraBornStyle-v0.2.0.zip
 cd DraBornStyle-main
 npm ci
 npx expo start --go --localhost --port 8081 --clear
@@ -40,7 +42,7 @@ npx expo start --go --localhost --port 8081 --clear
 Termux'u açık bırakın. Expo Go **58.0.2** içinden `exp://127.0.0.1:8081` adresini açın; aynı telefon için QR okutmanız gerekmez. Terminalde sunucu hazır olmadan Expo Go'yu açmayın. Daha sonra yeniden başlatmak için:
 
 ```bash
-cd "$HOME/DraBornStyle-v0.1.1/DraBornStyle-main"
+cd "$HOME/DraBornStyle-v0.2.0/DraBornStyle-main"
 npx expo start --go --localhost --port 8081 --clear
 ```
 
@@ -48,7 +50,7 @@ Bu, hazırlanan cihaz deneme yoludur; fiziksel Termux/Expo Go testi bu çalışm
 
 ## İlk deneme
 
-1. `draborneagle@gmail.com` hesabıyla giriş yapın. Mevcut Supabase Auth hesabının girişi doğrulandı; geçici şifre hiçbir kaynak veya migration dosyasına yazılmadı. Profil → **Şifremi Güncelle** ile yeni şifre belirlenebilir.
+1. `draborneagle@gmail.com` hesabıyla giriş yapın. İstenen mevcut şifreyle canlı Auth API ve gerçek giriş formu test edildi; Admin çalışma alanı açıldı. E-postanın çevresindeki boşluklar ve büyük harfler normalize edilir. Şifreyi göster/gizle ve Enter ile giriş kullanılabilir. Şifre hiçbir kaynak veya migration dosyasına yazılmadı. Profil → **Şifremi Güncelle** ile yeni şifre belirlenebilir.
 2. Admin panelinde **Demo Verileri Yükle** düğmesini kullanın. Üç işletme, dokuz usta, hizmetler, müşteri, randevular, sohbetler, 36 örnek tamamlanmış işlem ve kısmi ödeme bildirimi oluşur.
 3. Profil → Çalışma alanım bölümünden Müşteri / Usta / İşletme / Admin ekranlarına geçin. Demo içindeki bu geçişler aynı yetkili Admin hesabının arayüz denemesidir; bağımsız kullanıcıların RLS testleri veritabanı testinde ayrıca yapılmıştır.
 4. Müşteri olarak işletme, hizmet, usta ve boş saat seçin. Usta olarak **Tıraşa Başla**, misafir müşteri ve hizmet seçerek hızlı işlem deneyin.
@@ -94,7 +96,7 @@ Takvim randevu, aktif işlem, meşgul blok ve ekstra saat bekletmelerini tek ara
 - `db_style_reminders`: 5 dakikada bir, randevu/vade hatırlatmaları ve süre sonlandırma.
 - `db_style_push`: dakikada bir, yalnızca uygulamanın kayıtlı cihazları için gönderim/teslimat kuyruğu.
 
-Migration dosyaları **mevcut veritabanına uygulanmıştır** ve uzaktaki sürüm kimlikleriyle eşleştirilmiştir. `.github/workflows/check.yml` tip/test/Expo paket kontrollerini çalıştırır. Gelecek migration'ların CI'dan uygulanması için repository secret olarak `SUPABASE_ACCESS_TOKEN` gerekir; bu gizli bilgi bu çalışma sırasında temin edilmedi/yazılmadı. CI deployment hazırlığı ile mevcut migration uygulaması aynı şey değildir. `scripts/apply-migrations.mjs` yalnızca bu uygulamanın sürümlerini işler; ortak projenin diğer migration geçmişini eşitlemez.
+Migration dosyaları **mevcut veritabanına uygulanmıştır** ve uzaktaki sürüm kimlikleriyle eşleştirilmiştir. `.github/workflows/check.yml` tip/test/Expo paket kontrollerini çalıştırır. Gelecek migration'ların CI'dan uygulanması için repository secret olarak `SUPABASE_ACCESS_TOKEN` gerekir; tek projeye ve Database Read-write iznine sahip 90 günlük tokenin kapsamı inceleme ekranında hazırdır, henüz oluşturulmadı veya repository secret olarak kaydedilmedi. CI deployment hazırlığı ile mevcut migration uygulaması aynı şey değildir. `scripts/apply-migrations.mjs` yalnızca bu uygulamanın sürümlerini işler; ortak projenin diğer migration geçmişini eşitlemez.
 
 Ortak projede `supabase db reset`, genel schema temizleme veya diğer uygulamaların eksik migration'larını değiştiren bir `db push` kullanmayın.
 
@@ -108,7 +110,7 @@ Ortak projede `supabase db reset`, genel schema temizleme veya diğer uygulamala
 
 Resmî kaynaklar: [Expo bildirim sınırları](https://docs.expo.dev/versions/latest/sdk/notifications/), [SDK 58 konum](https://docs.expo.dev/versions/v58.0.0/sdk/location/), [TaskManager](https://docs.expo.dev/versions/v58.0.0/sdk/task-manager/), [Expo sürüm manifesti](https://exp.host/--/api/v2/versions).
 
-[GitHub kontrolleri](https://github.com/DrabornEagle/DraBornStyle/actions/runs/38129785556) temiz kurulum, TypeScript, testler, çevrimiçi Expo bağımlılık kontrolü ve Android/Web paket üretiminde geçti. CI migration uygulama adımı, dağıtım secret’ı olmadığı için atlandı; mevcut migration’lar daha önce uygulanmıştır.
+v0.2.0 yerel TypeScript, 8 test, Android/Web paket üretimi ve 17 canlı arayüz senaryosunda geçti. Güncel uzaktan kontroller: [GitHub Actions](https://github.com/DrabornEagle/DraBornStyle/actions). CI migration uygulaması için repository secret henüz kaydedilmedi; mevcut migration’lar daha önce uygulanmıştır.
 
 ## Kontroller
 

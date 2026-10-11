@@ -14,7 +14,9 @@ import {
   Avatar,
   Chip,
   State,
+  Hero,
 } from "../components/ui";
+import { appVersion } from "../theme";
 import { dateTime } from "../utils/dates";
 import {
   registerNotifications,
@@ -44,11 +46,16 @@ export function ProfileScreen() {
   };
   return (
     <Page>
-      <Section title="Profil ve ayarlar" />
+      <Hero
+        title="Profil ve ayarlar"
+        subtitle="Tarzın da çalışma alanın da sana ait."
+        compact
+        eyebrow="SANA ÖZEL ALAN"
+      />
       <Card tone="pink">
         <RowView>
           <Avatar url={profile?.avatar_url} size={72} />
-          <View>
+          <View style={{ flex: 1, minWidth: 0 }}>
             <Txt bold size={23}>
               {profile?.display_name || "Misafir"}
             </Txt>
@@ -159,7 +166,7 @@ export function ProfileScreen() {
         <Btn title="Giriş Yap / Kayıt Ol" onPress={() => app.nav("auth")} />
       )}
       <Card>
-        <Txt bold>DraBornStyle v0.1.1</Txt>
+        <Txt bold>DraBornStyle v{appVersion}</Txt>
         <Txt muted size={12}>
           Randevu, tıraş ve gelir yönetimi · Android / Expo Go test sürümü
         </Txt>

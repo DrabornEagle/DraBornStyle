@@ -1,9 +1,11 @@
 {
-  "startedAt": "2026-10-11T09:43:50.343Z",
-  "completedAt": "2026-10-11T09:44:30.129Z",
+  "startedAt": "2026-10-11T13:31:03.230Z",
+  "completedAt": "2026-10-11T13:31:50.591Z",
   "platform": "Chromium web export (not physical Android)",
   "status": "passed",
   "passed": [
+    "Login validates invalid email without submitting credentials",
+    "Admin logs in through actual form and Enter with padded uppercase email",
     "Admin demo load button creates tagged live fixtures",
     "Admin dashboard renders live data",
     "Invalid custom report date is handled without crash",

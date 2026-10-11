@@ -1,17 +1,24 @@
 export const colors = {
-  bg: "#070d20",
-  panel: "#10152cf2",
-  border: "#343454",
-  text: "#f5f3fc",
-  muted: "#a6aac8",
-  pink: "#ff4ecb",
-  cyan: "#24d6ed",
-  gold: "#ffb85c",
-  green: "#35e0ac",
-  red: "#ff6386",
-  purple: "#ba6aff",
+  bg: "#0c1222",
+  panel: "#172238",
+  border: "#344158",
+  text: "#fff9f0",
+  muted: "#b7c5d8",
+  pink: "#ff8aa8",
+  cyan: "#64edd9",
+  gold: "#ffcc8b",
+  green: "#83eab4",
+  red: "#ff99a0",
+  purple: "#bcb0ff",
 };
-export const gradient = ["#d637f6", "#ff498e", "#ffb65d"] as const;
+export const gradient = ["#ffc6a4", "#ff92aa", "#ee88cb"] as const;
+export const surface = {
+  raised: "#202d43",
+  input: "#101a2c",
+  ink: "#172238",
+  cream: "#fff4e6",
+};
+export const appVersion = "0.2.0";
 export const statusNames: Record<string, string> = {
   available: "Müsait",
   waiting: "Müşteri bekliyorum",

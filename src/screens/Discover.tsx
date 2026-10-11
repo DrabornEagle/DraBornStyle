@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { View, Image, Pressable, Linking, ScrollView } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import Ionicons from "@expo/vector-icons/Ionicons";
 import { useApp } from "../app/Context";
 import { useData } from "../hooks/useData";
 import { Business, Row } from "../types";
@@ -18,11 +20,13 @@ import {
   Icon,
   State,
   imageSource,
+  QuickAction,
 } from "../components/ui";
 import { money } from "../utils/money";
 import { MapPanel } from "../components/MapPanel";
+import { colors } from "../theme";
 export function DiscoverScreen() {
-  const { nav } = useApp();
+  const { nav, session } = useApp();
   const [search, setSearch] = useState("");
   const result = useData<Business[]>("directory", { search });
   return (
@@ -30,16 +34,43 @@ export function DiscoverScreen() {
       <Hero
         title="Yeni tarzın burada."
         subtitle="Sana uyan ustayı keşfet. Zamanını sen seç."
+        eyebrow="SANA YAKIN · SANA ÖZEL"
       />
+      <RowView style={{ flexWrap: "wrap" }}>
+        <QuickAction
+          title="Randevularım"
+          subtitle="Bir sonraki buluşman"
+          icon="calendar-outline"
+          tone="cyan"
+          onPress={() => nav(session ? "appointments" : "auth")}
+        />
+        <QuickAction
+          title="Favori ustalarım"
+          subtitle="Yeniden görüşelim"
+          icon="heart-outline"
+          tone="pink"
+          onPress={() => nav(session ? "favorites" : "auth")}
+        />
+      </RowView>
       <Field
         label="İşletme, berber veya şehir ara"
         value={search}
         onChange={setSearch}
         placeholder="Antalya, Ahmet Berber…"
+        icon="search-outline"
       />
       <Section
         title="Tarzına en yakın"
         subtitle="Fiyatlar ve müsaitlik, işletmenin güncel kayıtlarından."
+        right={
+          result.data ? (
+            <Chip
+              label={`${result.data.length} işletme`}
+              tone="cyan"
+              selected
+            />
+          ) : undefined
+        }
       />
       <State
         loading={result.loading && !result.data}
@@ -72,18 +103,57 @@ export function BusinessCard({
       accessibilityRole="button"
       accessibilityLabel={b.name}
     >
-      <Card tone="pink" style={{ padding: 0, overflow: "hidden" }}>
-        <Image
-          source={imageSource(b.cover_url)}
-          style={{ height: 185, width: "100%" }}
-        />
-        <View style={{ padding: 17, gap: 11 }}>
-          <RowView style={{ justifyContent: "space-between" }}>
-            <Txt bold size={22}>
-              {b.name}
-            </Txt>
-            {b.demo_batch_id && <Chip label="DEMO" tone="gold" selected />}
-          </RowView>
+      <Card tone="pink" style={{ padding: 0, overflow: "hidden", gap: 0 }}>
+        <View style={{ height: 203 }}>
+          <Image
+            source={imageSource(b.cover_url)}
+            style={{ height: "100%", width: "100%" }}
+          />
+          <LinearGradient
+            colors={["#0c122208", "#0c1222eb"]}
+            style={{
+              position: "absolute",
+              inset: 0,
+              justifyContent: "flex-end",
+              padding: 18,
+            }}
+          >
+            <RowView
+              style={{
+                justifyContent: "space-between",
+                alignItems: "flex-end",
+              }}
+            >
+              <View style={{ flex: 1, gap: 4 }}>
+                <Txt tone="cyan" size={9} bold style={{ letterSpacing: 1.6 }}>
+                  YENİ TARZININ ADRESİ
+                </Txt>
+                <Txt bold size={25} style={{ letterSpacing: -0.8 }}>
+                  {b.name}
+                </Txt>
+              </View>
+              <View
+                style={{
+                  padding: 10,
+                  borderRadius: 15,
+                  backgroundColor: colors.cyan,
+                }}
+              >
+                <Ionicons
+                  name="arrow-forward-outline"
+                  size={19}
+                  color="#172238"
+                />
+              </View>
+            </RowView>
+          </LinearGradient>
+          {b.demo_batch_id && (
+            <View style={{ position: "absolute", top: 13, left: 13 }}>
+              <Chip label="DEMO" tone="gold" selected />
+            </View>
+          )}
+        </View>
+        <View style={{ padding: 18, gap: 12 }}>
           <RowView>
             <Icon name="location-outline" tone="cyan" size={17} />
             <Txt muted size={12}>
@@ -237,7 +307,7 @@ export function BusinessScreen() {
         .map((s) => (
           <Card key={s.id}>
             <RowView style={{ justifyContent: "space-between" }}>
-              <View>
+              <View style={{ flex: 1 }}>
                 <Txt bold>{s.name}</Txt>
                 <Txt muted size={12}>
                   {s.duration_minutes} dakika
@@ -335,7 +405,7 @@ export function StaffProfileScreen() {
           <Card tone="cyan">
             <RowView>
               <Avatar url={s.photo_url} size={100} />
-              <View>
+              <View style={{ flex: 1 }}>
                 <Txt bold size={22}>
                   {s.name}
                 </Txt>

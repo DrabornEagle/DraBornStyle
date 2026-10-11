@@ -95,11 +95,13 @@ export function ChatScreen() {
             style={{
               alignSelf: own ? "flex-end" : "flex-start",
               maxWidth: "87%",
-              backgroundColor: own ? "#532453" : "#143446",
+              backgroundColor: own ? "#36324c" : "#1b3b43",
               borderWidth: 1,
               borderColor: own ? colors.pink + "80" : colors.cyan + "65",
-              borderRadius: 17,
-              padding: 13,
+              borderRadius: 22,
+              borderBottomRightRadius: own ? 6 : 22,
+              borderBottomLeftRadius: own ? 22 : 6,
+              padding: 16,
               gap: 5,
             }}
           >

@@ -1,8 +1,18 @@
-# DraBornStyle v0.1 / v0.1.1 doğrulama raporu
+# DraBornStyle v0.2.0 doğrulama raporu
 
 11 Ekim 2026 · Mevcut Supabase projesi: `xpdiwyxnnrmyvpcqwuyb` (DraBorn-Park-Garage-Series).
 
 Bu rapor gerçek veritabanı, HTTP API, web arayüzü ve paket üretimini birbirinden ayırır. Web ekran testleri fiziksel Android / Expo Go testi değildir. Demo içindeki finans verileri açıkça örnek olarak etiketlenir; gerçek ödeme tahsilatı yapılmadı.
+
+## v0.2.0 · Berber / Miami arayüzü ve yönetici girişi
+
+- Yeni tasarım sistemi, hareketli berber direği ve gün batımı/palmiye çizimi, giriş ve keşif düzeni, hızlı işlemler, rol panelleri, kartlar, formlar, sohbet balonları ve alt gezinme çubuğu hazır. Hareket azaltma ayarı ve arka plan durumu animasyonları durdurur.
+- `draborneagle@gmail.com` için istenen mevcut şifreyle canlı Auth API ve gerçek giriş formu başarılı. Sunucu Admin yetkisini UUID tablosundan doğruladı. Şifre değiştirilmedi ve kaynağa yazılmadı. E-posta çevresindeki boşluklar/büyük harf, şifre göster/gizle ve Enter ile giriş canlı formda doğrulandı.
+- TypeScript, 8 birim/regresyon testi, çevrimdışı SDK paket kontrolü, Android Hermes ve Web paket üretimi geçti.
+- 17 canlı Chromium arayüz senaryosu geçti; sonuçlar [ui-test-results.json](ui-test-results.json), görseller [screens](screens) altında. Demo yükleme, tüm roller, randevu oluşturma/iptali, çat kapı işlemi başlatma/tamamlama, çalışan ekleme, gerçek zamanlı mesaj, çevrimdışı yazmanın engellenmesi ve yeniden bağlantıda tek mesaj doğrulandı. 360 ve 414 piksel yerleşimleri kontrol edildi.
+- Test demo verileri temizlendi. 45 uygulama tablosunun 45’inde RLS etkin. Mevcut Admin kaydı korunuyor. v0.2.0 için yeni migration yok.
+- `SUPABASE_ACCESS_TOKEN` için tek proje, Database Read-write, 90 gün kapsamı Supabase inceleme ekranında hazır; token oluşturma ve GitHub Actions secret kaydı henüz tamamlanmadı. Token şema düzeyinde değil, proje veritabanı düzeyinde erişim taşır. Migration scripti yalnız `db_style` dosyalarını uygular.
+- Fiziksel Android / Termux / Expo Go testi bu çalışma ortamında yapılmadı. Aşağıdaki v0.1 ve v0.1.1 bölümleri tarihsel doğrulama kanıtlarıdır.
 
 ## v0.1.1 · Expo Go açılış düzeltmesi
 
@@ -96,7 +106,7 @@ REST schema önbelleğini engelleyen, veritabanında bulunmayan eski `drabornsty
 
 ## Henüz doğrulanmayan / tamamlanmayan noktalar
 
-- Fiziksel Android Expo Go 58.0.2: v0.1.1 açılışı, giriş, ekran geçişi, düşük güçlü cihaz akıcılığı, GPS izinleri, native harita, görsel/dekont seçme ve uçak modu testi. Android yerel/uzaktan cihaz bildirimleri development build testine ayrılmıştır.
+- Fiziksel Android Expo Go 58.0.2: v0.2.0 açılışı, giriş, ekran geçişi, düşük güçlü cihaz akıcılığı, GPS izinleri, native harita, görsel/dekont seçme ve uçak modu testi. Android yerel/uzaktan cihaz bildirimleri development build testine ayrılmıştır.
 - Android uzaktan push ve arka plan konumu: Expo Go sınırları nedeniyle development build, EAS/FCM yapılandırması ve gerçek cihaz testi gerekir; sunucu kuyrukları hazırdır, teslimat doğrulanmadı.
 - Yeni hesap e-posta doğrulama/SMTP teslimatı ve parola kurtarma deep link'i. Ortak projenin SMTP/redirect listesi değiştirilmedi.
 - Gelecek migration'ların GitHub Actions üzerinden otomatik uygulaması için `SUPABASE_ACCESS_TOKEN` secret gerekir. Mevcut 12 migration uygulanmıştır; CI dağıtım kimliği bu çalışma sırasında kurulmadı.
