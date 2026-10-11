@@ -1,5 +1,13 @@
-import React, { useState } from "react";
-import { View, Image, Pressable, Linking, ScrollView } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  View,
+  Image,
+  Pressable,
+  Linking,
+  ScrollView,
+  useWindowDimensions,
+  StyleSheet,
+} from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useApp } from "../app/Context";
@@ -25,77 +33,347 @@ import {
 import { money } from "../utils/money";
 import { MapPanel } from "../components/MapPanel";
 import { colors } from "../theme";
+import { slots } from "../services/api";
+import { localDate, clock } from "../utils/dates";
 export function DiscoverScreen() {
   const { nav, session } = useApp();
   const [search, setSearch] = useState("");
+  const [city, setCity] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [featuredIndex, setFeaturedIndex] = useState(0);
   const result = useData<Business[]>("directory", { search });
+  const rows = (result.data || []).filter((b) => !city || b.city === city);
+  const featured = rows[featuredIndex % Math.max(1, rows.length)];
+  const masters: (Row & { business: Business })[] = rows.flatMap((b) =>
+    (b.staff || []).filter((s) => s.active).map((s) => ({ ...s, business: b })),
+  );
+  const { width } = useWindowDimensions();
+  const cardWidth = width < 600 ? 180 : 270;
   return (
     <Page>
-      <Hero
-        title="Yeni tarzın burada."
-        subtitle="Sana uyan ustayı keşfet. Zamanını sen seç."
-        eyebrow="SANA YAKIN · SANA ÖZEL"
-      />
-      <RowView style={{ flexWrap: "wrap" }}>
-        <QuickAction
-          title="Randevularım"
-          subtitle="Bir sonraki buluşman"
-          icon="calendar-outline"
-          tone="cyan"
-          onPress={() => nav(session ? "appointments" : "auth")}
-        />
-        <QuickAction
-          title="Favori ustalarım"
-          subtitle="Yeniden görüşelim"
-          icon="heart-outline"
-          tone="pink"
-          onPress={() => nav(session ? "favorites" : "auth")}
+      <RowView style={{ justifyContent: "space-between", paddingVertical: 8 }}>
+        <Txt bold size={24}>
+          Keşfet
+        </Txt>
+        <Chip
+          label={city || "Tüm şehirler"}
+          selected
+          onPress={() => setFiltersOpen(!filtersOpen)}
         />
       </RowView>
-      <Field
-        label="İşletme, berber veya şehir ara"
-        value={search}
-        onChange={setSearch}
-        placeholder="Antalya, Ahmet Berber…"
-        icon="search-outline"
-      />
-      <Section
-        title="Tarzına en yakın"
-        subtitle="Fiyatlar ve müsaitlik, işletmenin güncel kayıtlarından."
-        right={
-          result.data ? (
-            <Chip
-              label={`${result.data.length} işletme`}
-              tone="cyan"
-              selected
-            />
-          ) : undefined
-        }
-      />
+      <RowView style={{ gap: 8 }}>
+        <View style={{ flex: 1 }}>
+          <Field
+            label="İşletme, berber veya şehir ara"
+            hideLabel
+            value={search}
+            onChange={setSearch}
+            placeholder="Berber, semt veya şehir ara…"
+            icon="search-outline"
+          />
+        </View>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Şehir filtreleri"
+          onPress={() => setFiltersOpen(!filtersOpen)}
+          style={{
+            padding: 12,
+            borderWidth: 1,
+            borderColor: colors.purple,
+            borderRadius: 14,
+            backgroundColor: "#101026ca",
+          }}
+        >
+          <Icon name="options-outline" tone="purple" />
+        </Pressable>
+      </RowView>
+      {filtersOpen && (
+        <Chips
+          items={[
+            { value: "", label: "Tüm şehirler" },
+            ...Array.from(new Set((result.data || []).map((b) => b.city)))
+              .filter(Boolean)
+              .map((city) => ({ value: city, label: city })),
+          ]}
+          value={city}
+          onChange={setCity}
+        />
+      )}
       <State
         loading={result.loading && !result.data}
         error={result.error}
         onRetry={result.reload}
       />
-      {result.data?.map((b) => (
-        <BusinessCard
-          key={b.id}
-          business={b}
-          onPress={() => nav("business", { id: b.id })}
-        />
-      ))}
-      {result.data?.length === 0 && (
+      {featured && (
+        <View style={{ gap: 10 }}>
+          <View
+            style={{
+              borderRadius: 20,
+              overflow: "hidden",
+              borderWidth: 1,
+              borderColor: colors.pink,
+              height: width < 600 ? 256 : 330,
+              shadowColor: colors.pink,
+              shadowRadius: 10,
+              shadowOpacity: 0.4,
+              shadowOffset: { width: 0, height: 0 },
+            }}
+          >
+            <Image
+              source={imageSource(featured.cover_url)}
+              style={StyleSheet.absoluteFill}
+              resizeMode="cover"
+            />
+            <LinearGradient
+              colors={["#030915f0", "#03091594", "#03091510"]}
+              start={{ x: 0, y: 0.5 }}
+              end={{ x: 1, y: 0.5 }}
+              style={StyleSheet.absoluteFill}
+            />
+            <View
+              style={{
+                padding: 18,
+                gap: 10,
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "flex-start",
+                maxWidth: width < 600 ? "85%" : "65%",
+              }}
+            >
+              <Chip
+                label={
+                  featured.demo_batch_id
+                    ? "★ Öne çıkan · DEMO"
+                    : "★ Öne çıkan işletme"
+                }
+                tone="gold"
+                selected
+              />
+              <Txt bold size={width < 600 ? 26 : 40}>
+                {featured.name}
+              </Txt>
+              <Txt size={12} tone="gold">
+                ★{" "}
+                {Number(featured.rating) > 0
+                  ? Number(featured.rating).toFixed(1)
+                  : "Yeni işletme"}{" "}
+                <Txt muted size={11}>
+                  ({featured.review_count || 0} değerlendirme)
+                </Txt>
+              </Txt>
+              <RowView style={{ gap: 4 }}>
+                <Icon name="location" tone="purple" size={16} />
+                <Txt size={12}>{featured.city}</Txt>
+              </RowView>
+              <RowView style={{ gap: 6, flexWrap: "wrap" }}>
+                {featured.services?.slice(0, 2).map((s) => (
+                  <View
+                    key={s.id}
+                    style={{
+                      backgroundColor: "#101726d9",
+                      padding: 7,
+                      borderRadius: 9,
+                      borderWidth: 1,
+                      borderColor: "#9a93a96f",
+                    }}
+                  >
+                    <Txt size={10}>{s.name}</Txt>
+                    <Txt bold size={12}>
+                      {money(s.price_cents)}
+                    </Txt>
+                  </View>
+                ))}
+              </RowView>
+              <Btn
+                title="Hemen Randevu Al"
+                small
+                icon="arrow-forward"
+                onPress={() => nav("business", { id: featured.id })}
+              />
+            </View>
+          </View>
+          {rows.length > 1 && (
+            <RowView style={{ justifyContent: "center", gap: 7 }}>
+              {rows.map((b, i) => (
+                <Pressable
+                  key={b.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Öne çıkan işletme ${i + 1}`}
+                  accessibilityState={{ selected: featured.id === b.id }}
+                  onPress={() => setFeaturedIndex(i)}
+                  style={{
+                    width: featured.id === b.id ? 20 : 7,
+                    height: 7,
+                    borderRadius: 5,
+                    backgroundColor:
+                      featured.id === b.id ? colors.pink : "#878092",
+                  }}
+                />
+              ))}
+            </RowView>
+          )}
+        </View>
+      )}
+      {rows.length > 0 && (
+        <>
+          <Section
+            title="İşletmeler"
+            icon="location"
+            right={
+              <Txt muted size={11}>
+                {rows.length} işletme
+              </Txt>
+            }
+          />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 12, paddingBottom: 8 }}
+          >
+            {rows.map((b) => (
+              <View key={b.id} style={{ width: cardWidth }}>
+                <BusinessCard
+                  business={b}
+                  compact
+                  onPress={() => nav("business", { id: b.id })}
+                />
+              </View>
+            ))}
+          </ScrollView>
+          <Section title="Popüler Ustalar" icon="ribbon" />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ gap: 12, paddingBottom: 8 }}
+          >
+            {masters.slice(0, 12).map((s) => (
+              <Card
+                key={s.id}
+                tone="purple"
+                style={{
+                  width: width < 600 ? 146 : 185,
+                  padding: 12,
+                  alignItems: "center",
+                  gap: 8,
+                }}
+              >
+                <Avatar url={s.photo_url} size={74} />
+                <Txt bold size={14} style={{ textAlign: "center" }}>
+                  {s.name}
+                </Txt>
+                <Txt muted size={11} style={{ textAlign: "center" }}>
+                  {s.business.name}
+                </Txt>
+                <Btn
+                  title="Profili Gör"
+                  small
+                  tone="purple"
+                  onPress={() =>
+                    nav("staffprofile", {
+                      business_id: s.business.id,
+                      staff_id: s.id,
+                    })
+                  }
+                />
+              </Card>
+            ))}
+          </ScrollView>
+          {featured && (
+            <DiscoverySlots
+              business={featured}
+              onPick={(staff, service, starts_at) =>
+                session
+                  ? nav("booking", {
+                      business_id: featured.id,
+                      staff_id: staff,
+                      service_id: service,
+                      starts_at,
+                    })
+                  : nav("auth")
+              }
+            />
+          )}
+        </>
+      )}
+      {result.data && rows.length === 0 && (
         <State empty="Bu aramada işletme bulunamadı. İşletmeler sisteme katıldıkça burada görünür." />
       )}
     </Page>
   );
 }
+function DiscoverySlots({
+  business,
+  onPick,
+}: {
+  business: Business;
+  onPick: (staff: string, service: string, starts_at: string) => void;
+}) {
+  const { data: b } = useData<Business>("business", {
+    business_id: business.id,
+  });
+  const [available, setAvailable] = useState<Row[]>([]);
+  const [error, setError] = useState(false);
+  const assignment = b?.staff_services?.find(
+    (x) =>
+      b.staff.some((s) => s.id === x.staff_id && s.active) &&
+      b.services.some((s) => s.id === x.service_id && s.active),
+  );
+  useEffect(() => {
+    let live = true;
+    setAvailable([]);
+    setError(false);
+    if (assignment)
+      slots(assignment.staff_id, assignment.service_id, localDate())
+        .then((rows) => {
+          if (live) setAvailable(rows.filter((s) => s.available).slice(0, 8));
+        })
+        .catch(() => {
+          if (live) setError(true);
+        });
+    return () => {
+      live = false;
+    };
+  }, [assignment?.staff_id, assignment?.service_id]);
+  if (!assignment || error || !available.length) return null;
+  return (
+    <View style={{ gap: 12 }}>
+      <Section
+        title="Bugün Uygun Saatler"
+        icon="time-outline"
+        subtitle={
+          business.name +
+          " · " +
+          b?.staff.find((s) => s.id === assignment.staff_id)?.name
+        }
+      />
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 8 }}
+      >
+        {available.map((s) => (
+          <Chip
+            key={s.starts_at}
+            label={clock(s.starts_at) + " · Müsait"}
+            tone="green"
+            selected
+            onPress={() =>
+              onPick(assignment.staff_id, assignment.service_id, s.starts_at)
+            }
+          />
+        ))}
+      </ScrollView>
+    </View>
+  );
+}
 export function BusinessCard({
   business: b,
   onPress,
+  compact = false,
 }: {
   business: Row;
   onPress: () => void;
+  compact?: boolean;
 }) {
   return (
     <Pressable
@@ -104,7 +382,7 @@ export function BusinessCard({
       accessibilityLabel={b.name}
     >
       <Card tone="pink" style={{ padding: 0, overflow: "hidden", gap: 0 }}>
-        <View style={{ height: 203 }}>
+        <View style={{ height: compact ? 110 : 203 }}>
           <Image
             source={imageSource(b.cover_url)}
             style={{ height: "100%", width: "100%" }}
@@ -115,7 +393,7 @@ export function BusinessCard({
               position: "absolute",
               inset: 0,
               justifyContent: "flex-end",
-              padding: 18,
+              padding: compact ? 10 : 18,
             }}
           >
             <RowView
@@ -125,26 +403,32 @@ export function BusinessCard({
               }}
             >
               <View style={{ flex: 1, gap: 4 }}>
-                <Txt tone="cyan" size={9} bold style={{ letterSpacing: 1.6 }}>
-                  YENİ TARZININ ADRESİ
-                </Txt>
-                <Txt bold size={25} style={{ letterSpacing: -0.8 }}>
-                  {b.name}
-                </Txt>
+                {!compact && (
+                  <Txt tone="cyan" size={9} bold style={{ letterSpacing: 1.6 }}>
+                    YENİ TARZININ ADRESİ
+                  </Txt>
+                )}
+                {!compact && (
+                  <Txt bold size={25} style={{ letterSpacing: -0.8 }}>
+                    {b.name}
+                  </Txt>
+                )}
               </View>
-              <View
-                style={{
-                  padding: 10,
-                  borderRadius: 15,
-                  backgroundColor: colors.cyan,
-                }}
-              >
-                <Ionicons
-                  name="arrow-forward-outline"
-                  size={19}
-                  color="#172238"
-                />
-              </View>
+              {!compact && (
+                <View
+                  style={{
+                    padding: 10,
+                    borderRadius: 15,
+                    backgroundColor: colors.cyan,
+                  }}
+                >
+                  <Ionicons
+                    name="arrow-forward-outline"
+                    size={19}
+                    color="#172238"
+                  />
+                </View>
+              )}
             </RowView>
           </LinearGradient>
           {b.demo_batch_id && (
@@ -153,11 +437,16 @@ export function BusinessCard({
             </View>
           )}
         </View>
-        <View style={{ padding: 18, gap: 12 }}>
+        <View style={{ padding: compact ? 11 : 18, gap: compact ? 7 : 12 }}>
+          {compact && (
+            <Txt bold size={16}>
+              {b.name}
+            </Txt>
+          )}
           <RowView>
             <Icon name="location-outline" tone="cyan" size={17} />
             <Txt muted size={12}>
-              {b.city} · {b.address}
+              {compact ? b.city : b.city + " · " + b.address}
             </Txt>
           </RowView>
           {b.rating !== undefined && (
@@ -173,13 +462,17 @@ export function BusinessCard({
             {b.min_price_cents != null && (
               <Chip label={"Hizmetler " + money(b.min_price_cents) + "’den"} />
             )}
-            <Chip label={`${b.staff?.length || 0} uzman usta`} tone="cyan" />
+            {!compact && (
+              <Chip label={`${b.staff?.length || 0} uzman usta`} tone="cyan" />
+            )}
           </RowView>
-          <Btn
-            title="Hemen Randevu Al"
-            icon="calendar-outline"
-            onPress={onPress}
-          />
+          {!compact && (
+            <Btn
+              title="Hemen Randevu Al"
+              icon="calendar-outline"
+              onPress={onPress}
+            />
+          )}
         </View>
       </Card>
     </Pressable>

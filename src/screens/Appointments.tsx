@@ -16,6 +16,7 @@ import {
   AmountLine,
   Chips,
   Chip,
+  Hero,
 } from "../components/ui";
 import { dateTime, localDate, addDays, atLocal } from "../utils/dates";
 import { money } from "../utils/money";
@@ -127,11 +128,20 @@ export function AppointmentScreen() {
   async function chat() {
     if (!a) return;
     const result = await app.run("chat_open", { appointment_id: a.id }, "");
-    if (result) app.nav("chat", { id: result.id, staff: a.staff_name });
+    if (result)
+      app.nav("chat", {
+        id: result.id,
+        staff: a.staff_name,
+        photo_url: a.staff_photo,
+      });
   }
   return (
     <Page>
-      <Section title="Randevu detayları" />
+      <Hero
+        title="Randevu detayları"
+        eyebrow="RANDEVUM & YOLDA"
+        subtitle="Saatin, hizmetin ve ustana ulaşmanın en kısa yolu."
+      />
       <State loading={r.loading && !a} error={r.error} onRetry={r.reload} />
       {a && (
         <>

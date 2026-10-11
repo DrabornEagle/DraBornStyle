@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,16 +7,19 @@ import {
   ActivityIndicator,
   BackHandler,
   StyleSheet,
+  Image,
+  Modal,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useFonts } from "expo-font";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { AppProvider, useApp } from "./Context";
 import { useData } from "../hooks/useData";
 import { colors } from "../theme";
 import { Row } from "../types";
-import { Txt, RowView } from "../components/ui";
-import { BarberPole } from "../components/MiamiScene";
+import { Txt, RowView, Btn, Card } from "../components/ui";
+import { Brand } from "../components/Brand";
 import { MotionProvider } from "../components/motion";
 import { AuthScreen, ResetPasswordScreen } from "../screens/Auth";
 import {
@@ -69,6 +72,7 @@ class Boundary extends React.Component<
 }
 function Shell() {
   const app = useApp();
+  const [menuOpen, setMenuOpen] = useState(false);
   const notifications = useData<Row[]>("notifications", {}, !!app.session);
   const unread = notifications.data?.filter((n) => !n.read_at).length || 0;
   useEffect(() => {
@@ -143,90 +147,125 @@ function Shell() {
             ["reports", "Performans", "bar-chart-outline"],
             ["profile", "Profil", "person-outline"],
           ]
-        : [
-            [
-              "home",
-              app.role === "admin" ? "Platform" : "Kontrol",
-              "grid-outline",
-            ],
-            ["management", "Yönetim", "storefront-outline"],
-            [
-              app.role === "admin" ? "reports" : "appointments",
-              app.role === "admin" ? "Raporlar" : "Randevular",
-              app.role === "admin" ? "bar-chart-outline" : "calendar-outline",
-            ],
-            ["finance", "Ödemeler", "card-outline"],
-            ["profile", "Profil", "person-outline"],
-          ];
+        : app.role === "owner"
+          ? [
+              ["discover", "Keşfet", "home-outline"],
+              ["appointments", "Randevular", "calendar-outline"],
+              ["conversations", "Sohbet", "chatbubble-outline"],
+              ["home", "İşletmem", "storefront-outline"],
+              ["profile", "Profil", "person-outline"],
+            ]
+          : [
+              [
+                "home",
+                app.role === "admin" ? "Platform" : "Kontrol",
+                "grid-outline",
+              ],
+              ["management", "Yönetim", "storefront-outline"],
+              [
+                app.role === "admin" ? "reports" : "appointments",
+                app.role === "admin" ? "Raporlar" : "Randevular",
+                app.role === "admin" ? "bar-chart-outline" : "calendar-outline",
+              ],
+              ["finance", "Ödemeler", "card-outline"],
+              ["profile", "Profil", "person-outline"],
+            ];
+  const authView = Screen === AuthScreen;
+  const isTab = tabs.some(([target]) => target === name) || name === "discover";
+  const tabActive = (target: string) => {
+    if (name === target) return true;
+    if (target === "appointments")
+      return ["booking", "appointment"].includes(name);
+    if (target === "conversations") return name === "chat";
+    if (target === "home")
+      return app.role === "customer"
+        ? ["discover", "business", "staffprofile"].includes(name)
+        : app.role === "staff"
+          ? ["start", "session", "completed"].includes(name)
+          : app.role === "owner" && ["management", "services"].includes(name);
+    return (
+      target === "management" && app.role === "admin" && name === "services"
+    );
+  };
   return (
     <SafeAreaView
       style={{ flex: 1, backgroundColor: colors.bg }}
       edges={["top", "bottom"]}
     >
       <StatusBar barStyle="light-content" />
-      <LinearGradient
-        colors={["#252b47", colors.bg, "#15363b"]}
-        style={StyleSheet.absoluteFill}
-      />
       <View style={styles.frame}>
-        <View style={styles.header}>
-          <RowView>
-            {name !== "home" && (
+        <Image
+          source={require("../../assets/art/neon-salon.webp")}
+          resizeMode="cover"
+          style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
+        />
+        <LinearGradient
+          colors={["#040b1830", "#040b1845", "#040b1835"]}
+          style={StyleSheet.absoluteFill}
+        />
+        {!authView && (
+          <View style={styles.header}>
+            <RowView style={{ gap: 6, flexShrink: 1 }}>
+              {!isTab && name !== "home" ? (
+                <Pressable
+                  onPress={app.back}
+                  accessibilityLabel="Geri"
+                  accessibilityRole="button"
+                  style={styles.headerButton}
+                >
+                  <Ionicons name="chevron-back" size={24} color={colors.text} />
+                </Pressable>
+              ) : (
+                app.session && (
+                  <Pressable
+                    onPress={() => setMenuOpen(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Menüyü aç"
+                    style={[styles.headerButton, { width: 34, borderWidth: 0 }]}
+                  >
+                    <Ionicons name="menu-outline" size={25} color="#fff" />
+                  </Pressable>
+                )
+              )}
+              <Brand compact={!!app.session || !isTab} />
+            </RowView>
+            <RowView>
+              {app.session && (
+                <Pressable
+                  onPress={() => app.nav("notifications")}
+                  accessibilityLabel="Bildirimler"
+                  style={styles.headerButton}
+                  accessibilityRole="button"
+                >
+                  <Ionicons
+                    name="notifications-outline"
+                    size={23}
+                    color={colors.text}
+                  />
+                  {unread > 0 && (
+                    <View style={styles.notification}>
+                      <Text style={{ color: "#fff", fontSize: 9 }}>
+                        {unread > 9 ? "9+" : unread}
+                      </Text>
+                    </View>
+                  )}
+                </Pressable>
+              )}
               <Pressable
-                onPress={app.back}
-                accessibilityLabel="Geri"
+                onPress={() => app.nav("profile")}
+                accessibilityLabel="Profil ve roller"
                 accessibilityRole="button"
                 style={styles.headerButton}
-              >
-                <Ionicons name="chevron-back" size={24} color={colors.text} />
-              </Pressable>
-            )}
-            <BarberPole size={25} animated={false} />
-            <View>
-              <Text style={styles.wordmark}>
-                DraBorn<Text style={{ color: colors.pink }}>Style</Text>
-              </Text>
-              <Txt size={8} tone="cyan" style={{ letterSpacing: 1.8 }}>
-                BERBER · KUAFÖR · STİL
-              </Txt>
-            </View>
-          </RowView>
-          <RowView>
-            {app.session && (
-              <Pressable
-                onPress={() => app.nav("notifications")}
-                accessibilityLabel="Bildirimler"
-                style={styles.headerButton}
-                accessibilityRole="button"
               >
                 <Ionicons
-                  name="notifications-outline"
+                  name="person-circle-outline"
                   size={23}
-                  color={colors.text}
+                  color={colors.cyan}
                 />
-                {unread > 0 && (
-                  <View style={styles.notification}>
-                    <Text style={{ color: "#fff", fontSize: 9 }}>
-                      {unread > 9 ? "9+" : unread}
-                    </Text>
-                  </View>
-                )}
               </Pressable>
-            )}
-            <Pressable
-              onPress={() => app.nav("profile")}
-              accessibilityLabel="Profil ve roller"
-              accessibilityRole="button"
-              style={styles.headerButton}
-            >
-              <Ionicons
-                name="person-circle-outline"
-                size={23}
-                color={colors.cyan}
-              />
-            </Pressable>
-          </RowView>
-        </View>
+            </RowView>
+          </View>
+        )}
         {app.boot?.demo_batches.length ? (
           <View
             style={{
@@ -295,59 +334,140 @@ function Shell() {
             <Txt size={12}>Kaydediliyor…</Txt>
           </View>
         )}
-        <View style={styles.tabs}>
-          {tabs.map(([target, label, icon]) => (
-            <Pressable
-              key={target}
-              onPress={() => app.nav(target)}
-              accessibilityRole="button"
-              accessibilityLabel={label}
-              accessibilityState={{
-                selected:
-                  name === target || (target === "home" && name === "discover"),
-              }}
-              style={{
-                flex: 1,
-                alignItems: "center",
-                gap: 5,
-                paddingVertical: 9,
-                borderRadius: 18,
-                backgroundColor:
-                  name === target || (target === "home" && name === "discover")
-                    ? colors.cyan + "18"
-                    : "transparent",
-              }}
-            >
-              <Ionicons
-                name={icon as any}
-                size={22}
-                color={
-                  name === target || (target === "home" && name === "discover")
-                    ? colors.cyan
-                    : colors.muted
-                }
-              />
-              <Text
+        {!authView && (
+          <View style={styles.tabs}>
+            {tabs.map(([target, label, icon]) => (
+              <Pressable
+                key={target}
+                onPress={() => app.nav(target)}
+                accessibilityRole="button"
+                accessibilityLabel={label}
+                accessibilityState={{
+                  selected: tabActive(target),
+                }}
                 style={{
-                  fontSize: 10,
-                  color:
-                    name === target ||
-                    (target === "home" && name === "discover")
-                      ? colors.cyan
-                      : colors.muted,
-                  fontWeight: name === target ? "700" : "400",
+                  flex: 1,
+                  alignItems: "center",
+                  gap: 5,
+                  paddingVertical: 9,
+                  borderRadius: 14,
+                  backgroundColor: tabActive(target)
+                    ? colors.pink + "18"
+                    : "transparent",
                 }}
               >
-                {label}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
+                <Ionicons
+                  name={icon as any}
+                  size={22}
+                  color={tabActive(target) ? colors.pink : colors.muted}
+                />
+                <Text
+                  style={{
+                    fontSize: 10,
+                    color: tabActive(target) ? colors.text : colors.muted,
+                    fontWeight: tabActive(target) ? "700" : "400",
+                  }}
+                >
+                  {label}
+                </Text>
+                {tabActive(target) && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      bottom: 0,
+                      width: 30,
+                      height: 3,
+                      borderRadius: 4,
+                      backgroundColor: colors.pink,
+                      shadowColor: colors.pink,
+                      shadowRadius: 7,
+                      shadowOpacity: 1,
+                      shadowOffset: { width: 0, height: 0 },
+                    }}
+                  />
+                )}
+              </Pressable>
+            ))}
+          </View>
+        )}
+        <Modal
+          visible={menuOpen}
+          transparent
+          animationType="fade"
+          onRequestClose={() => setMenuOpen(false)}
+        >
+          <Pressable
+            onPress={() => setMenuOpen(false)}
+            style={{
+              flex: 1,
+              backgroundColor: "#000a",
+              justifyContent: "center",
+              padding: 24,
+            }}
+          >
+            <Card
+              tone="pink"
+              style={{ width: "100%", maxWidth: 480, alignSelf: "center" }}
+            >
+              <RowView style={{ justifyContent: "space-between" }}>
+                <Brand />
+                <Pressable
+                  accessibilityRole="button"
+                  accessibilityLabel="Menüyü kapat"
+                  onPress={() => setMenuOpen(false)}
+                  style={{ padding: 8 }}
+                >
+                  <Ionicons name="close" color="#fff" size={25} />
+                </Pressable>
+              </RowView>
+              {[
+                ...tabs,
+                ["notifications", "Bildirimler", "notifications-outline"],
+                ...(app.role !== "customer"
+                  ? [
+                      [
+                        "requests",
+                        "Talepler ve müşteri sırası",
+                        "list-outline",
+                      ],
+                      ["customers", "Müşteri defteri", "people-outline"],
+                    ]
+                  : []),
+              ].map(([target, label, icon]) => (
+                <Btn
+                  key={target}
+                  title={label}
+                  icon={icon}
+                  outline
+                  onPress={() => {
+                    setMenuOpen(false);
+                    app.nav(target);
+                  }}
+                />
+              ))}
+            </Card>
+          </Pressable>
+        </Modal>
       </View>
     </SafeAreaView>
   );
 }
 export default function App() {
+  const [fontsReady, fontError] = useFonts({
+    DraBornScript: require("../../assets/fonts/Allura-Regular.ttf"),
+  });
+  if (!fontsReady && !fontError)
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: colors.bg,
+          justifyContent: "center",
+        }}
+      >
+        <ActivityIndicator color={colors.pink} />
+      </View>
+    );
   return (
     <SafeAreaProvider>
       <MotionProvider>
@@ -359,23 +479,27 @@ export default function App() {
   );
 }
 const styles = StyleSheet.create({
-  frame: { flex: 1, maxWidth: 720, width: "100%", alignSelf: "center" },
+  frame: {
+    flex: 1,
+    maxWidth: 1120,
+    width: "100%",
+    alignSelf: "center",
+    overflow: "hidden",
+  },
   header: {
-    paddingHorizontal: 18,
-    paddingVertical: 13,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border + "65",
   },
   headerButton: {
     width: 40,
     height: 40,
-    borderRadius: 15,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.panel,
+    backgroundColor: "#070a20c4",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -389,7 +513,7 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -5,
     right: -6,
-    backgroundColor: "#b84266",
+    backgroundColor: "#fb299f",
     borderRadius: 12,
     minWidth: 17,
     height: 17,
@@ -400,12 +524,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 2,
     padding: 6,
-    marginHorizontal: 14,
-    marginBottom: 8,
-    borderColor: colors.border,
+    marginHorizontal: 8,
+    marginBottom: 5,
+    borderColor: colors.pink + "65",
     borderWidth: 1,
-    borderRadius: 25,
-    backgroundColor: "#172238fa",
+    borderRadius: 17,
+    backgroundColor: "#080c1ef7",
   },
   toast: {
     position: "absolute",
@@ -415,7 +539,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 15,
     padding: 14,
-    backgroundColor: "#172238fa",
+    backgroundColor: "#080c1ef7",
   },
   busy: {
     position: "absolute",

@@ -1,10 +1,20 @@
-# DraBornStyle v0.2.0 doğrulama raporu
+# DraBornStyle v0.3.0 doğrulama raporu
 
 11 Ekim 2026 · Mevcut Supabase projesi: `xpdiwyxnnrmyvpcqwuyb` (DraBorn-Park-Garage-Series).
 
 Bu rapor gerçek veritabanı, HTTP API, web arayüzü ve paket üretimini birbirinden ayırır. Web ekran testleri fiziksel Android / Expo Go testi değildir. Demo içindeki finans verileri açıkça örnek olarak etiketlenir; gerçek ödeme tahsilatı yapılmadı.
 
-## v0.2.0 · Berber / Miami arayüzü ve yönetici girişi
+## v0.3.0 · Gönderilen mockuplara göre yeniden kurulan arayüz
+
+- On referansın ekran eşleştirmesi ve uygulama farkları [DESIGN.md](DESIGN.md) içinde. Önceki çizimli Miami sahnesi kaldırıldı; fotoğraf salon arka planı, alfa şeffaf neon makas markası ve gömülü Allura el yazısı fontu eklendi. Keşfet, rol panelleri, randevu takvimi, çalışan haftası ve sohbet yeniden düzenlendi.
+- TypeScript, 8 birim/regresyon testi, çevrimdışı Expo paket uyumu, Android Hermes ve Web paket üretimi geçti. Çevrimdışı uyum kontrolü tek başına uzak manifest doğrulaması değildir; CI ayrıca çevrimiçi kontrol çalıştırır.
+- 13 Chromium kontrol grubu gerçek Supabase verisiyle geçti: yeni giriş formu/Enter, e-posta normalizasyonu, şifre görünürlüğü, tüm roller, arama, ay/gün/saat seçimi, onay düğmesinin seçim öncesi kapalı olması, isteğe bağlı kod, çalışan editörüne geçiş, sohbet alanı, rapor doğrulaması, finans ve global menü. [ui-design-results.json](ui-design-results.json).
+- 360, 414, 864 ve 1120 pikselde ekran görüntüleri alındı; kök yatay taşma ve yakalanmamış tarayıcı hatası yok. Dar sohbet başlığı ve tek günlük grafiğin aşırı geniş çubuğu görsel incelemeden sonra düzeltildi. Yatay işletme/usta/saat listeleri ve zaman çizelgesi bilerek kaydırılabilir.
+- Test uygulama verilerine yazmaz: command RPC'leri testte durdurulur. Mevcut aktif demo grubu korunur; yeni demo, randevu, çalışan, ödeme veya mesaj oluşturulmaz. Normal Auth giriş isteği doğrulanır, parola ve yetkiler değiştirilmez. Admin hesabının şifresi kaynağa yazılmaz.
+- Bu sürüm için yeni migration yok. Önceki RLS, finans ve Expo Go bildirim korumaları korunmuştur. Önceki 17 yazma/gerçek zamanlı test bu sürümde yeniden çalıştırılmış gibi gösterilmez.
+- Fiziksel Android/Termux/Expo Go, GPS/harita/seçici/klavye/işletim sistemi izin testi yapılmadı. SDK paket üretimi APK/AAB üretimi değildir. E-posta teslimatı ve Google/telefon sağlayıcıları bu tasarım işiyle yapılandırılmadı.
+
+## v0.2.0 · Tarihsel Berber / Miami arayüzü ve yönetici girişi
 
 - Yeni tasarım sistemi, hareketli berber direği ve gün batımı/palmiye çizimi, giriş ve keşif düzeni, hızlı işlemler, rol panelleri, kartlar, formlar, sohbet balonları ve alt gezinme çubuğu hazır. Hareket azaltma ayarı ve arka plan durumu animasyonları durdurur.
 - `draborneagle@gmail.com` için istenen mevcut şifreyle canlı Auth API ve gerçek giriş formu başarılı. Sunucu Admin yetkisini UUID tablosundan doğruladı. Şifre değiştirilmedi ve kaynağa yazılmadı. E-posta çevresindeki boşluklar/büyük harf, şifre göster/gizle ve Enter ile giriş canlı formda doğrulandı.
@@ -107,7 +117,7 @@ REST schema önbelleğini engelleyen, veritabanında bulunmayan eski `drabornsty
 
 ## Henüz doğrulanmayan / tamamlanmayan noktalar
 
-- Fiziksel Android Expo Go 58.0.2: v0.2.0 açılışı, giriş, ekran geçişi, düşük güçlü cihaz akıcılığı, GPS izinleri, native harita, görsel/dekont seçme ve uçak modu testi. Android yerel/uzaktan cihaz bildirimleri development build testine ayrılmıştır.
+- Fiziksel Android Expo Go 58.0.2: v0.3.0 açılışı, giriş, ekran geçişi, düşük güçlü cihaz akıcılığı, GPS izinleri, native harita, görsel/dekont seçme ve uçak modu testi. Android yerel/uzaktan cihaz bildirimleri development build testine ayrılmıştır.
 - Android uzaktan push ve arka plan konumu: Expo Go sınırları nedeniyle development build, EAS/FCM yapılandırması ve gerçek cihaz testi gerekir; sunucu kuyrukları hazırdır, teslimat doğrulanmadı.
 - Yeni hesap e-posta doğrulama/SMTP teslimatı ve parola kurtarma deep link'i. Ortak projenin SMTP/redirect listesi değiştirilmedi.
 - Gelecek migration'lar GitHub Actions üzerinden otomatik uygulanır. Tek proje kapsamlı `SUPABASE_ACCESS_TOKEN` secret kurulmuştur; mevcut 12 migration uygulanmış ve CI migration işi doğrulanmıştır.
@@ -117,6 +127,6 @@ REST schema önbelleğini engelleyen, veritabanında bulunmayan eski `drabornsty
 
 `npm run typecheck`, `npm test`, `npm run export:android`, `npm run export:web` yerel kod kontrolleridir. `tests/database.sql` yetkili mevcut veritabanında çalıştırılır ve kendi değişikliklerini geri alır.
 
-`tests/live-api.mjs` için Admin tarafından yüklenmiş etiketli demo gerekir. `tests/ui-smoke.cjs` boş dizinde Admin düğmesiyle demo yükler veya mevcut etiketli demo kullanır; gerçek işletme içeren dizinde çalışmayı reddeder. Demo kayıtları oluşturur, ekran/sonuç dosyalarını günceller ve başarılı testin sonunda Admin düğmesiyle demo kaldırır. Canlı işletmeler içeren üretim hesabında çalıştırmayın. Başarısız testten sonra Admin → Demo Verileri Kaldır kullanılabilir.
+`tests/ui-design.cjs` mevcut demo ile yalnız okuma yapar, command RPC'lerini test tarayıcısında durdurur ve güncel tasarım sonucu üretir. `tests/live-api.mjs` için Admin tarafından yüklenmiş etiketli demo gerekir. Yazma içeren `tests/ui-smoke.cjs` yalnız tamamen boş işletme dizini ve aktif demo bulunmayan ortamda kendi demo grubunu oluşturur. Mevcut gerçek veya demo kayıt varken başlamayı reddeder; kendi demo grubunu başarılı/başarısız testin sonunda temizlemeyi dener. Canlı işletmeler içeren üretim hesabında yazma testlerini çalıştırmayın.
 
 UI testi öncesinde `npm run export:web`, `npx playwright install chromium` çalıştırın. Dışarıdaki özel oturum dosyasının yolunu `DB_STYLE_TEST_SESSION_FILE` olarak sağlayın ve `node tests/ui-smoke.cjs` çalıştırın. İsteğe bağlı `DB_STYLE_BROWSER_PATH` mevcut Chromium'u seçer. Oturum, parola, access/refresh token veya service-role anahtarını repoya koymayın.

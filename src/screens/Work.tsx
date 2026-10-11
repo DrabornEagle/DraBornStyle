@@ -32,7 +32,9 @@ export function StartScreen() {
     { business_id: app.businessId },
     !!app.businessId,
   );
-  const [service, setService] = useState<string | null>(null),
+  const [service, setService] = useState<string | null>(
+      app.route.params?.service_id || null,
+    ),
     [customer, setCustomer] = useState<string>("guest"),
     [name, setName] = useState("");
   const available =
@@ -47,7 +49,11 @@ export function StartScreen() {
     if (!app.staffId) return;
     AsyncStorage.getItem("db_style_last_service_" + app.staffId).then((id) =>
       setService(
-        available.some((s) => s.id === id) ? id : available[0]?.id || null,
+        available.some((s) => s.id === app.route.params?.service_id)
+          ? app.route.params?.service_id
+          : available.some((s) => s.id === id)
+            ? id
+            : available[0]?.id || null,
       ),
     );
   }, [b.data?.id, app.staffId]);

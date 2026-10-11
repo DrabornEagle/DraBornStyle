@@ -14,6 +14,7 @@ import {
   ViewStyle,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -21,11 +22,12 @@ import { money } from "../utils/money";
 import { colors, gradient, surface, statusNames } from "../theme";
 import { Tone, Row } from "../types";
 import { useApp } from "../app/Context";
-import { MiamiScene } from "./MiamiScene";
 import { Entrance, useMotionEnabled, nativeAnimation } from "./motion";
 
 export const art: Record<string, any> = {
   hero: require("../../assets/art/miami-hero.webp"),
+  backdrop: require("../../assets/art/neon-salon.webp"),
+  logo: require("../../assets/art/neon-logo.webp"),
   barber: require("../../assets/art/miami-hero.webp"),
   salon: require("../../assets/art/salon.webp"),
   elite: require("../../assets/art/elite.webp"),
@@ -91,11 +93,19 @@ export function RowView({
 }) {
   return <View style={[styles.row, style]}>{children}</View>;
 }
-export function Page({ children }: { children: React.ReactNode }) {
+export function Page({
+  children,
+  keyboardAvoiding = true,
+}: {
+  children: React.ReactNode;
+  keyboardAvoiding?: boolean;
+}) {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={
+        keyboardAvoiding && Platform.OS === "ios" ? "padding" : undefined
+      }
     >
       <ScrollView
         keyboardShouldPersistTaps="handled"
@@ -108,7 +118,7 @@ export function Page({ children }: { children: React.ReactNode }) {
               React.isValidElement(child) && child.key != null ? child.key : i
             }
             delay={Math.min(i, 5) * 35}
-            style={{ gap: 18 }}
+            style={{ gap: 20 }}
           >
             {child}
           </Entrance>
@@ -121,10 +131,12 @@ export function Section({
   title,
   subtitle,
   right,
+  icon,
 }: {
   title: string;
   subtitle?: string;
   right?: React.ReactNode;
+  icon?: string;
 }) {
   return (
     <RowView
@@ -136,18 +148,26 @@ export function Section({
       }}
     >
       <View style={{ flex: 1, minWidth: 0, gap: 4 }}>
-        <View
-          style={{
-            width: 22,
-            height: 3,
-            borderRadius: 3,
-            backgroundColor: colors.cyan,
-            marginBottom: 3,
-          }}
-        />
-        <Txt bold size={22} style={{ letterSpacing: -0.7 }}>
-          {title}
-        </Txt>
+        <RowView style={{ gap: 9 }}>
+          <Icon
+            name={
+              icon ||
+              (/usta|çalışan|müşteri/i.test(title)
+                ? "people"
+                : /hizmet|tıraş/i.test(title)
+                  ? "cut"
+                  : /randevu|takvim/i.test(title)
+                    ? "calendar-outline"
+                    : /gelir|ödeme|finans/i.test(title)
+                      ? "bar-chart"
+                      : "sparkles-outline")
+            }
+            size={23}
+          />
+          <Txt bold size={20} style={{ letterSpacing: -0.4 }}>
+            {title}
+          </Txt>
+        </RowView>
         {subtitle && (
           <Txt muted size={12}>
             {subtitle}
@@ -168,9 +188,18 @@ export function Card({
   style?: StyleProp<ViewStyle>;
 }) {
   return (
-    <View style={[styles.card, { borderColor: colors[tone] + "35" }, style]}>
+    <LinearGradient
+      colors={[colors[tone] + "22", "#0a1022f5", "#060d19fa"]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 0.7, y: 1 }}
+      style={[
+        styles.card,
+        { borderColor: colors[tone] + "85", shadowColor: colors[tone] },
+        style,
+      ]}
+    >
       {children}
-    </View>
+    </LinearGradient>
   );
 }
 export function Btn({
@@ -181,6 +210,7 @@ export function Btn({
   icon,
   small = false,
   disabled = false,
+  iconOnly = false,
 }: {
   title: string;
   onPress: () => any;
@@ -189,6 +219,7 @@ export function Btn({
   icon?: string;
   small?: boolean;
   disabled?: boolean;
+  iconOnly?: boolean;
 }) {
   const { busy } = useApp();
   const enabled = useMotionEnabled();
@@ -209,28 +240,29 @@ export function Btn({
       useNativeDriver: nativeAnimation,
     }).start();
   };
-  const darkText = !outline;
   const body = (
     <>
       {icon && (
         <Ionicons
           name={icon as any}
           size={small ? 18 : 21}
-          color={darkText ? surface.ink : colors[tone]}
+          color={outline ? colors[tone] : "#fff"}
         />
       )}
-      <Text
-        style={{
-          color: darkText ? surface.ink : colors[tone],
-          fontWeight: "700",
-          fontSize: small ? 12 : 15,
-          lineHeight: small ? 17 : 21,
-          textAlign: "center",
-          flexShrink: 1,
-        }}
-      >
-        {title}
-      </Text>
+      {!iconOnly && (
+        <Text
+          style={{
+            color: "#fff",
+            fontWeight: "700",
+            fontSize: small ? 12 : 15,
+            lineHeight: small ? 17 : 21,
+            textAlign: "center",
+            flexShrink: 1,
+          }}
+        >
+          {title}
+        </Text>
+      )}
     </>
   );
   return (
@@ -263,9 +295,11 @@ export function Btn({
               styles.button,
               {
                 minHeight: small ? 42 : 52,
+                minWidth: iconOnly ? 44 : undefined,
+                paddingHorizontal: iconOnly ? 12 : 16,
                 paddingVertical: small ? 11 : 14,
-                borderColor: colors[tone] + (hovered ? "bb" : "55"),
-                backgroundColor: colors[tone] + (hovered ? "1c" : "0c"),
+                borderColor: colors[tone] + (hovered ? "dd" : "85"),
+                backgroundColor: colors[tone] + (hovered ? "28" : "10"),
               },
             ]}
           >
@@ -273,15 +307,28 @@ export function Btn({
           </View>
         ) : (
           <LinearGradient
-            colors={tone === "pink" ? gradient : [colors[tone], colors[tone]]}
+            colors={
+              tone === "pink"
+                ? gradient
+                : [
+                    colors[tone] + "cc",
+                    tone === "purple" ? "#7010ed" : colors[tone] + "80",
+                  ]
+            }
             start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
+            end={{ x: 1, y: 0 }}
             style={[
               styles.button,
               {
                 minHeight: small ? 42 : 52,
+                minWidth: iconOnly ? 44 : undefined,
+                paddingHorizontal: iconOnly ? 12 : 16,
                 paddingVertical: small ? 11 : 15,
-                borderColor: hovered ? "#fff4e6" : "#ffffff28",
+                borderColor: hovered ? "#fff4e6" : "#ffb2ee98",
+                shadowColor: colors[tone],
+                shadowOpacity: 0.45,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 0 },
               },
             ]}
           >
@@ -313,8 +360,12 @@ export function Chip({
         styles.chip,
         {
           minHeight: onPress ? 44 : 31,
-          borderColor: selected ? colors[tone] + "90" : colors.border,
-          backgroundColor: selected ? colors[tone] + "20" : surface.input,
+          borderColor: selected ? colors[tone] : colors.border,
+          backgroundColor: selected ? colors[tone] + "30" : surface.input,
+          shadowColor: colors[tone],
+          shadowOpacity: selected ? 0.3 : 0,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 0 },
           opacity: pressed ? 0.75 : 1,
         },
       ]}
@@ -362,6 +413,8 @@ export function Field({
   email = false,
   icon,
   onSubmit,
+  hideLabel = false,
+  compact = false,
 }: {
   label: string;
   value: string;
@@ -373,20 +426,24 @@ export function Field({
   email?: boolean;
   icon?: string;
   onSubmit?: () => void;
+  hideLabel?: boolean;
+  compact?: boolean;
 }) {
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
   return (
     <View style={{ gap: 7 }}>
-      <Txt muted bold size={12}>
-        {label}
-      </Txt>
+      {!hideLabel && (
+        <Txt muted bold size={12}>
+          {label}
+        </Txt>
+      )}
       <View
         style={[
           styles.inputBox,
           {
-            borderColor: focused ? colors.cyan : colors.border,
-            backgroundColor: focused ? "#18263c" : surface.input,
+            borderColor: focused ? colors.pink : colors.border,
+            backgroundColor: focused ? "#17132eeb" : surface.input,
           },
           multiline && { alignItems: "flex-start" },
         ]}
@@ -400,7 +457,11 @@ export function Field({
           accessibilityLabel={label}
           style={[
             styles.input,
-            multiline && { minHeight: 100, textAlignVertical: "top" },
+            multiline && {
+              minHeight: compact ? 52 : 100,
+              maxHeight: compact ? 100 : undefined,
+              textAlignVertical: "top",
+            },
           ]}
           value={value}
           onChangeText={onChange}
@@ -456,39 +517,146 @@ export function Stat({
   tone?: Tone;
 }) {
   return (
-    <View style={[styles.stat, { borderColor: colors[tone] + "38" }]}>
-      <RowView style={{ justifyContent: "space-between" }}>
-        <View
-          style={{
-            padding: 8,
-            borderRadius: 13,
-            backgroundColor: colors[tone] + "16",
-          }}
-        >
-          <Icon name={icon} tone={tone} size={20} />
-        </View>
-        <View
-          style={{
-            width: 18,
-            height: 3,
-            borderRadius: 3,
-            backgroundColor: colors[tone],
-          }}
-        />
+    <LinearGradient
+      colors={[colors[tone] + "2e", "#0a1024", "#050d18"]}
+      style={[
+        styles.stat,
+        { borderColor: colors[tone] + "aa", shadowColor: colors[tone] },
+      ]}
+    >
+      <RowView style={{ gap: 9, alignItems: "flex-start" }}>
+        <Icon name={icon} tone={tone} size={26} />
+        <Txt muted size={11} style={{ flex: 1, minHeight: 30 }}>
+          {label}
+        </Txt>
       </RowView>
-      <Txt bold size={28} style={{ letterSpacing: -1.2 }}>
+      <Txt bold size={26} style={{ letterSpacing: -0.7 }}>
         {value}
       </Txt>
-      <Txt muted size={11}>
-        {label}
-      </Txt>
-    </View>
+    </LinearGradient>
   );
 }
 export function StatsGrid({ children }: { children: React.ReactNode }) {
+  const { width } = useWindowDimensions();
+  const columns = width < 600 ? 2 : 3;
+  function flatten(nodes: React.ReactNode): React.ReactNode[] {
+    return React.Children.toArray(nodes).flatMap((child) =>
+      React.isValidElement<{ children?: React.ReactNode }>(child) &&
+      child.type === React.Fragment
+        ? flatten(child.props.children)
+        : [child],
+    );
+  }
   return (
-    <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
-      {children}
+    <View
+      style={{
+        flexDirection: "row",
+        flexWrap: "wrap",
+        gap: 10,
+        alignItems: "stretch",
+      }}
+    >
+      {flatten(children).map((child, i) => (
+        <View
+          key={i}
+          style={{
+            width: `${100 / columns - (columns === 2 ? 1.4 : 1)}%`,
+            flexGrow: 1,
+          }}
+        >
+          {child}
+        </View>
+      ))}
+    </View>
+  );
+}
+export function Columns({ children }: { children: React.ReactNode }) {
+  const wide = useWindowDimensions().width >= 760;
+  return (
+    <View
+      style={{
+        flexDirection: wide ? "row" : "column",
+        gap: 14,
+        alignItems: "stretch",
+      }}
+    >
+      {React.Children.toArray(children).map((child, i) => (
+        <View
+          key={i}
+          style={{ flex: wide ? 1 : undefined, minWidth: 0, gap: 14 }}
+        >
+          {child}
+        </View>
+      ))}
+    </View>
+  );
+}
+export function ColumnChart({
+  rows,
+  keyValue,
+  label,
+  currency = false,
+}: {
+  rows: Row[];
+  keyValue: string;
+  label: string;
+  currency?: boolean;
+}) {
+  const max = Math.max(1, ...rows.map((r) => Number(r[keyValue]) || 0));
+  return (
+    <View style={{ gap: 10 }}>
+      <RowView style={{ justifyContent: "space-between" }}>
+        <Txt muted size={11}>
+          Seçilen dönem
+        </Txt>
+        <Txt tone="pink" bold size={18}>
+          {currency
+            ? money(rows.reduce((n, r) => n + Number(r[keyValue] || 0), 0))
+            : rows.reduce((n, r) => n + Number(r[keyValue] || 0), 0)}
+        </Txt>
+      </RowView>
+      <View
+        style={{
+          height: 148,
+          flexDirection: "row",
+          gap: 8,
+          alignItems: "flex-end",
+          borderBottomWidth: 1,
+          borderBottomColor: colors.border,
+          paddingHorizontal: 5,
+        }}
+      >
+        {rows.slice(-12).map((r, i) => (
+          <View
+            key={r.id || i}
+            style={{
+              flex: 1,
+              alignItems: "center",
+              gap: 7,
+              height: "100%",
+              justifyContent: "flex-end",
+            }}
+          >
+            <LinearGradient
+              colors={
+                i === rows.slice(-12).length - 1
+                  ? ["#ffb462", "#ff30c9"]
+                  : ["#dd3cff", "#7712d4"]
+              }
+              style={{
+                width: "85%",
+                maxWidth: 42,
+                height: Math.max(4, (Number(r[keyValue]) / max) * 118),
+                borderTopLeftRadius: 4,
+                borderTopRightRadius: 4,
+              }}
+            />
+            <Txt muted size={9}>
+              {String(r[label]).slice(-5)}
+            </Txt>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -551,98 +719,70 @@ export function Hero({
   compact?: boolean;
 }) {
   const content = (
-    <>
-      {image ? (
-        <LinearGradient
-          colors={["#0c122225", "#0c1222f5"]}
-          style={StyleSheet.absoluteFill}
-        />
-      ) : (
-        <>
-          <LinearGradient
-            colors={["#242c49", "#253e4e", "#182638"]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <View
-            style={{
-              position: "absolute",
-              right: 8,
-              top: compact ? 0 : 16,
-              width: 112,
-              height: 154,
-              transform: [{ scale: 0.86 }],
-            }}
-          >
-            <MiamiScene compact />
-          </View>
-        </>
-      )}
-      <View
+    <View
+      style={{
+        padding: image ? 22 : 6,
+        gap: 8,
+        paddingTop: image ? 120 : 24,
+        paddingBottom: image ? 22 : 22,
+      }}
+    >
+      <Txt
+        size={10}
+        bold
         style={{
-          padding: 22,
-          gap: 9,
-          paddingTop: image ? 84 : compact ? 20 : 25,
+          letterSpacing: 2.7,
+          color: "#e4dff2",
+          textShadowColor: "#000",
+          textShadowRadius: 8,
         }}
       >
-        <RowView
-          style={{
-            marginBottom: image ? 25 : compact ? 18 : 32,
-            maxWidth: image ? "100%" : "62%",
-            gap: 6,
-          }}
-        >
-          <View
-            style={{
-              width: 5,
-              height: 5,
-              backgroundColor: colors.cyan,
-              borderRadius: 3,
-            }}
-          />
-          <Txt size={9} tone="cyan" bold style={{ letterSpacing: 1.5 }}>
-            {eyebrow}
-          </Txt>
-        </RowView>
-        <Txt
-          bold
-          size={compact ? 27 : 34}
-          style={{
-            letterSpacing: -1.4,
-            lineHeight: compact ? 33 : 39,
-            maxWidth: image ? "100%" : "60%",
-          }}
-        >
-          {title}
-        </Txt>
-        <Txt size={13} muted style={{ maxWidth: "96%", lineHeight: 20 }}>
-          {subtitle}
-        </Txt>
-        {children}
-      </View>
-      <LinearGradient
-        colors={[colors.cyan, colors.pink, colors.gold]}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={{ height: 3 }}
-      />
-    </>
+        {eyebrow}
+      </Txt>
+      <Txt
+        bold
+        size={compact ? 28 : 35}
+        style={{
+          letterSpacing: -0.8,
+          lineHeight: compact ? 34 : 40,
+          textShadowColor: "#000",
+          textShadowRadius: 14,
+        }}
+      >
+        {title}
+      </Txt>
+      <Txt
+        muted
+        size={13}
+        style={{
+          lineHeight: 20,
+          textShadowColor: "#000",
+          textShadowRadius: 10,
+        }}
+      >
+        {subtitle}
+      </Txt>
+      {children}
+    </View>
   );
-  const style: ViewStyle = {
-    minHeight: compact ? 198 : 252,
-    borderRadius: 28,
-    overflow: "hidden",
-    borderWidth: 1,
-    borderColor: "#739eaa45",
-    justifyContent: "space-between",
-  };
   return image ? (
-    <ImageBackground source={imageSource(image)} style={style}>
+    <ImageBackground
+      source={imageSource(image)}
+      style={{
+        borderRadius: 20,
+        overflow: "hidden",
+        borderWidth: 1,
+        borderColor: colors.pink + "85",
+      }}
+    >
+      <LinearGradient
+        colors={["#03071618", "#040b18ee"]}
+        style={StyleSheet.absoluteFill}
+      />
       {content}
     </ImageBackground>
   ) : (
-    <View style={style}>{content}</View>
+    content
   );
 }
 export function QuickAction({
@@ -668,10 +808,14 @@ export function QuickAction({
           flex: 1,
           minWidth: 130,
           padding: 16,
-          borderRadius: 22,
+          borderRadius: 16,
           borderWidth: 1,
-          borderColor: colors[tone] + "3f",
-          backgroundColor: surface.raised,
+          borderColor: colors[tone] + "85",
+          backgroundColor: colors[tone] + "12",
+          shadowColor: colors[tone],
+          shadowOpacity: 0.15,
+          shadowRadius: 8,
+          shadowOffset: { width: 0, height: 0 },
           gap: 12,
           opacity: pressed ? 0.75 : 1,
         },
@@ -827,7 +971,7 @@ export function Bars({
             }}
           >
             <LinearGradient
-              colors={[colors.cyan, colors.purple, colors.pink]}
+              colors={[colors.purple, colors.pink, colors.gold]}
               style={{
                 height: 7,
                 borderRadius: 8,
@@ -844,16 +988,18 @@ export function Bars({
 }
 const styles = StyleSheet.create({
   row: { flexDirection: "row", alignItems: "center", gap: 10 },
-  page: { padding: 18, paddingBottom: 30, gap: 18 },
+  page: { padding: 14, paddingBottom: 28, gap: 20 },
   card: {
-    backgroundColor: colors.panel,
     borderWidth: 1,
-    borderRadius: 25,
-    padding: 19,
+    borderRadius: 18,
+    padding: 16,
     gap: 14,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.17,
+    shadowRadius: 8,
   },
   button: {
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     paddingHorizontal: 16,
     flexDirection: "row",
@@ -865,7 +1011,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderWidth: 1,
-    borderRadius: 25,
+    borderRadius: 12,
     alignSelf: "flex-start",
     justifyContent: "center",
   },
@@ -887,11 +1033,12 @@ const styles = StyleSheet.create({
   },
   stat: {
     flex: 1,
-    minWidth: 135,
-    padding: 17,
+    padding: 14,
     borderWidth: 1,
-    borderRadius: 24,
-    gap: 9,
-    backgroundColor: colors.panel,
+    borderRadius: 16,
+    gap: 12,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
   },
 });

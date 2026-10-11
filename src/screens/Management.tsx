@@ -1,5 +1,5 @@
-import React from "react";
-import { View } from "react-native";
+import React, { useState } from "react";
+import { View, ScrollView, Pressable, Image } from "react-native";
 import { useApp } from "../app/Context";
 import { useData } from "../hooks/useData";
 import { Business, Row } from "../types";
@@ -16,11 +16,19 @@ import {
   State,
   AmountLine,
   Chip,
+  Hero,
+  Field,
+  Chips,
+  Icon,
+  imageSource,
 } from "../components/ui";
 import { money } from "../utils/money";
-import { dateTime } from "../utils/dates";
+import { dateTime, localDate, addDays, atLocal, clock } from "../utils/dates";
+import { colors } from "../theme";
 export function ManagementScreen() {
   const app = useApp();
+  const [tab, setTab] = useState("staff"),
+    [search, setSearch] = useState("");
   const r = useData<Business>(
     "business",
     { business_id: app.businessId },
@@ -34,20 +42,37 @@ export function ManagementScreen() {
   );
   return (
     <Page>
-      <Section title="İşletme yönetimi" />
+      <Hero
+        title="İşletme Yönetimi"
+        eyebrow="İŞLETME PANELİ"
+        subtitle="Ekibini, takvimini ve hizmetlerini tek yerden yönet."
+      />
       <BusinessPicker />
       <State loading={r.loading && !b} error={r.error} onRetry={r.reload} />
       {b && (
         <>
           <Card tone="pink">
-            <Txt bold size={24}>
-              {b.name}
-            </Txt>
-            {b.demo_batch_id && (
-              <Chip label="Demo işletme" selected tone="gold" />
-            )}
-            <Txt muted>{b.address}</Txt>
             <RowView>
+              <Image
+                source={imageSource(b.cover_url)}
+                resizeMode="cover"
+                style={{ width: 82, height: 76, borderRadius: 12 }}
+              />
+              <View style={{ flex: 1, gap: 5 }}>
+                <Txt bold size={24}>
+                  {b.name}
+                </Txt>
+                {b.demo_batch_id && (
+                  <Txt tone="gold" size={10}>
+                    DEMO İŞLETME
+                  </Txt>
+                )}
+                <Txt muted size={12}>
+                  {b.address}
+                </Txt>
+              </View>
+            </RowView>
+            <RowView style={{ flexWrap: "wrap" }}>
               <Btn
                 title="İşletme Ayarları"
                 outline
@@ -67,101 +92,219 @@ export function ManagementScreen() {
                 tone="cyan"
                 onPress={() => app.nav("business", { id: b.id })}
               />
-            </RowView>
-            <Btn
-              title="Çalışma Saatleri"
-              small
-              outline
-              tone="gold"
-              onPress={() =>
-                app.nav("editor", { kind: "hours", business_id: b.id })
-              }
-            />
-          </Card>
-          <Section
-            title="Çalışanlar"
-            right={
               <Btn
-                title="Yeni Çalışan"
+                title="Çalışma Saatleri"
                 small
+                outline
+                tone="gold"
                 onPress={() =>
-                  app.nav("editor", { kind: "staff", business_id: b.id })
+                  app.nav("editor", { kind: "hours", business_id: b.id })
                 }
               />
-            }
+            </RowView>
+          </Card>
+          <Chips
+            items={[
+              { value: "staff", label: "Çalışanlar" },
+              { value: "calendar", label: "Takvim" },
+            ]}
+            value={tab}
+            onChange={setTab}
           />
-          {b.staff.map((s) => (
-            <Card key={s.id} tone="cyan">
-              <RowView>
-                <Avatar url={s.photo_url} size={60} />
-                <View style={{ flex: 1 }}>
-                  <Txt bold size={19}>
-                    {s.name}
-                  </Txt>
-                  <Txt muted size={12}>
-                    {s.specialties}
-                  </Txt>
-                  <Txt tone="gold" size={12}>
-                    Aylık hedef: {s.target_monthly} müşteri
-                  </Txt>
-                </View>
-                <Badge state={s.state?.status || "available"} />
-              </RowView>
-              <RowView style={{ flexWrap: "wrap" }}>
-                <Btn
-                  title="Düzenle / Hesap Bağla"
-                  small
-                  outline
-                  onPress={() =>
-                    app.nav("editor", {
-                      kind: "staff",
-                      business_id: b.id,
-                      item: s,
-                      account: management.data?.accounts.find(
-                        (a: Row) => a.staff_id === s.id,
-                      ),
-                    })
-                  }
-                />
-                <Btn
-                  title="Çalışma Saatleri"
-                  small
-                  outline
-                  tone="gold"
-                  onPress={() =>
-                    app.nav("editor", {
-                      kind: "hours",
-                      business_id: b.id,
-                      staff_id: s.id,
-                    })
-                  }
-                />
-                <Btn
-                  title="Performans"
-                  small
-                  outline
-                  tone="cyan"
-                  onPress={() =>
-                    app.nav("reports", { business_id: b.id, staff_id: s.id })
-                  }
-                />
-                {app.boot?.is_admin && (
+          {tab === "calendar" ? (
+            <StaffSchedule business={b} />
+          ) : (
+            <>
+              <Section
+                title="Çalışanlarım"
+                right={
                   <Btn
-                    title="Özel Bedel"
+                    title="Yeni Çalışan"
                     small
-                    outline
                     onPress={() =>
-                      app.nav("editor", {
-                        kind: "fee",
-                        business_id: b.id,
-                        staff_id: s.id,
-                      })
+                      app.nav("editor", { kind: "staff", business_id: b.id })
                     }
                   />
-                )}
-              </RowView>
+                }
+              />
+              <Field
+                label="Çalışan ara"
+                hideLabel
+                placeholder="Çalışan ara…"
+                value={search}
+                onChange={setSearch}
+              />
+              {b.staff
+                .filter((s) =>
+                  (s.name + " " + s.specialties)
+                    .toLocaleLowerCase("tr-TR")
+                    .includes(search.toLocaleLowerCase("tr-TR")),
+                )
+                .map((s) => (
+                  <Card key={s.id} tone="cyan">
+                    <RowView>
+                      <Avatar url={s.photo_url} size={60} />
+                      <View style={{ flex: 1 }}>
+                        <Txt bold size={19}>
+                          {s.name}
+                        </Txt>
+                        <Txt muted size={12}>
+                          {s.specialties}
+                        </Txt>
+                        <Txt tone="gold" size={12}>
+                          Aylık hedef: {s.target_monthly} müşteri
+                        </Txt>
+                      </View>
+                      <Badge
+                        state={
+                          s.active ? s.state?.status || "available" : "off"
+                        }
+                      />
+                    </RowView>
+                    <RowView style={{ flexWrap: "wrap" }}>
+                      <Btn
+                        title="Düzenle / Hesap Bağla"
+                        small
+                        outline
+                        onPress={() =>
+                          app.nav("editor", {
+                            kind: "staff",
+                            business_id: b.id,
+                            item: s,
+                            account: management.data?.accounts.find(
+                              (a: Row) => a.staff_id === s.id,
+                            ),
+                          })
+                        }
+                      />
+                      <Btn
+                        title="Çalışma Saatleri"
+                        small
+                        outline
+                        tone="gold"
+                        onPress={() =>
+                          app.nav("editor", {
+                            kind: "hours",
+                            business_id: b.id,
+                            staff_id: s.id,
+                          })
+                        }
+                      />
+                      <Btn
+                        title="Performans"
+                        small
+                        outline
+                        tone="cyan"
+                        onPress={() =>
+                          app.nav("reports", {
+                            business_id: b.id,
+                            staff_id: s.id,
+                          })
+                        }
+                      />
+                      {app.boot?.is_admin && (
+                        <Btn
+                          title="Özel Bedel"
+                          small
+                          outline
+                          onPress={() =>
+                            app.nav("editor", {
+                              kind: "fee",
+                              business_id: b.id,
+                              staff_id: s.id,
+                            })
+                          }
+                        />
+                      )}
+                    </RowView>
+                  </Card>
+                ))}
+              {b.staff.length === 0 && (
+                <State empty="Henüz çalışan eklenmedi." />
+              )}
+            </>
+          )}
+          {b.staff.length > 0 && b.services.length > 0 && (
+            <Card tone="purple">
+              <Section title="Hizmet Atamaları" icon="cut-outline" />
+              <Txt muted size={11}>
+                Atamaları değiştirmek için ilgili hizmeti düzenle.
+              </Txt>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={{ minWidth: 320 }}>
+                  <RowView
+                    style={{
+                      paddingBottom: 12,
+                      borderBottomWidth: 1,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <Txt muted size={11} style={{ width: 120 }}>
+                      Çalışan
+                    </Txt>
+                    {b.services
+                      .filter((s) => s.active)
+                      .map((s) => (
+                        <Txt
+                          key={s.id}
+                          bold
+                          size={11}
+                          style={{ width: 92, textAlign: "center" }}
+                        >
+                          {s.name}
+                        </Txt>
+                      ))}
+                  </RowView>
+                  {b.staff
+                    .filter((s) => s.active)
+                    .map((s) => (
+                      <RowView
+                        key={s.id}
+                        style={{
+                          paddingVertical: 12,
+                          borderBottomWidth: 1,
+                          borderColor: "#ffffff10",
+                        }}
+                      >
+                        <Txt size={12} style={{ width: 120 }}>
+                          {s.name}
+                        </Txt>
+                        {b.services
+                          .filter((v) => v.active)
+                          .map((v) => (
+                            <View
+                              key={v.id}
+                              style={{ width: 92, alignItems: "center" }}
+                            >
+                              <Icon
+                                name={
+                                  b.staff_services?.some(
+                                    (x) =>
+                                      x.staff_id === s.id &&
+                                      x.service_id === v.id,
+                                  )
+                                    ? "checkmark-circle"
+                                    : "ellipse-outline"
+                                }
+                                tone={
+                                  b.staff_services?.some(
+                                    (x) =>
+                                      x.staff_id === s.id &&
+                                      x.service_id === v.id,
+                                  )
+                                    ? "pink"
+                                    : "purple"
+                                }
+                                size={21}
+                              />
+                            </View>
+                          ))}
+                      </RowView>
+                    ))}
+                </View>
+              </ScrollView>
             </Card>
-          ))}
+          )}
           <Section
             title="Hizmetler ve fiyatlar"
             right={
@@ -276,6 +419,206 @@ export function ManagementScreen() {
         />
       )}
     </Page>
+  );
+}
+function StaffSchedule({ business }: { business: Business }) {
+  const app = useApp(),
+    [day, setDay] = useState(localDate());
+  const week = addDays(
+    day,
+    -((new Date(day + "T12:00:00+03:00").getUTCDay() + 6) % 7),
+  );
+  const r = useData<Row[]>("appointments", {
+    business_id: business.id,
+    from: atLocal(day, "00:00"),
+    to: atLocal(addDays(day, 1), "00:00"),
+  });
+  const rows =
+    r.data?.filter((a) => !["cancelled", "no_show"].includes(a.status)) || [];
+  const weekday = new Date(day + "T12:00:00+03:00").getUTCDay() || 7;
+  const hours =
+    business.hours?.filter((h) => h.weekday === weekday && !h.closed) || [];
+  const open = Math.floor(
+    Math.min(
+      540,
+      ...hours.map((h) => h.open_minute),
+      ...rows.map((a) => Number(clock(a.starts_at).slice(0, 2)) * 60),
+    ) / 60,
+  );
+  const close = Math.max(
+    open + 1,
+    Math.ceil(
+      Math.max(
+        1200,
+        ...hours.map((h) => h.close_minute),
+        ...rows.map(
+          (a) =>
+            Number(clock(a.starts_at).slice(0, 2)) * 60 +
+            Number(a.duration_minutes),
+        ),
+      ) / 60,
+    ),
+  );
+  const cell = 72,
+    width = (close - open) * cell;
+  return (
+    <Card tone="pink">
+      <Section
+        title="Haftalık Takvim"
+        icon="calendar-outline"
+        right={
+          <Btn
+            title="Bugün"
+            small
+            outline
+            onPress={() => setDay(localDate())}
+          />
+        }
+      />
+      <RowView style={{ justifyContent: "space-between" }}>
+        <Btn
+          title="Önceki hafta"
+          small
+          outline
+          onPress={() => setDay(addDays(day, -7))}
+        />
+        <Txt size={12} bold>
+          {new Date(day + "T12:00:00+03:00").toLocaleDateString("tr-TR", {
+            month: "long",
+            year: "numeric",
+          })}
+        </Txt>
+        <Btn
+          title="Sonraki hafta"
+          small
+          outline
+          onPress={() => setDay(addDays(day, 7))}
+        />
+      </RowView>
+      <RowView style={{ gap: 4 }}>
+        {Array.from({ length: 7 }, (_, i) => addDays(week, i)).map((date) => (
+          <Pressable
+            key={date}
+            accessibilityRole="button"
+            accessibilityLabel={"Takvim " + date}
+            accessibilityState={{ selected: day === date }}
+            onPress={() => setDay(date)}
+            style={{
+              flex: 1,
+              alignItems: "center",
+              paddingVertical: 10,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: day === date ? colors.pink : "#77699150",
+              backgroundColor: day === date ? "#bf2dc43a" : "#10132660",
+            }}
+          >
+            <Txt size={10} muted>
+              {new Date(date + "T12:00:00+03:00").toLocaleDateString("tr-TR", {
+                weekday: "short",
+              })}
+            </Txt>
+            <Txt size={16} bold>
+              {Number(date.slice(8))}
+            </Txt>
+          </Pressable>
+        ))}
+      </RowView>
+      <State loading={r.loading} error={r.error} onRetry={r.reload} />
+      <ScrollView horizontal showsHorizontalScrollIndicator>
+        <View>
+          <RowView style={{ gap: 0 }}>
+            <View style={{ width: 108 }} />
+            {Array.from({ length: close - open }, (_, i) => (
+              <View key={i} style={{ width: cell }}>
+                <Txt size={10} muted>
+                  {String(open + i).padStart(2, "0")}:00
+                </Txt>
+              </View>
+            ))}
+          </RowView>
+          {business.staff
+            .filter((s) => s.active)
+            .map((s) => (
+              <RowView key={s.id} style={{ gap: 0, marginTop: 10 }}>
+                <View style={{ width: 108, gap: 5 }}>
+                  <Avatar url={s.photo_url} size={38} />
+                  <Txt size={11} bold>
+                    {s.name}
+                  </Txt>
+                </View>
+                <View
+                  style={{
+                    width,
+                    height: 84,
+                    flexDirection: "row",
+                    backgroundColor: "#080e20aa",
+                    borderRadius: 10,
+                    overflow: "hidden",
+                  }}
+                >
+                  {Array.from({ length: close - open }, (_, i) => (
+                    <View
+                      key={i}
+                      style={{
+                        width: cell,
+                        borderLeftWidth: 1,
+                        borderColor: "#66568f40",
+                      }}
+                    />
+                  ))}
+                  {rows
+                    .filter((a) => a.staff_id === s.id)
+                    .map((a) => {
+                      const [h, m] = clock(a.starts_at).split(":").map(Number);
+                      return (
+                        <Pressable
+                          key={a.id}
+                          accessibilityRole="button"
+                          accessibilityLabel={
+                            a.customer_name + " " + clock(a.starts_at)
+                          }
+                          onPress={() => app.nav("appointment", { id: a.id })}
+                          style={{
+                            position: "absolute",
+                            left: (((h - open) * 60 + m) / 60) * cell,
+                            width: Math.max(
+                              50,
+                              (Number(a.duration_minutes) / 60) * cell - 3,
+                            ),
+                            top: 6,
+                            bottom: 6,
+                            padding: 5,
+                            borderWidth: 1,
+                            borderColor: colors.pink,
+                            backgroundColor: "#722880cf",
+                            borderRadius: 8,
+                          }}
+                        >
+                          <Txt size={10} bold>
+                            {clock(a.starts_at)}
+                          </Txt>
+                          <Txt size={9}>{a.customer_name}</Txt>
+                          <Txt size={8} muted>
+                            {a.service_name}
+                          </Txt>
+                        </Pressable>
+                      );
+                    })}
+                </View>
+              </RowView>
+            ))}
+        </View>
+      </ScrollView>
+      {!rows.length && !r.loading && (
+        <Txt muted size={12}>
+          Seçili gün için randevu yok.
+        </Txt>
+      )}
+      <Txt muted size={10}>
+        Randevu ayrıntılarını görmek için takvimdeki kayda dokun.
+      </Txt>
+    </Card>
   );
 }
 export function CustomersScreen() {

@@ -1,0 +1,25 @@
+{
+  "version": "0.3.0",
+  "startedAt": "2026-10-11T15:20:44.708Z",
+  "completedAt": "2026-10-11T15:21:23.379Z",
+  "platform": "Chromium Web export against live Supabase (not physical Android)",
+  "mode": "Read-only; command RPCs intercepted; no demo created/removed",
+  "status": "passed",
+  "passed": [
+    "Admin logs in through redesigned form with normalized email and Enter",
+    "Welcome/login at 360 px; email validation and password visibility",
+    "Admin summary, live business table and chart at 414 px",
+    "Dashboard period selector",
+    "Discovery at 360/414/864 px; search empty state and real cards",
+    "Calendar month/day selection, available slot, gated confirm and optional code at 360/414/864 px",
+    "Staff five statuses, today timeline and start-service navigation",
+    "Owner summary and staff/service management; week navigation at mobile/desktop widths",
+    "Staff editor navigation preserves functional form",
+    "Live chat context, bubbles, inline composer and safety options at 360 px; no message sent",
+    "Report invalid date stays in controlled validation state",
+    "Finance navigation and live periods",
+    "Global menu routes to notifications"
+  ],
+  "errors": [],
+  "interceptedCommands": []
+}

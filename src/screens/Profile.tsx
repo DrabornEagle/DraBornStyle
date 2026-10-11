@@ -89,8 +89,8 @@ export function ProfileScreen() {
               ))}
             </RowView>
             <Txt muted size={11}>
-              Roller sunucu yetkileriyle korunur. Demo yüklendiğinde Admin tüm
-              rol ekranlarını deneyebilir.
+              Kullanmak istediğin çalışma alanını seç. Yalnızca yetkili olduğun
+              alanlar burada görünür.
             </Txt>
           </Card>
           <Btn

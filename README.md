@@ -1,12 +1,12 @@
-# DraBornStyle · v0.2.0
+# DraBornStyle · v0.3.0
 
-Android için React Native / Expo ile geliştirilen berber ve kuaför randevu, günlük çalışma ve işletme yönetimi uygulaması. Müşteri, usta, işletme sahibi ve platform Admin'i ayrı çalışma ekranları kullanır. Arayüz Türkçe; gece mavisi zemin, mercan pembe, turkuaz ve gün batımı tonlarıyla baştan tasarlanmıştır. Hareketli berber direği, Miami palmiyesi, yeni giriş düzeni, kartlar, hızlı işlemler ve alt gezinme çubuğu bütün çalışma alanlarında kullanılır. Animasyonlar hareket azaltma tercihine uyar ve uygulama arka plandayken durur.
+Android için React Native / Expo ile geliştirilen berber ve kuaför randevu, günlük çalışma ve işletme yönetimi uygulaması. Müşteri, usta, işletme sahibi ve platform Admin'i ayrı çalışma ekranları kullanır. v0.3.0 gönderilen on mockup esas alınarak yeniden kurulmuştur: fotoğraf ağırlıklı neon salon, cam paneller, el yazısı Style markası, magenta–mor–turuncu düğmeler ve tutarlı alt menü. Önceki Miami çizimi kaldırılmıştır. Animasyonlar hareket azaltma tercihine uyar ve uygulama arka plandayken durur.
 
-v0.2.0 yeni arayüzü ve giriş deneyimini içerir. v0.1.1'deki düzeltme korunur: Expo Go 58.0.2'deki `ExpoTopicSubscriptionModule` açılış hatasını giderir. Düzeltme ve test kapsamı: [EXPO-GO-FIX.md](docs/EXPO-GO-FIX.md).
+Keşfet, yönetici/işletme/usta panelleri, aylık randevu takvimi, çalışan zaman çizelgesi ve sabit mesaj alanı yeni düzene taşınmıştır. Bütün fiyatlar, yorumlar ve saatler gerçek kayıttan gelir. [Mockup eşleştirmesi ve görsel yönergeleri](docs/DESIGN.md). v0.1.1'deki Expo Go 58.0.2 `ExpoTopicSubscriptionModule` açılış düzeltmesi korunur: [EXPO-GO-FIX.md](docs/EXPO-GO-FIX.md).
 
-![Giriş ekranı](docs/screens/login.png)
+![Yeni karşılama ekranı](docs/screens/welcome.png)
 
-![Admin paneli](docs/screens/admin.png)
+![Keşfet ekranı](docs/screens/customer-reference.png)
 
 ## Çalıştırma
 
@@ -29,11 +29,11 @@ Termux ve Expo Go aynı telefonda kullanılabilir. Önce eski Metro sunucusunu t
 
 ```bash
 pkg update -y
-pkg install nodejs-lts curl unzip -y
-mkdir -p "$HOME/DraBornStyle-v0.2.0"
-cd "$HOME/DraBornStyle-v0.2.0"
-curl -fL https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip -o DraBornStyle-v0.2.0.zip
-unzip -q -o DraBornStyle-v0.2.0.zip
+pkg install nodejs-lts npm curl unzip -y
+mkdir -p "$HOME/DraBornStyle-v0.3.0"
+cd "$HOME/DraBornStyle-v0.3.0"
+curl -fL https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip -o DraBornStyle-v0.3.0.zip
+unzip -q -o DraBornStyle-v0.3.0.zip
 cd DraBornStyle-main
 npm ci
 npx expo start --go --localhost --port 8081 --clear
@@ -42,11 +42,13 @@ npx expo start --go --localhost --port 8081 --clear
 Termux'u açık bırakın. Expo Go **58.0.2** içinden `exp://127.0.0.1:8081` adresini açın; aynı telefon için QR okutmanız gerekmez. Terminalde sunucu hazır olmadan Expo Go'yu açmayın. Daha sonra yeniden başlatmak için:
 
 ```bash
-cd "$HOME/DraBornStyle-v0.2.0/DraBornStyle-main"
+cd "$HOME/DraBornStyle-v0.3.0/DraBornStyle-main"
 npx expo start --go --localhost --port 8081 --clear
 ```
 
 Bu, hazırlanan cihaz deneme yoludur; fiziksel Termux/Expo Go testi bu çalışma ortamında yapılmadı. Bilgisayardan çalıştırırken yukarıdaki genel kurulum ve aynı ağdaki QR yolu kullanılabilir.
+
+Güncel Termux paketinde npm ayrı paket olduğundan kurulum satırında açıkça yer alır: [resmî nodejs-lts paket notu](https://github.com/termux/termux-packages/blob/master/packages/nodejs-lts/build.sh). `--go`, `--localhost` ve port seçenekleri [resmî Expo CLI](https://docs.expo.dev/more/expo-cli/) davranışıdır. Eski proje klasörünüz silinmez; v0.3.0 ayrı klasörde çalışır.
 
 ## İlk deneme
 
@@ -57,7 +59,7 @@ Bu, hazırlanan cihaz deneme yoludur; fiziksel Termux/Expo Go testi bu çalışm
 5. İşlem sonunda hizmet tutarı, indirim, platform bedeli ve toplamı kontrol edip tamamlayın. Finans bölümünde ödeme bildirin; Admin rolünde banka/nakit kontrolünden sonra onaylayın veya reddedin.
 6. **Demo Verileri Kaldır** yalnızca aktif demo grubuna bağlı işletme kayıtlarını kaldırır. Denetim geçmişi korunur. Ortak Auth kullanıcıları veya gerçek işletmeler silinmez.
 
-Demo veriler aktifken görünür bir DEMO bandı vardır; örnek işletmeler ve raporlar ayrıca etiketlenir. Demo işlemler seçili rapor toplamlarına dahildir. Ekran görüntüleri etiketli demo verilerle alınmıştır.
+Demo veriler aktifken görünür bir DEMO bandı vardır; örnek işletmeler ve raporlar ayrıca etiketlenir. Demo işlemler seçili rapor toplamlarına dahildir. Ekran görüntüleri mevcut etiketli demo verilerle alınmıştır; v0.3.0 görsel kontrolü bunları değiştirmez veya temizlemez.
 
 ## İşlevler
 
@@ -110,7 +112,7 @@ Ortak projede `supabase db reset`, genel schema temizleme veya diğer uygulamala
 
 Resmî kaynaklar: [Expo bildirim sınırları](https://docs.expo.dev/versions/latest/sdk/notifications/), [SDK 58 konum](https://docs.expo.dev/versions/v58.0.0/sdk/location/), [TaskManager](https://docs.expo.dev/versions/v58.0.0/sdk/task-manager/), [Expo sürüm manifesti](https://exp.host/--/api/v2/versions).
 
-v0.2.0 yerel TypeScript, 8 test, Android/Web paket üretimi ve 17 canlı arayüz senaryosunda geçti. Güncel uzaktan kontroller: [GitHub Actions](https://github.com/DrabornEagle/DraBornStyle/actions). Secret kurulumundan sonraki [CI #6](https://github.com/DrabornEagle/DraBornStyle/actions/runs/38144678520) çalışmasında doğrulama ve migration işleri başarıyla tamamlandı.
+v0.3.0 TypeScript, 8 birim/regresyon testi, Android/Web paket üretimi ve 13 canlı veriyle çalışan, uygulama kayıtlarını değiştirmeyen arayüz kontrolünde geçti. 360, 414, 864 ve 1120 pikselde görsel inceleme yapıldı. Kanıt: [ui-design-results.json](docs/ui-design-results.json). Önceki v0.2.0 için 17 yazma/gerçek zamanlı senaryo tarihsel sonuç olarak korunur. Güncel uzaktan kontroller: [GitHub Actions](https://github.com/DrabornEagle/DraBornStyle/actions).
 
 ## Kontroller
 
@@ -130,7 +132,9 @@ node tests/live-api.mjs
 
 `DB_STYLE_TEST_EMAIL`, `DB_STYLE_TEST_PASSWORD` veya dışarıdaki özel `DB_STYLE_TEST_SESSION_FILE` kullanılır. Bunları Git'e eklemeyin. Ayrıntılı sonuçlar ve gerçek cihaz deneme listesi: [docs/TEST-REPORT.md](docs/TEST-REPORT.md).
 
-Web arayüzünün canlı demo testi için `npm run export:web`, `npx playwright install chromium` ve dışarıdaki özel Admin oturum dosyasıyla `node tests/ui-smoke.cjs` kullanılır. Bu test demo kayıtları oluşturur; boş veya yalnızca demo işletmeleri bulunan bir dizinde çalışır ve başarılı testin sonunda demo temizlenir. Sonuçlar `docs/ui-test-results.json` içindedir.
+Güncel tasarım kontrolü: `npm run export:web`, `npx playwright install chromium` ve dışarıdaki özel Admin oturum dosyasıyla `node tests/ui-design.cjs`. Mevcut demo verilerinden okur; command RPC'lerini durdurur, mesaj göndermez, demo yüklemez/kaldırmaz. Sonuçlar `docs/ui-design-results.json` içindedir.
+
+Yazma içeren uçtan uca test için `node tests/ui-smoke.cjs` kullanılır. Bu test yalnız boş işletme dizini ve aktif demo bulunmayan test ortamında çalışır; kendi demo grubunu oluşturur ve sonunda temizler. Mevcut demo veya gerçek işletmelere dokunmamak için başka durumda başlamayı reddeder. Önceki sonuçlar `docs/ui-test-results.json` içindedir; bu dosya v0.3.0 tasarım testi sonucu değildir.
 
 ## Dizinler
 

@@ -20,6 +20,7 @@ const { chromium } = require("playwright"),
     );
   const session = JSON.parse(fs.readFileSync(sessionFile, "utf8"));
   const startedAt = new Date().toISOString();
+  let createdDemoBatch = null;
   const server = http.createServer((req, res) => {
     const f = path.join(
       root,
@@ -127,6 +128,15 @@ const { chromium } = require("playwright"),
     await loginPage.goto("http://127.0.0.1:" + server.address().port, {
       waitUntil: "networkidle",
     });
+    await loginPage
+      .getByRole("button", { name: "Giriş Yap", exact: true })
+      .waitFor();
+    await loginPage.screenshot({
+      path: path.join(screenshotRoot, "welcome.png"),
+    });
+    await loginPage
+      .getByRole("button", { name: "Giriş Yap", exact: true })
+      .click();
     await loginPage.getByLabel("E-posta", { exact: true }).waitFor();
     await loginPage.screenshot({
       path: path.join(screenshotRoot, "login.png"),
@@ -186,16 +196,20 @@ const { chromium } = require("playwright"),
     });
     if (
       !initialBoot.is_admin ||
-      initialDirectory.some(
-        (b) => !initialBoot.demo_batches.some((d) => d.id === b.demo_batch_id),
-      )
+      initialDirectory.length ||
+      initialBoot.demo_batches.length
     )
       throw new Error(
-        "This destructive UI fixture test requires Admin and a directory containing only tagged demo businesses.",
+        "This mutating UI fixture test requires Admin and an empty directory with no existing demo. Use ui-design.cjs for read-only checks of existing data.",
       );
     if (!initialBoot.demo_batches.length) {
       await button("Demo Verileri Yükle").click();
       await button("Demo Verileri Kaldır").waitFor();
+      const loaded = await rpc("db_style_query", {
+        dkd_resource: "bootstrap",
+        dkd_filters: {},
+      });
+      createdDemoBatch = loaded.demo_batches[0]?.id;
       passed.push("Admin demo load button creates tagged live fixtures");
     }
     await wait(
@@ -221,21 +235,21 @@ const { chromium } = require("playwright"),
     await page.getByLabel("Profil ve roller").click();
     await wait("Profil ve ayarlar");
     await text("Müşteri").click();
-    await wait("Yeni tarzın burada.");
+    await button("Hemen Randevu Al").first().waitFor();
     await wait("Ahmet Berber");
     await screenshot("customer");
     passed.push("Customer discovery role renders");
     await button("Hemen Randevu Al").first().click();
     await button("Randevu Al").click();
     await wait("Randevu takvimi");
-    await wait("Randevu özeti");
+    await wait("Randevu Özeti");
     await screenshot("booking");
     const tomorrow = new Intl.DateTimeFormat("sv-SE", {
       timeZone: "Europe/Istanbul",
     }).format(new Date(Date.now() + 24 * 60 * 60 * 1000));
-    await page.getByLabel("Tarih (YYYY-AA-GG)").fill(tomorrow);
+    await page.getByRole("button", { name: tomorrow, exact: true }).click();
     await page
-      .getByText(/ · Müsait$/)
+      .getByRole("button", { name: / · Müsait$/ })
       .first()
       .click();
     await button("Randevuyu Onayla").click();
@@ -266,8 +280,19 @@ const { chromium } = require("playwright"),
     await wait("Hizmet geliri");
     await screenshot("owner");
     passed.push("Owner dashboard renders");
-    await button("Yönetim").click();
-    await wait("İşletme yönetimi");
+    await button("İşletme Yönetimi").click();
+    await wait("İşletme Yönetimi");
+    await wait("Hizmet Atamaları");
+    await screenshot("management");
+    await button("Takvim").click();
+    await wait("Haftalık Takvim");
+    await screenshot("schedule");
+    await button("Sonraki hafta").click();
+    await button("Bugün").click();
+    await button("Çalışanlar").click();
+    passed.push(
+      "Owner staff tabs, assignment matrix and weekly schedule render real appointments",
+    );
     await button("Yeni Çalışan").click();
     await page.getByLabel("Ustanın adı").fill("E2E Demo Usta");
     await button("Kaydet ve Devam Et").click();
@@ -391,6 +416,26 @@ const { chromium } = require("playwright"),
     console.log(JSON.stringify(result, null, 2));
     throw e;
   } finally {
+    if (createdDemoBatch) {
+      try {
+        const boot = await rpc("db_style_query", {
+          dkd_resource: "bootstrap",
+          dkd_filters: {},
+        });
+        if (boot.demo_batches.some((b) => b.id === createdDemoBatch)) {
+          await rpc("db_style_command", {
+            dkd_action: "demo_remove",
+            dkd_payload: { id: createdDemoBatch },
+            dkd_key: crypto.randomUUID(),
+          });
+        }
+      } catch (cleanupError) {
+        console.error(
+          "Tagged UI fixture cleanup failed: " + cleanupError.message,
+        );
+        process.exitCode = 1;
+      }
+    }
     await browser.close();
     server.close();
   }
