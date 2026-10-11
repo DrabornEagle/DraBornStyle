@@ -19,6 +19,31 @@ Telefon ve geliştirme bilgisayarı aynı ağdayken terminaldeki QR kodunu Expo 
 
 APK/AAB üretilmedi. `export:android` komutu yalnızca JavaScript/Hermes paketi üretir.
 
+### Android / Termux ile ZIP üzerinden ilk kurulum
+
+Termux ve Expo Go aynı telefonda kullanılabilir. Aşağıdaki komutlar Python veya patch kullanmaz; kaynakları GitHub'ın ZIP arşivinden indirir. İlk kurulum için kullanın, mevcut klasörünüzün üzerine güncelleme yapmayın.
+
+```bash
+pkg update -y
+pkg install nodejs-lts curl unzip -y
+mkdir -p "$HOME/DraBornStyle-v0.1"
+cd "$HOME/DraBornStyle-v0.1"
+curl -fL https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip -o DraBornStyle-v0.1.zip
+unzip -q DraBornStyle-v0.1.zip
+cd DraBornStyle-main
+npm ci
+npx expo start --localhost --port 8081
+```
+
+Termux'u açık bırakın. Expo Go **58.0.2** içinden `exp://127.0.0.1:8081` adresini açın; aynı telefon için QR okutmanız gerekmez. Terminalde sunucu hazır olmadan Expo Go'yu açmayın. Daha sonra yeniden başlatmak için:
+
+```bash
+cd "$HOME/DraBornStyle-v0.1/DraBornStyle-main"
+npx expo start --localhost --port 8081
+```
+
+Bu, hazırlanan cihaz deneme yoludur; fiziksel Termux/Expo Go testi bu çalışma ortamında yapılmadı. Bilgisayardan çalıştırırken yukarıdaki genel kurulum ve aynı ağdaki QR yolu kullanılabilir.
+
 ## İlk deneme
 
 1. `draborneagle@gmail.com` hesabıyla giriş yapın. Mevcut Supabase Auth hesabının girişi doğrulandı; geçici şifre hiçbir kaynak veya migration dosyasına yazılmadı. Profil → **Şifremi Güncelle** ile yeni şifre belirlenebilir.

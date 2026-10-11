@@ -40,6 +40,17 @@ Test sonunda demo düğmesiyle bütün örnek işletme/işlem/finans kayıtları
 
 Migration işindeki uygulama adımı **atlanmıştır**: repository secret `SUPABASE_ACCESS_TOKEN` yoktur. Bu CI çalışması veritabanına yeniden migration uygulamamıştır. Mevcut 12 migration geliştirme sırasında mevcut Supabase projesine zaten uygulanmış ve sürümleri doğrulanmıştır.
 
+### Devam kontrolü · 11 Ekim 2026
+
+- Uzak `main`, kaynakları ve mevcut raporu içeren `8b531d5a82f7bb209161711c82c0ffc25633a472` commit'iyle eşleşti; çalışma dizini temizdi.
+- `npm run typecheck`, üç para/tarih test grubu ve yerel çevrimdışı Expo bağımlılık kontrolü yeniden geçti. Çevrimiçi bağımlılık kontrolü ve Android/Web paket üretimi için yukarıdaki başarılı GitHub Actions adımları doğrudan tekrar sorgulandı; kod değişmediği için paket üretimi yeniden çalıştırılmadı.
+- Canlı veritabanında 45 uygulama tablosunun 45'inde RLS etkin. Beş `public.db_style_*` girişinin tamamı `SECURITY INVOKER`; uygulamaya özel iki bucket yerinde. Admin yetki kaydı mevcut.
+- Repodaki 12 güncel migration'ın sürüm ve adları mevcut veritabanıyla eşleşti. Ortak projenin migration geçmişinde 10 Ekim tarihli beş eski `db_style_*` sürüm kaydı da bulunuyor; bu tarihsel kayıtlar güncel dosya listesine dahil değildir. Geçmiş kayıtları silinmedi veya yeniden yazılmadı.
+- `db_style_reminders` ve `db_style_push` görevleri etkin ve son çalışmaları `succeeded`. Bu sonuç gerçek Android push teslimatı anlamına gelmez.
+- Güvenlik danışmanının güncel sonucunda DraBornStyle nesnelerine ait bulgu yok. Diğer uygulamaların bulgularına müdahale edilmedi.
+- Uygulama işletme sayısı sıfır: test demo kayıtları kaldırılmış durumda. İlk deneme için Admin panelinden demo yüklenebilir.
+- ZIP ile Termux kurulumu ve aynı cihazda `exp://127.0.0.1:8081` üzerinden Expo Go açılışı README'ye eklendi. Fiziksel Termux/Android testi yapılmış olarak raporlanmadı.
+
 ## İstenen 22 senaryo
 
 | #   | Senaryo                      | Sonuç ve kapsam                                                                                                                |
