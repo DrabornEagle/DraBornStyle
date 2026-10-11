@@ -137,7 +137,7 @@ export function AuthScreen() {
         />
       </Card>
       <Txt muted size={11}>
-        v0.1 · Randevu, sohbet ve işletme yönetimi
+        v0.1.1 · Randevu, sohbet ve işletme yönetimi
       </Txt>
     </Page>
   );

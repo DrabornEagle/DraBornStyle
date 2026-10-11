@@ -159,7 +159,7 @@ export function ProfileScreen() {
         <Btn title="Giriş Yap / Kayıt Ol" onPress={() => app.nav("auth")} />
       )}
       <Card>
-        <Txt bold>DraBornStyle v0.1</Txt>
+        <Txt bold>DraBornStyle v0.1.1</Txt>
         <Txt muted size={12}>
           Randevu, tıraş ve gelir yönetimi · Android / Expo Go test sürümü
         </Txt>

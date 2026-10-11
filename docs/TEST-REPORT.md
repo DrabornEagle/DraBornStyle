@@ -1,8 +1,12 @@
-# DraBornStyle v0.1 doğrulama raporu
+# DraBornStyle v0.1 / v0.1.1 doğrulama raporu
 
 11 Ekim 2026 · Mevcut Supabase projesi: `xpdiwyxnnrmyvpcqwuyb` (DraBorn-Park-Garage-Series).
 
 Bu rapor gerçek veritabanı, HTTP API, web arayüzü ve paket üretimini birbirinden ayırır. Web ekran testleri fiziksel Android / Expo Go testi değildir. Demo içindeki finans verileri açıkça örnek olarak etiketlenir; gerçek ödeme tahsilatı yapılmadı.
+
+## v0.1.1 · Expo Go açılış düzeltmesi
+
+Kullanıcının gerçek cihazında `ExpoTopicSubscriptionModule` eksikliği nedeniyle ilk açılış hatası bildirmesinin ardından Android Expo Go'daki eager bildirim import'u kaldırıldı. Eksik native modülü taklit eden servis açılışı ve düğme testleri dahil toplam 8 test geçti; TypeScript, Android Hermes/Web paket üretimi ve yerel bağımlılık kontrolü başarılı. Fiziksel cihazda düzeltmenin açılışı henüz doğrulanmadı. Ayrıntılar: [EXPO-GO-FIX.md](EXPO-GO-FIX.md). Aşağıdaki kapsamlı DB/UI kanıtları v0.1 için çalıştırılan testlerdir; bu istemci düzeltmesi veritabanında değişiklik yapmaz.
 
 ## Uygulanan değişiklikler
 
@@ -92,7 +96,7 @@ REST schema önbelleğini engelleyen, veritabanında bulunmayan eski `drabornsty
 
 ## Henüz doğrulanmayan / tamamlanmayan noktalar
 
-- Fiziksel Android Expo Go 58.0.2: giriş, ekran geçişi, düşük güçlü cihaz akıcılığı, GPS izinleri, native harita, görsel/dekont seçme, yerel bildirim ve uçak modu testi.
+- Fiziksel Android Expo Go 58.0.2: v0.1.1 açılışı, giriş, ekran geçişi, düşük güçlü cihaz akıcılığı, GPS izinleri, native harita, görsel/dekont seçme ve uçak modu testi. Android yerel/uzaktan cihaz bildirimleri development build testine ayrılmıştır.
 - Android uzaktan push ve arka plan konumu: Expo Go sınırları nedeniyle development build, EAS/FCM yapılandırması ve gerçek cihaz testi gerekir; sunucu kuyrukları hazırdır, teslimat doğrulanmadı.
 - Yeni hesap e-posta doğrulama/SMTP teslimatı ve parola kurtarma deep link'i. Ortak projenin SMTP/redirect listesi değiştirilmedi.
 - Gelecek migration'ların GitHub Actions üzerinden otomatik uygulaması için `SUPABASE_ACCESS_TOKEN` secret gerekir. Mevcut 12 migration uygulanmıştır; CI dağıtım kimliği bu çalışma sırasında kurulmadı.

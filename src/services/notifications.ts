@@ -1,29 +1,63 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Constants from "expo-constants";
-import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { command } from "./api";
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+
+// The SDK 58 notifications barrel imports ExpoTopicSubscriptionModule even
+// when topic subscriptions are unused. Expo Go Android does not ship it.
+// Keep this import lazy and never evaluate it in the Android Expo Go path.
+let nativeNotifications:
+  | Promise<typeof import("expo-notifications")>
+  | undefined;
+function loadNativeNotifications() {
+  nativeNotifications ??= import("expo-notifications")
+    .then((notifications) => {
+      notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowBanner: true,
+          shouldShowList: true,
+          shouldPlaySound: false,
+          shouldSetBadge: false,
+        }),
+      });
+      return notifications;
+    })
+    .catch((cause: unknown) => {
+      nativeNotifications = undefined;
+      throw new Error(
+        "Cihaz bildirimleri bu uygulama sürümünde kullanılamıyor. Uygulama içi bildirimler çalışmaya devam eder.",
+        { cause },
+      );
+    });
+  return nativeNotifications;
+}
+
 export async function registerNotifications() {
   if (Platform.OS === "web")
     return "Uygulama içi bildirimler etkin. Android cihazda push izinlerini açabilirsiniz.";
-  await Notifications.setNotificationChannelAsync("db_style_default", {
-    name: "DraBornStyle",
-    importance: Notifications.AndroidImportance.DEFAULT,
-  });
+  const expoGo = Constants.executionEnvironment === "storeClient";
+  if (Platform.OS === "android" && expoGo)
+    return "Uygulama içi bildirimler etkin. Bu test sürümünde cihaz bildirimleri kullanılmıyor.";
+
+  const projectId =
+    Constants.expoConfig?.extra?.eas?.projectId ||
+    Constants.easConfig?.projectId;
+  if (!expoGo && !projectId)
+    throw new Error(
+      "Development build için EAS proje kimliği henüz yapılandırılmadı. Uygulama içi bildirimler etkin.",
+    );
+  const Notifications = await loadNativeNotifications();
+  if (Platform.OS === "android")
+    await Notifications.setNotificationChannelAsync("db_style_default", {
+      name: "DraBornStyle",
+      importance: Notifications.AndroidImportance.DEFAULT,
+    });
   const p = await Notifications.requestPermissionsAsync();
   if (!p.granted)
     throw new Error(
       "Bildirim izni verilmedi. Uygulama içi bildirimler çalışmaya devam eder.",
     );
-  if (Constants.executionEnvironment === "storeClient") {
+  if (expoGo) {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: "DraBornStyle bildirimleri hazır",
@@ -33,13 +67,6 @@ export async function registerNotifications() {
     });
     return "Yerel ve uygulama içi bildirimler etkin. Uzaktan push için development build gerekir.";
   }
-  const projectId =
-    Constants.expoConfig?.extra?.eas?.projectId ||
-    Constants.easConfig?.projectId;
-  if (!projectId)
-    throw new Error(
-      "Development build için EAS proje kimliği henüz yapılandırılmadı. Uygulama içi bildirimler etkin.",
-    );
   const { data } = await Notifications.getExpoPushTokenAsync({ projectId });
   await command("push_token", { token: data });
   await AsyncStorage.setItem("db_style_push_device", data);

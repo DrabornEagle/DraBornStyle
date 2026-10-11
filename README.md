@@ -1,6 +1,8 @@
-# DraBornStyle · v0.1
+# DraBornStyle · v0.1.1
 
 Android için React Native / Expo ile geliştirilen berber ve kuaför randevu, günlük çalışma ve işletme yönetimi uygulaması. Müşteri, usta, işletme sahibi ve platform Admin'i ayrı çalışma ekranları kullanır. Arayüz Türkçe, koyu renkli, pembe/camgöbeği neon vurgulu ve özgün Miami esintili görsellerle hazırlanmıştır.
+
+v0.1.1, Expo Go 58.0.2'deki `ExpoTopicSubscriptionModule` açılış hatasını giderir. Düzeltme ve test kapsamı: [EXPO-GO-FIX.md](docs/EXPO-GO-FIX.md).
 
 ![Admin paneli](docs/screens/admin.png)
 
@@ -21,25 +23,25 @@ APK/AAB üretilmedi. `export:android` komutu yalnızca JavaScript/Hermes paketi 
 
 ### Android / Termux ile ZIP üzerinden ilk kurulum
 
-Termux ve Expo Go aynı telefonda kullanılabilir. Aşağıdaki komutlar Python veya patch kullanmaz; kaynakları GitHub'ın ZIP arşivinden indirir. İlk kurulum için kullanın, mevcut klasörünüzün üzerine güncelleme yapmayın.
+Termux ve Expo Go aynı telefonda kullanılabilir. Önce eski Metro sunucusunu terminalde **Ctrl+C** ile kapatın. Aşağıdaki komutlar Python veya patch kullanmaz; güncel kaynakları GitHub'ın ZIP arşivinden ayrı bir sürüm klasörüne indirir.
 
 ```bash
 pkg update -y
 pkg install nodejs-lts curl unzip -y
-mkdir -p "$HOME/DraBornStyle-v0.1"
-cd "$HOME/DraBornStyle-v0.1"
-curl -fL https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip -o DraBornStyle-v0.1.zip
-unzip -q DraBornStyle-v0.1.zip
+mkdir -p "$HOME/DraBornStyle-v0.1.1"
+cd "$HOME/DraBornStyle-v0.1.1"
+curl -fL https://github.com/DrabornEagle/DraBornStyle/archive/refs/heads/main.zip -o DraBornStyle-v0.1.1.zip
+unzip -q -o DraBornStyle-v0.1.1.zip
 cd DraBornStyle-main
 npm ci
-npx expo start --localhost --port 8081
+npx expo start --go --localhost --port 8081 --clear
 ```
 
 Termux'u açık bırakın. Expo Go **58.0.2** içinden `exp://127.0.0.1:8081` adresini açın; aynı telefon için QR okutmanız gerekmez. Terminalde sunucu hazır olmadan Expo Go'yu açmayın. Daha sonra yeniden başlatmak için:
 
 ```bash
-cd "$HOME/DraBornStyle-v0.1/DraBornStyle-main"
-npx expo start --localhost --port 8081
+cd "$HOME/DraBornStyle-v0.1.1/DraBornStyle-main"
+npx expo start --go --localhost --port 8081 --clear
 ```
 
 Bu, hazırlanan cihaz deneme yoludur; fiziksel Termux/Expo Go testi bu çalışma ortamında yapılmadı. Bilgisayardan çalıştırırken yukarıdaki genel kurulum ve aynı ağdaki QR yolu kullanılabilir.
@@ -98,7 +100,7 @@ Ortak projede `supabase db reset`, genel schema temizleme veya diğer uygulamala
 
 ## Expo Go sınırları ve test bekleyenler
 
-- Android Expo Go'da uzaktan push yoktur. Uygulama içi ve yerel bildirim test yolu vardır. Sunucu outbox/receipt worker hazırlanmıştır; gerçek cihaz teslimatı için EAS project ID, Android FCM ayarı ve development build gerekir. Burada APK/AAB oluşturulmadı.
+- Android Expo Go'da uygulama içi bildirimler kullanılır. SDK 58 bildirim paketinin ana import'u Expo Go 58.0.2'de bulunmayan `ExpoTopicSubscriptionModule` modülünü yüklediği için v0.1.1'de bu ortamda cihaz bildirim paketi hiç çalıştırılmaz. Uygulama açılışı ve bildirim düğmesi için eksik native modül regresyon testi vardır. Yerel/uzaktan cihaz bildirimleri development build testine ayrılmıştır; uzaktan push için EAS project ID ve Android FCM ayarı gerekir. Burada APK/AAB oluşturulmadı.
 - Expo Go Android arka plan konum görevini çalıştırmaz. Ön plan konumu açık onayla, randevuya iki saat kala paylaşılır; bitiş/iptal/izin geri alma ile durur. Arka plan görevi development build için ayrıdır. ETA yol/trafik servisi değildir, kuş uçuşu mesafeden yaklaşık hesaplanır.
 - E-posta kayıt/doğrulama/sıfırlama API ekranları vardır. Ortak Supabase projesinin SMTP/redirect ayarları değiştirilmedi; yeni hesap e-posta teslimatı ve Expo Go recovery deep link'i burada uçtan uca doğrulanmadı. Üretim öncesi uygulama dönüş URL'si (`drabornstyle://reset`, Expo Go test URL'si) mevcut redirect listesine eklenmeli, mevcut girişleri koruyun.
 - Fiziksel Android cihaz, GPS/galeri/dekont seçicisi, işletim sistemi izin pencereleri ve gerçek native harita testi yapılmadı. Bunları çalışıyor olarak raporlamıyoruz.
