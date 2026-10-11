@@ -15,24 +15,30 @@ Bu rapor gerçek veritabanı, HTTP API, web arayüzü ve paket üretimini birbir
 
 ## Çalıştırılan kontroller
 
-| Kontrol                          | Sonuç                         | Kanıt / sınır                                                                                                                         |
-| -------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| TypeScript                       | Geçti                         | `npm run typecheck`                                                                                                                   |
-| Para ve İstanbul tarih işlemleri | 3 test grubu geçti            | `npm test`; kuruş girişleri, indirim/borç hesabı, geçersiz tarih ve gün sınırları                                                     |
-| Gerçek PostgreSQL iş akışları    | Geçti                         | `tests/database.sql`; bütün fixture değişiklikleri `ROLLBACK` ile geri alındı                                                         |
-| Gerçek HTTP eşzamanlılık         | Geçti                         | `tests/live-api.mjs`; aynı slot için iki eşzamanlı istekte biri başarılı, biri reddedildi; aynı anahtarlı tekrar tek kayıt döndürdü   |
-| Canlı API kaynakları             | Geçti                         | 10 yetkili kaynak ve rapor tutarları; yalnızca etiketli demo fixture kullanıldı                                                       |
-| Mobil genişlikte web arayüzü     | 15 kontrol geçti, hata yok    | 09:44 UTC; `tests/ui-smoke.cjs`, [ui-test-results.json](ui-test-results.json); gerçek Supabase API ve WebSocket bağlantısı kullanıldı |
-| Android Hermes paketi            | Geçti                         | `npm run export:android`; 901 modül, yaklaşık 2,8 MB JS/Hermes paketi; APK değildir                                                   |
-| Web paketi                       | Geçti                         | `npm run export:web`; yaklaşık 1,2 MB JS paketi                                                                                       |
-| Expo Go sürüm eşleşmesi          | Geçti                         | Resmî manifest Android 58.0.2 → SDK 58; exact bağımlılıklar [expo-compatibility.json](expo-compatibility.json)                        |
-| Expo bağımlılık kontrolü         | Çevrimdışı SDK kontrolü geçti | `EXPO_OFFLINE=1 npx expo install --check`; çevrimiçi kontrol bu ortamın proxy bağlantısında tamamlanmadı                              |
-| Supabase güvenlik danışmanı      | Style bulgusu yok             | 09:36 UTC kontrolünde `db_style` için güvenlik bulgusu sıfır; diğer uygulamaların uyarıları değiştirilmedi                            |
-| Zamanlanmış işler                | Geçti                         | Son `db_style_reminders` çalışması 09:35 UTC, `db_style_push` 09:36 UTC: `succeeded`; gerçek cihaza push teslimatı doğrulanmadı       |
+| Kontrol                          | Sonuç                         | Kanıt / sınır                                                                                                                                |
+| -------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| TypeScript                       | Geçti                         | `npm run typecheck`                                                                                                                          |
+| Para ve İstanbul tarih işlemleri | 3 test grubu geçti            | `npm test`; kuruş girişleri, indirim/borç hesabı, geçersiz tarih ve gün sınırları                                                            |
+| Gerçek PostgreSQL iş akışları    | Geçti                         | `tests/database.sql`; bütün fixture değişiklikleri `ROLLBACK` ile geri alındı                                                                |
+| Gerçek HTTP eşzamanlılık         | Geçti                         | `tests/live-api.mjs`; aynı slot için iki eşzamanlı istekte biri başarılı, biri reddedildi; aynı anahtarlı tekrar tek kayıt döndürdü          |
+| Canlı API kaynakları             | Geçti                         | 10 yetkili kaynak ve rapor tutarları; yalnızca etiketli demo fixture kullanıldı                                                              |
+| Mobil genişlikte web arayüzü     | 15 kontrol geçti, hata yok    | 09:44 UTC; `tests/ui-smoke.cjs`, [ui-test-results.json](ui-test-results.json); gerçek Supabase API ve WebSocket bağlantısı kullanıldı        |
+| Android Hermes paketi            | Geçti                         | `npm run export:android`; 901 modül, yaklaşık 2,8 MB JS/Hermes paketi; APK değildir                                                          |
+| Web paketi                       | Geçti                         | `npm run export:web`; yaklaşık 1,2 MB JS paketi                                                                                              |
+| Expo Go sürüm eşleşmesi          | Geçti                         | Resmî manifest Android 58.0.2 → SDK 58; exact bağımlılıklar [expo-compatibility.json](expo-compatibility.json)                               |
+| Expo bağımlılık kontrolü         | Çevrimdışı SDK kontrolü geçti | `EXPO_OFFLINE=1 npx expo install --check`; yerel çevrimiçi kontrol proxy bağlantısında tamamlanmadı; GitHub Actions çevrimiçi kontrolü geçti |
+| Supabase güvenlik danışmanı      | Style bulgusu yok             | 09:36 UTC kontrolünde `db_style` için güvenlik bulgusu sıfır; diğer uygulamaların uyarıları değiştirilmedi                                   |
+| Zamanlanmış işler                | Geçti                         | Son `db_style_reminders` çalışması 09:35 UTC, `db_style_push` 09:36 UTC: `succeeded`; gerçek cihaza push teslimatı doğrulanmadı              |
 
 Web testinde Admin demo yükleme/kaldırma düğmeleri, gelir ekranı ve geçersiz tarih, finans dönemleri, müşteri keşfi, fiyat/slot üzerinden randevu ve iptal, usta günlük paneli, misafir işlem başlangıç/bitişi, işletme çalışan ekleme, dış API mesajının ekrana realtime gelmesi, çevrimdışı yazma engeli ve yeniden bağlantıda tek mesaj doğrulandı. 360 ve 414 piksel genişlikte yatay sayfa taşması kontrol edildi. Çevrimdışı test gerçek tarayıcı ağını kapatır ve işletim sistemi bağlantı olayını simüle eder; Android uçak modu testi değildir. Ekran görselleri `docs/screens` içindedir.
 
 Test sonunda demo düğmesiyle bütün örnek işletme/işlem/finans kayıtları kaldırıldı; rapor tutarlarının sıfıra dönmesi doğrulandı. Kullanıcı Admin panelinden yeni demo yükleyebilir. Değişmez denetim geçmişi korunur.
+
+## GitHub doğrulaması
+
+[GitHub Actions çalışması](https://github.com/DrabornEagle/DraBornStyle/actions/runs/38129785556), uygulama kaynak commit’i `aac64597d0d3a7ab151be90d70d79890ac2895dc` için başarıyla tamamlandı: temiz `npm ci`, TypeScript, üç test grubu, çevrimiçi Expo bağımlılık kontrolü, Android ve Web paket üretimi geçti.
+
+Migration işindeki uygulama adımı **atlanmıştır**: repository secret `SUPABASE_ACCESS_TOKEN` yoktur. Bu CI çalışması veritabanına yeniden migration uygulamamıştır. Mevcut 12 migration geliştirme sırasında mevcut Supabase projesine zaten uygulanmış ve sürümleri doğrulanmıştır.
 
 ## İstenen 22 senaryo
 

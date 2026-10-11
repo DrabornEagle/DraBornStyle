@@ -81,6 +81,8 @@ Ortak projede `supabase db reset`, genel schema temizleme veya diğer uygulamala
 
 Resmî kaynaklar: [Expo bildirim sınırları](https://docs.expo.dev/versions/latest/sdk/notifications/), [SDK 58 konum](https://docs.expo.dev/versions/v58.0.0/sdk/location/), [TaskManager](https://docs.expo.dev/versions/v58.0.0/sdk/task-manager/), [Expo sürüm manifesti](https://exp.host/--/api/v2/versions).
 
+[GitHub kontrolleri](https://github.com/DrabornEagle/DraBornStyle/actions/runs/38129785556) temiz kurulum, TypeScript, testler, çevrimiçi Expo bağımlılık kontrolü ve Android/Web paket üretiminde geçti. CI migration uygulama adımı, dağıtım secret’ı olmadığı için atlandı; mevcut migration’lar daha önce uygulanmıştır.
+
 ## Kontroller
 
 ```bash
