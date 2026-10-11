@@ -1,0 +1,12 @@
+node_modules/
+.expo/
+dist*/
+.env
+.env.*
+!.env.example
+supabase/.temp/
+*.jks
+*.keystore
+*.apk
+*.aab
+tests/private/

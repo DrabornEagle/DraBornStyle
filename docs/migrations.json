@@ -1,0 +1,53 @@
+{
+  "project_ref": "xpdiwyxnnrmyvpcqwuyb",
+  "applied": [
+    {
+      "version": "20261011080311",
+      "name": "db_style_foundation"
+    },
+    {
+      "version": "20261011080320",
+      "name": "db_style_workflows"
+    },
+    {
+      "version": "20261011080819",
+      "name": "db_style_demo"
+    },
+    {
+      "version": "20261011080831",
+      "name": "db_style_security_automation"
+    },
+    {
+      "version": "20261011082152",
+      "name": "db_style_api_cache"
+    },
+    {
+      "version": "20261011083142",
+      "name": "db_style_validation"
+    },
+    {
+      "version": "20261011084619",
+      "name": "db_style_reports_push"
+    },
+    {
+      "version": "20261011084905",
+      "name": "db_style_report_accuracy"
+    },
+    {
+      "version": "20261011085537",
+      "name": "db_style_access_location"
+    },
+    {
+      "version": "20261011090228",
+      "name": "db_style_query_indexes"
+    },
+    {
+      "version": "20261011091251",
+      "name": "db_style_release_guard"
+    },
+    {
+      "version": "20261011091826",
+      "name": "db_style_live_prices"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "noUncheckedIndexedAccess": false,
+    "types": ["react"],
+    "ignoreDeprecations": "6.0"
+  },
+  "exclude": ["supabase/functions", "dist-web", "dist-android", "node_modules"]
+}

@@ -1,0 +1,24 @@
+{
+  "startedAt": "2026-10-11T09:43:50.343Z",
+  "completedAt": "2026-10-11T09:44:30.129Z",
+  "platform": "Chromium web export (not physical Android)",
+  "status": "passed",
+  "passed": [
+    "Admin demo load button creates tagged live fixtures",
+    "Admin dashboard renders live data",
+    "Invalid custom report date is handled without crash",
+    "Finance displays periods and claims",
+    "Customer discovery role renders",
+    "Customer creates appointment through quote and slot UI",
+    "Customer cancels reservation through UI",
+    "Staff role quick work panel renders",
+    "Walk-in starts and finishes through UI",
+    "Owner dashboard renders",
+    "Owner creates staff through validated form",
+    "External live message arrives via Supabase Realtime without navigation",
+    "Offline mutation blocked; reconnect sends one message",
+    "360 and 414 px layouts have no body overflow",
+    "Admin demo remove button clears fixtures and financial report data"
+  ],
+  "errors": []
+}

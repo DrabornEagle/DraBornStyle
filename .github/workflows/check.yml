@@ -1,0 +1,44 @@
+name: DraBornStyle checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npx expo install --check
+      - run: npm run export:android
+      - run: npm run export:web
+  migrations:
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    concurrency:
+      group: db-style-database-deploy
+      cancel-in-progress: false
+    env:
+      SUPABASE_PROJECT_REF: xpdiwyxnnrmyvpcqwuyb
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Apply app migrations when deployment credential exists
+        if: env.SUPABASE_ACCESS_TOKEN != ''
+        run: node scripts/apply-migrations.mjs
+      - name: Document missing deployment credential
+        if: env.SUPABASE_ACCESS_TOKEN == ''
+        run: echo 'Current migrations were applied during development. Future CI deployment requires the SUPABASE_ACCESS_TOKEN repository secret.'

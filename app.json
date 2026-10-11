@@ -1,0 +1,29 @@
+{
+  "expo": {
+    "name": "DraBornStyle",
+    "slug": "drabornstyle",
+    "version": "0.1.0",
+    "scheme": "drabornstyle",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "android": {
+      "package": "com.draborneagle.drabornstyle",
+      "edgeToEdgeEnabled": true
+    },
+    "plugins": [
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Randevunuz sırasında işletmeye tahmini varışınızı göstermek için konumunuzu paylaşın.",
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      "expo-notifications",
+      "expo-document-picker",
+      "expo-image-picker"
+    ],
+    "web": { "bundler": "metro" }
+  }
+}
