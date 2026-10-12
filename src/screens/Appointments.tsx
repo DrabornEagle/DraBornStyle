@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Modal, ScrollView } from "react-native";
 import { useApp } from "../app/Context";
 import { useData } from "../hooks/useData";
 import { Row } from "../types";
@@ -20,6 +20,8 @@ import {
 } from "../components/ui";
 import { dateTime, localDate, addDays, atLocal } from "../utils/dates";
 import { money } from "../utils/money";
+import { colors } from "../theme";
+import { locationEligibility } from "../utils/locationConsent";
 import { MapPanel } from "../components/MapPanel";
 import {
   startSharing,
@@ -125,6 +127,40 @@ export function AppointmentScreen() {
     [sharing, setSharing] = useState(false);
   const owner = app.role !== "customer";
   const own = a?.customer_user_id === app.session?.user.id;
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [locationPending, setLocationPending] = useState(false);
+  const eligibility = locationEligibility(a || {});
+  useEffect(() => {
+    if (
+      app.route.params?.locationPrompt &&
+      a &&
+      own &&
+      ["booked", "arrived"].includes(a.status) &&
+      app.claimLocationPrompt(a.id)
+    )
+      setLocationOpen(true);
+  }, [
+    a?.id,
+    own,
+    a?.status,
+    app.route.params?.locationPrompt,
+    app.claimLocationPrompt,
+  ]);
+  async function shareLocation() {
+    if (!a || locationPending) return;
+    setLocationPending(true);
+    try {
+      await startSharing(a, (m) => app.toast(m, true));
+      setSharing(true);
+      setLocationOpen(false);
+      app.refresh();
+      app.toast("Uygulama açıkken konumunuz güncellenecek.");
+    } catch (e) {
+      app.toast((e as Error).message, true);
+    } finally {
+      setLocationPending(false);
+    }
+  }
   async function chat() {
     if (!a) return;
     const result = await app.run("chat_open", { appointment_id: a.id }, "");
@@ -136,193 +172,258 @@ export function AppointmentScreen() {
       });
   }
   return (
-    <Page>
-      <Hero
-        title="Randevu detayları"
-        eyebrow="RANDEVUM & YOLDA"
-        subtitle="Saatin, hizmetin ve ustana ulaşmanın en kısa yolu."
-      />
-      <State loading={r.loading && !a} error={r.error} onRetry={r.reload} />
-      {a && (
-        <>
-          <Card tone="pink">
-            <RowView>
-              <Avatar url={a.staff_photo} size={65} />
-              <View style={{ flex: 1 }}>
-                <Txt bold size={21}>
-                  {a.business_name}
-                </Txt>
-                <Txt muted>
-                  {a.staff_name} · {a.service_name}
-                </Txt>
-              </View>
-            </RowView>
-            <Badge state={a.status} />
-            <Txt bold size={24} tone="gold">
-              {dateTime(a.starts_at)}
-            </Txt>
-            <Txt muted>
-              {a.customer_name} · {a.duration_minutes} dakika
-            </Txt>
-            <AmountLine
-              label="Hizmet bedeli"
-              value={money(a.quoted_service_cents)}
-            />
-            <AmountLine
-              label="Platform hizmet bedeli"
-              value={money(a.quoted_fee_cents)}
-            />
-            <AmountLine
-              label="Toplam"
-              value={money(
-                Number(a.quoted_service_cents) + Number(a.quoted_fee_cents),
-              )}
-              total
-            />
-          </Card>
-          <MapPanel
-            business={{ ...a, name: a.business_name }}
-            location={owner ? a.location : null}
-          />
-          <Btn
-            title={owner ? "Müşteriyle Sohbet Et" : "Ustayla Sohbet Et"}
-            icon="chatbubble-outline"
-            onPress={chat}
-          />
-          {["booked", "arrived"].includes(a.status) && (
-            <>
+    <>
+      <Page>
+        <Hero
+          title="Randevu detayları"
+          eyebrow="RANDEVUM & YOLDA"
+          subtitle="Saatin, hizmetin ve ustana ulaşmanın en kısa yolu."
+        />
+        <State loading={r.loading && !a} error={r.error} onRetry={r.reload} />
+        {a && (
+          <>
+            <Card tone="pink">
               <RowView>
-                <Btn
-                  title="Randevuyu Değiştir"
-                  small
-                  outline
-                  onPress={() =>
-                    app.nav("booking", {
-                      business_id: a.business_id,
-                      staff_id: a.staff_id,
-                      service_id: a.service_id,
-                      appointment: a,
-                    })
-                  }
-                />
-                <Btn
-                  title={confirmCancel ? "İptali Onayla" : "İptal Et"}
-                  outline
-                  tone="red"
-                  small
-                  onPress={async () => {
-                    if (!confirmCancel) {
-                      setConfirmCancel(true);
-                      return;
-                    }
-                    const result = await app.run(
-                      "cancel",
-                      { id: a.id },
-                      "Randevunuz iptal edildi.",
-                    );
-                    if (result) {
-                      await stopSharing();
-                      setSharing(false);
-                    }
-                  }}
-                />
-              </RowView>
-              {own && (
-                <Card tone="cyan">
-                  <Txt bold>Varışını paylaş</Txt>
-                  <Txt muted size={12}>
-                    Açık onayınızla, randevuya 2 saat kala konumunuz yalnızca
-                    işletme ve ilgili usta tarafından görülür. Varış süresi
-                    mesafeden yaklaşık hesaplanır.
+                <Avatar url={a.staff_photo} size={65} />
+                <View style={{ flex: 1 }}>
+                  <Txt bold size={21}>
+                    {a.business_name}
                   </Txt>
+                  <Txt muted>
+                    {a.staff_name} · {a.service_name}
+                  </Txt>
+                </View>
+              </RowView>
+              <Badge state={a.status} />
+              <Txt bold size={24} tone="gold">
+                {dateTime(a.starts_at)}
+              </Txt>
+              <Txt muted>
+                {a.customer_name} · {a.duration_minutes} dakika
+              </Txt>
+              <AmountLine
+                label="Hizmet bedeli"
+                value={money(a.quoted_service_cents)}
+              />
+              <AmountLine
+                label="Platform hizmet bedeli"
+                value={money(a.quoted_fee_cents)}
+              />
+              <AmountLine
+                label="Toplam"
+                value={money(
+                  Number(a.quoted_service_cents) + Number(a.quoted_fee_cents),
+                )}
+                total
+              />
+            </Card>
+            <MapPanel
+              business={{ ...a, name: a.business_name }}
+              location={owner ? a.location : null}
+            />
+            <Btn
+              title={owner ? "Müşteriyle Sohbet Et" : "Ustayla Sohbet Et"}
+              icon="chatbubble-outline"
+              onPress={chat}
+            />
+            {["booked", "arrived"].includes(a.status) && (
+              <>
+                <RowView>
                   <Btn
-                    title={
-                      sharing || a.location?.shared
-                        ? "Konum Paylaşımını Durdur"
-                        : "Konumumu Paylaşmayı Onaylıyorum"
-                    }
+                    title="Randevuyu Değiştir"
+                    small
                     outline
-                    tone="cyan"
+                    onPress={() =>
+                      app.nav("booking", {
+                        business_id: a.business_id,
+                        staff_id: a.staff_id,
+                        service_id: a.service_id,
+                        appointment: a,
+                      })
+                    }
+                  />
+                  <Btn
+                    title={confirmCancel ? "İptali Onayla" : "İptal Et"}
+                    outline
+                    tone="red"
+                    small
                     onPress={async () => {
-                      try {
-                        if (sharing || a.location?.shared) {
-                          await stopSharing();
-                          await app.run(
-                            "location_update",
-                            { id: a.id, shared: false },
-                            "Konum paylaşımı durduruldu.",
-                          );
-                          setSharing(false);
-                        } else {
-                          await startSharing(a, (m) => app.toast(m, true));
-                          setSharing(true);
-                          app.toast(
-                            "Uygulama açıkken konumunuz güncellenecek.",
-                          );
-                        }
-                      } catch (e) {
-                        app.toast((e as Error).message, true);
+                      if (!confirmCancel) {
+                        setConfirmCancel(true);
+                        return;
+                      }
+                      const result = await app.run(
+                        "cancel",
+                        { id: a.id },
+                        "Randevunuz iptal edildi.",
+                      );
+                      if (result) {
+                        await stopSharing();
+                        setSharing(false);
                       }
                     }}
                   />
-                  {sharing && (
+                </RowView>
+                {own && (
+                  <Card tone="cyan">
+                    <Txt bold>Varışını paylaş</Txt>
+                    <Txt muted size={12}>
+                      Açık onayınızla, randevuya 2 saat kala konumunuz yalnızca
+                      işletme ve ilgili usta tarafından görülür. Varış süresi
+                      mesafeden yaklaşık hesaplanır.
+                    </Txt>
                     <Btn
-                      title="Arka plan paylaşımını etkinleştir"
-                      small
+                      title={
+                        sharing || a.location?.shared
+                          ? "Konum Paylaşımını Durdur"
+                          : "Konumumu Paylaşmayı Onaylıyorum"
+                      }
                       outline
-                      tone="gold"
+                      tone="cyan"
                       onPress={async () => {
                         try {
-                          await enableBackgroundSharing();
-                          app.toast("Arka plan konumu etkin.");
+                          if (sharing || a.location?.shared) {
+                            await stopSharing();
+                            await app.run(
+                              "location_update",
+                              { id: a.id, shared: false },
+                              "Konum paylaşımı durduruldu.",
+                            );
+                            setSharing(false);
+                          } else {
+                            setLocationOpen(true);
+                          }
                         } catch (e) {
                           app.toast((e as Error).message, true);
                         }
                       }}
                     />
-                  )}
-                  <Btn
-                    title="İşletmeye Geldim"
-                    small
-                    outline
-                    tone="green"
-                    onPress={() =>
-                      app.run(
-                        "arrived",
-                        { id: a.id },
-                        "İşletmeye varışınız bildirildi.",
-                      )
-                    }
-                  />
-                </Card>
-              )}
-              {owner && (
-                <Card tone="gold">
-                  <Txt bold>Usta işlemleri</Txt>
-                  <Btn
-                    title="Bu Müşterinin Tıraşına Başla"
-                    icon="cut-outline"
-                    onPress={async () => {
-                      const result = await app.run("start_session", {
-                        appointment_id: a.id,
-                      });
-                      if (result) app.nav("session", { id: result.id });
-                    }}
-                  />
-                  <Btn
-                    title="Müşteri Gelmedi"
-                    outline
-                    tone="red"
-                    small
-                    onPress={() => app.run("no_show", { id: a.id })}
-                  />
-                </Card>
-              )}
-            </>
-          )}
-        </>
-      )}
-    </Page>
+                    {sharing && (
+                      <Btn
+                        title="Arka plan paylaşımını etkinleştir"
+                        small
+                        outline
+                        tone="gold"
+                        onPress={async () => {
+                          try {
+                            await enableBackgroundSharing();
+                            app.toast("Arka plan konumu etkin.");
+                          } catch (e) {
+                            app.toast((e as Error).message, true);
+                          }
+                        }}
+                      />
+                    )}
+                    <Btn
+                      title="İşletmeye Geldim"
+                      small
+                      outline
+                      tone="green"
+                      onPress={() =>
+                        app.run(
+                          "arrived",
+                          { id: a.id },
+                          "İşletmeye varışınız bildirildi.",
+                        )
+                      }
+                    />
+                  </Card>
+                )}
+                {owner && (
+                  <Card tone="gold">
+                    <Txt bold>Usta işlemleri</Txt>
+                    <Btn
+                      title="Bu Müşterinin Tıraşına Başla"
+                      icon="cut-outline"
+                      onPress={async () => {
+                        const result = await app.run("start_session", {
+                          appointment_id: a.id,
+                        });
+                        if (result) app.nav("session", { id: result.id });
+                      }}
+                    />
+                    <Btn
+                      title="Müşteri Gelmedi"
+                      outline
+                      tone="red"
+                      small
+                      onPress={() => app.run("no_show", { id: a.id })}
+                    />
+                  </Card>
+                )}
+              </>
+            )}
+          </>
+        )}
+      </Page>
+      <Modal
+        visible={
+          locationOpen && !!a && own && ["booked", "arrived"].includes(a.status)
+        }
+        transparent
+        animationType="fade"
+        onRequestClose={() => {
+          if (!locationPending) setLocationOpen(false);
+        }}
+      >
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "#000b",
+            justifyContent: "center",
+            padding: 20,
+          }}
+        >
+          <ScrollView
+            style={{ flexGrow: 0, maxHeight: "85%" }}
+            contentContainerStyle={{ gap: 16 }}
+          >
+            <Card quiet style={{ gap: 16, borderColor: colors.cyan }}>
+              <View
+                testID="location-consent"
+                accessibilityViewIsModal
+                accessibilityLabel="Konum paylaşımı onayı"
+                style={{ gap: 16 }}
+              >
+                <Txt bold size={24}>
+                  Varışını paylaş
+                </Txt>
+                <Txt muted>
+                  Randevun oluşturuldu. İstersen işletmene ve ilgili ustaya
+                  tahmini varışını gösterebilirsin.
+                </Txt>
+                <Txt muted size={12}>
+                  Konum paylaşımı yalnızca onayınla başlar. Randevuna 2 saat
+                  kala kullanılabilir; paylaşımı randevu detaylarından
+                  durdurabilirsin.
+                </Txt>
+                {eligibility.reason && (
+                  <Txt tone="gold" size={12}>
+                    {eligibility.reason}
+                  </Txt>
+                )}
+                <Btn
+                  title={
+                    locationPending
+                      ? "Konum alınıyor…"
+                      : "Konumumu Paylaşmayı Onaylıyorum"
+                  }
+                  tone="cyan"
+                  disabled={!eligibility.allowed || locationPending}
+                  onPress={shareLocation}
+                />
+                <Btn
+                  title="Daha Sonra"
+                  outline
+                  disabled={locationPending}
+                  onPress={() => setLocationOpen(false)}
+                />
+              </View>
+            </Card>
+          </ScrollView>
+        </View>
+      </Modal>
+    </>
   );
 }
 export function RequestsScreen() {

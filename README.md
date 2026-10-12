@@ -1,6 +1,6 @@
 # DraBornStyle · v0.4.0
 
-Android için React Native / Expo ile geliştirilen berber ve kuaför randevu, günlük çalışma ve işletme yönetimi uygulaması. Müşteri, usta, işletme sahibi ve platform Admin'i ayrı çalışma ekranları kullanır. **v0.4.0 / Android version code 1** giriş logosunu aşağı taşır, Giriş / Hesap Oluştur seçeneklerini yakın ve eşit genişlikte bir seçim alanına yerleştirir, sayfa üstlerinde sade Miami görseli kullanır. Profil işlemleri açıklamalı satırlarla Randevular ve işlemler, Hesap ve izinler, İşletme gruplarına ayrılır. Finans kartındaki `<Text>` dışı boşluk kaldırılır; eski `ImageBackground` yerine mutlak konumlu `Image` kullanılır. Expo Go arka plan konum API'lerine çağrı yapmadan ön plan paylaşımını kullanır. v0.3.0 marka renkleri ve mevcut işlevler korunur. Animasyonlar hareket azaltma tercihine uyar ve uygulama arka plandayken durur.
+Android için React Native / Expo ile geliştirilen berber ve kuaför randevu, günlük çalışma ve işletme yönetimi uygulaması. Müşteri, usta, işletme sahibi ve platform Admin'i ayrı çalışma ekranları kullanır. **v0.4.0 / Android version code 1** giriş logosunu aşağı taşır, Giriş / Hesap Oluştur seçeneklerini yakın ve eşit genişlikte bir seçim alanına yerleştirir, eski neon salon görselini yalnızca Login ekranında kullanır. Diğer ekranların zemini sadedir. Login logosu 120 × 120 piksel olarak marka yazısının hemen üstünde durur. Profil işlemleri açıklamalı satırlarla Randevular ve işlemler, Hesap ve izinler, İşletme gruplarına ayrılır. Finans kartındaki `<Text>` dışı boşluk kaldırılır; eski `ImageBackground` yerine mutlak konumlu `Image` kullanılır. Expo Go arka plan konum API'lerine çağrı yapmadan ön plan paylaşımını kullanır. v0.3.0 marka renkleri ve mevcut işlevler korunur. Animasyonlar hareket azaltma tercihine uyar ve uygulama arka plandayken durur.
 
 Keşfet, yönetici/işletme/usta panelleri, aylık randevu takvimi, çalışan zaman çizelgesi ve sabit mesaj alanı yeni düzene taşınmıştır. Bütün fiyatlar, yorumlar ve saatler gerçek kayıttan gelir. [Mockup eşleştirmesi ve görsel yönergeleri](docs/DESIGN.md). v0.1.1'deki Expo Go 58.0.2 `ExpoTopicSubscriptionModule` açılış düzeltmesi korunur: [EXPO-GO-FIX.md](docs/EXPO-GO-FIX.md).
 
@@ -55,13 +55,15 @@ Güncel Termux paketinde npm ayrı paket olduğundan kurulum satırında açık�
 ## İlk deneme
 
 1. `draborneagle@gmail.com` hesabıyla giriş yapın. Önceki sürümlerde canlı Auth API ve giriş formu doğrulandı; v0.4.0 kontrolü yerel örnek oturumla yapıldı. E-postanın çevresindeki boşluklar ve büyük harfler normalize edilir. Şifreyi göster/gizle ve Enter ile giriş kullanılabilir. Şifre hiçbir kaynak veya migration dosyasına yazılmadı. Profil → **Şifremi Güncelle** ile yeni şifre belirlenebilir.
-2. Admin panelinde **Demo Verileri Yükle** düğmesini kullanın. Üç işletme, dokuz usta, hizmetler, müşteri, randevular, sohbetler, 36 örnek tamamlanmış işlem ve kısmi ödeme bildirimi oluşur.
+2. İsterseniz Admin panelinde **Demo Modunu Aç** düğmesini kullanın. Demo varsayılan olarak kapalıdır; bu kayıtlar yalnızca Admin hesabının denemesinde görünür. Normal kullanıcılar ve ziyaretçiler her zaman gerçek işletmeleri görür. Üç işletme, dokuz usta, hizmetler, müşteri, randevular, sohbetler, 36 örnek tamamlanmış işlem ve kısmi ödeme bildirimi oluşur.
 3. Profil → Çalışma alanım bölümünden Müşteri / Usta / İşletme / Admin ekranlarına geçin. Demo içindeki bu geçişler aynı yetkili Admin hesabının arayüz denemesidir; bağımsız kullanıcıların RLS testleri veritabanı testinde ayrıca yapılmıştır.
 4. Müşteri olarak işletme, hizmet, usta ve boş saat seçin. Usta olarak **Tıraşa Başla**, misafir müşteri ve hizmet seçerek hızlı işlem deneyin.
 5. İşlem sonunda hizmet tutarı, indirim, platform bedeli ve toplamı kontrol edip tamamlayın. Finans bölümünde ödeme bildirin; Admin rolünde banka/nakit kontrolünden sonra onaylayın veya reddedin.
-6. **Demo Verileri Kaldır** yalnızca aktif demo grubuna bağlı işletme kayıtlarını kaldırır. Denetim geçmişi korunur. Ortak Auth kullanıcıları veya gerçek işletmeler silinmez.
+6. **Demo Modunu Kapat**, Admin önizlemesini kapatır; tekrar gerçek veriler gösterilir. Demo kayıtları daha sonraki Admin denemesi için saklanır. Gerçek işletmeler, Auth kullanıcıları ve denetim geçmişi silinmez.
 
 Demo veriler aktifken görünür bir DEMO bandı vardır; örnek işletmeler ve raporlar ayrıca etiketlenir. Demo işlemler seçili rapor toplamlarına dahildir. Eski sürüm ekran görüntüleri etiketli demo verilerle alınmıştır. v0.4.0 ekran görüntüleri yerel örnek hesap/API verilerinden üretilir; mevcut sunucu kayıtları değiştirilmez.
+
+Randevu onaylandıktan sonra müşterinin konum paylaşım onayı otomatik açılır. **Daha Sonra** ile kapatılabilir. Konum izni ve paylaşımı yalnızca onay düğmesine basıldığında başlar; randevuya iki saatten fazla varsa ekran bunu açıklar ve paylaşım düğmesi kapalı kalır. Profil fotoğrafı olmayan gerçek kayıtlarda örnek usta fotoğrafı yerine kişi ikonu gösterilir.
 
 ## İşlevler
 
@@ -114,7 +116,7 @@ Ortak projede `supabase db reset`, genel schema temizleme veya diğer uygulamala
 
 Resmî kaynaklar: [Expo bildirim sınırları](https://docs.expo.dev/versions/latest/sdk/notifications/), [SDK 58 konum](https://docs.expo.dev/versions/v58.0.0/sdk/location/), [TaskManager](https://docs.expo.dev/versions/v58.0.0/sdk/task-manager/), [Expo sürüm manifesti](https://exp.host/--/api/v2/versions).
 
-v0.4.0 TypeScript, 16 birim/regresyon testi ve Android/Web paket üretiminden geçti. Giriş ve profil 320, 360, 414 ve 1120 pikselde yerel örnek hesap/API verileriyle kontrol edilir; yeni sonuçlar [ui-v04-results.json](docs/ui-v04-results.json) içindedir. Canlı hesaba giriş bu sürümde doğrulanmadı: otomatik onay incelemesi bu görevde hesap erişim yetkisini doğrulayamadığı için kontrolü engelledi. v0.3.0'ın 13 canlı okuma kontrolü ve v0.2.0'ın 17 yazma/gerçek zamanlı senaryosu tarihsel sonuçlardır. Güncel uzaktan kontroller: [GitHub Actions](https://github.com/DrabornEagle/DraBornStyle/actions).
+v0.4.0 TypeScript, 19 birim/regresyon testi ve Android/Web paket üretiminden geçti. Giriş ve profil 320, 360, 414 ve 1120 pikselde yerel örnek hesap/API verileriyle kontrol edilir; yeni sonuçlar [ui-v04-results.json](docs/ui-v04-results.json) içindedir. Canlı hesaba giriş bu sürümde doğrulanmadı: otomatik onay incelemesi bu görevde hesap erişim yetkisini doğrulayamadığı için kontrolü engelledi. v0.3.0'ın 13 canlı okuma kontrolü ve v0.2.0'ın 17 yazma/gerçek zamanlı senaryosu tarihsel sonuçlardır. Güncel uzaktan kontroller: [GitHub Actions](https://github.com/DrabornEagle/DraBornStyle/actions).
 
 ## Kontroller
 

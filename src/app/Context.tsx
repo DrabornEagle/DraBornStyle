@@ -29,6 +29,7 @@ type AppContextType = {
   route: Route;
   nav: (name: string, params?: Row) => void;
   back: () => void;
+  claimLocationPrompt: (appointmentId: string) => boolean;
   online: boolean;
   toast: (message: string, error?: boolean) => void;
   dismissMessage: () => void;
@@ -53,6 +54,16 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       null,
     );
   const recoveryRequested = useRef(false);
+  const locationPrompts = useRef(new Set<string>());
+  const claimLocationPrompt = useCallback(
+    (appointmentId: string) => {
+      const key = `${session?.user.id}:${appointmentId}`;
+      if (locationPrompts.current.has(key)) return false;
+      locationPrompts.current.add(key);
+      return true;
+    },
+    [session?.user.id],
+  );
   const pending = useRef(false),
     timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const toast = useCallback((text: string, error = false) => {
@@ -328,6 +339,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           [
             "demo_load",
             "demo_remove",
+            "dkd_demo_disable",
             "business_create",
             "profile_save",
           ].includes(action)
@@ -366,6 +378,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         route: history[history.length - 1],
         nav,
         back,
+        claimLocationPrompt,
         online,
         toast,
         dismissMessage: () => setMessage(null),

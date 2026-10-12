@@ -15,7 +15,6 @@ import {
   RowView,
   Icon,
   SegmentedControl,
-  imageSource,
 } from "../components/ui";
 import { appVersion, colors } from "../theme";
 import { authErrorMessage, normalizeEmail, validEmail } from "../utils/auth";
@@ -98,17 +97,6 @@ export function AuthScreen() {
     return (
       <Page key={mode}>
         <View style={{ height: 340, margin: -14, marginBottom: -8 }}>
-          <Image
-            accessible={false}
-            source={imageSource("asset:backdrop")}
-            resizeMode="cover"
-            style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
-          />
-          <LinearGradient
-            pointerEvents="none"
-            colors={["#040b1800", "#040b1800", "#040b18"]}
-            style={StyleSheet.absoluteFill}
-          />
           <View
             style={{
               position: "absolute",
@@ -211,156 +199,180 @@ export function AuthScreen() {
       </Page>
     );
   return (
-    <Page key={mode} contentStyle={{ gap: 16 }}>
-      <View style={{ alignItems: "center", paddingTop: 40, paddingBottom: 14 }}>
-        <Brand large />
-      </View>
-      <Card quiet style={{ gap: 18 }}>
-        <View style={{ gap: 5 }}>
-          <Txt size={25} bold style={{ letterSpacing: -0.8 }}>
-            {mode === "login"
-              ? "Giriş Yap"
-              : mode === "signup"
-                ? "Hesap Oluştur"
-                : "Şifremi Unuttum"}
-          </Txt>
-          <Txt muted size={12}>
-            {mode === "login"
-              ? "Randevuların, işletmen ve stilin tek yerde."
-              : mode === "signup"
-                ? "Tek hesapla randevularını ve işini yönet."
-                : "Hesabına dönebilmen için bir bağlantı gönderelim."}
-          </Txt>
+    <View style={{ flex: 1 }}>
+      {mode === "login" && (
+        <>
+          <Image
+            testID="login-background"
+            accessible={false}
+            source={require("../../assets/art/neon-salon.webp")}
+            resizeMode="cover"
+            style={[StyleSheet.absoluteFill, { width: "100%", height: "100%" }]}
+          />
+          <LinearGradient
+            pointerEvents="none"
+            colors={["#040b1835", "#040b1875", "#040b18e8"]}
+            style={StyleSheet.absoluteFill}
+          />
+        </>
+      )}
+      <Page key={mode} contentStyle={{ gap: 16 }}>
+        <View
+          style={{
+            alignItems: "center",
+            paddingTop: mode === "login" ? 70 : 40,
+            paddingBottom: 14,
+          }}
+        >
+          <Brand large login={mode === "login"} />
         </View>
-        {mode !== "reset" && (
-          <SegmentedControl
-            label="Giriş veya hesap oluştur"
-            items={[
-              { value: "login", label: "Giriş" },
-              { value: "signup", label: "Hesap Oluştur" },
-            ]}
-            value={mode}
-            onChange={(value) => switchMode(value as typeof mode)}
-            disabled={pending}
-          />
-        )}
-        {mode === "signup" && (
-          <Field
-            label="Adınız"
-            value={name}
-            onChange={setName}
-            icon="person-outline"
-            placeholder="Size nasıl hitap edelim?"
-          />
-        )}
-        <Field
-          label="E-posta"
-          value={email}
-          onChange={setEmail}
-          placeholder="ornek@eposta.com"
-          email
-          icon="mail-outline"
-          onSubmit={mode === "reset" ? submit : undefined}
-        />
-        {mode !== "reset" && (
-          <Field
-            label="Şifre"
-            value={password}
-            onChange={setPassword}
-            secure
-            icon="lock-closed-outline"
-            placeholder="En az 8 karakter"
-            onSubmit={submit}
-          />
-        )}
-        {error && (
-          <View
-            accessibilityLiveRegion="polite"
-            style={{
-              borderLeftWidth: 3,
-              borderLeftColor: colors.red,
-              paddingLeft: 12,
-            }}
-          >
-            <Txt tone="red" size={12}>
-              {error}
-            </Txt>
-          </View>
-        )}
-        {notice && (
-          <View accessibilityLiveRegion="polite">
-            <Txt tone="green" size={12}>
-              {notice}
-            </Txt>
-          </View>
-        )}
-        <Btn
-          title={
-            pending
-              ? "Lütfen bekleyin…"
-              : mode === "login"
+        <Card quiet style={{ gap: 18 }}>
+          <View style={{ gap: 5 }}>
+            <Txt size={25} bold style={{ letterSpacing: -0.8 }}>
+              {mode === "login"
                 ? "Giriş Yap"
                 : mode === "signup"
                   ? "Hesap Oluştur"
-                  : "Sıfırlama Bağlantısı Gönder"
-          }
-          onPress={submit}
-          icon="arrow-forward-outline"
-          disabled={pending}
-        />
-        {mode === "login" ? (
-          <Btn
-            title="Şifremi unuttum"
-            outline
-            tone="cyan"
-            small
-            onPress={() => switchMode("reset")}
-            disabled={pending}
-          />
-        ) : (
-          <Btn
-            title="Girişe dön"
-            outline
-            tone="cyan"
-            small
-            onPress={() => switchMode("login")}
-            disabled={pending}
-          />
-        )}
-      </Card>
-      <Btn
-        title="Karşılama Ekranı"
-        outline
-        small
-        tone="purple"
-        icon="chevron-back"
-        onPress={() => switchMode("welcome")}
-      />
-      <Btn
-        title="Misafir Olarak Keşfet"
-        outline
-        tone="gold"
-        icon="compass-outline"
-        onPress={() => nav("discover")}
-      />
-      <RowView style={{ justifyContent: "center", gap: 16 }}>
-        {[
-          ["calendar-outline", "Randevu"],
-          ["cut-outline", "Usta"],
-          ["storefront-outline", "İşletme"],
-        ].map(([icon, label]) => (
-          <RowView key={label} style={{ gap: 5 }}>
-            <Icon name={icon} tone="cyan" size={15} />
-            <Txt muted size={10}>
-              {label}
+                  : "Şifremi Unuttum"}
             </Txt>
-          </RowView>
-        ))}
-      </RowView>
-      <Txt muted size={10} style={{ textAlign: "center" }}>
-        DraBornStyle · v{appVersion}
-      </Txt>
-    </Page>
+            <Txt muted size={12}>
+              {mode === "login"
+                ? "Randevuların, işletmen ve stilin tek yerde."
+                : mode === "signup"
+                  ? "Tek hesapla randevularını ve işini yönet."
+                  : "Hesabına dönebilmen için bir bağlantı gönderelim."}
+            </Txt>
+          </View>
+          {mode !== "reset" && (
+            <SegmentedControl
+              label="Giriş veya hesap oluştur"
+              items={[
+                { value: "login", label: "Giriş" },
+                { value: "signup", label: "Hesap Oluştur" },
+              ]}
+              value={mode}
+              onChange={(value) => switchMode(value as typeof mode)}
+              disabled={pending}
+            />
+          )}
+          {mode === "signup" && (
+            <Field
+              label="Adınız"
+              value={name}
+              onChange={setName}
+              icon="person-outline"
+              placeholder="Size nasıl hitap edelim?"
+            />
+          )}
+          <Field
+            label="E-posta"
+            value={email}
+            onChange={setEmail}
+            placeholder="ornek@eposta.com"
+            email
+            icon="mail-outline"
+            onSubmit={mode === "reset" ? submit : undefined}
+          />
+          {mode !== "reset" && (
+            <Field
+              label="Şifre"
+              value={password}
+              onChange={setPassword}
+              secure
+              icon="lock-closed-outline"
+              placeholder="En az 8 karakter"
+              onSubmit={submit}
+            />
+          )}
+          {error && (
+            <View
+              accessibilityLiveRegion="polite"
+              style={{
+                borderLeftWidth: 3,
+                borderLeftColor: colors.red,
+                paddingLeft: 12,
+              }}
+            >
+              <Txt tone="red" size={12}>
+                {error}
+              </Txt>
+            </View>
+          )}
+          {notice && (
+            <View accessibilityLiveRegion="polite">
+              <Txt tone="green" size={12}>
+                {notice}
+              </Txt>
+            </View>
+          )}
+          <Btn
+            title={
+              pending
+                ? "Lütfen bekleyin…"
+                : mode === "login"
+                  ? "Giriş Yap"
+                  : mode === "signup"
+                    ? "Hesap Oluştur"
+                    : "Sıfırlama Bağlantısı Gönder"
+            }
+            onPress={submit}
+            icon="arrow-forward-outline"
+            disabled={pending}
+          />
+          {mode === "login" ? (
+            <Btn
+              title="Şifremi unuttum"
+              outline
+              tone="cyan"
+              small
+              onPress={() => switchMode("reset")}
+              disabled={pending}
+            />
+          ) : (
+            <Btn
+              title="Girişe dön"
+              outline
+              tone="cyan"
+              small
+              onPress={() => switchMode("login")}
+              disabled={pending}
+            />
+          )}
+        </Card>
+        <Btn
+          title="Karşılama Ekranı"
+          outline
+          small
+          tone="purple"
+          icon="chevron-back"
+          onPress={() => switchMode("welcome")}
+        />
+        <Btn
+          title="Misafir Olarak Keşfet"
+          outline
+          tone="gold"
+          icon="compass-outline"
+          onPress={() => nav("discover")}
+        />
+        <RowView style={{ justifyContent: "center", gap: 16 }}>
+          {[
+            ["calendar-outline", "Randevu"],
+            ["cut-outline", "Usta"],
+            ["storefront-outline", "İşletme"],
+          ].map(([icon, label]) => (
+            <RowView key={label} style={{ gap: 5 }}>
+              <Icon name={icon} tone="cyan" size={15} />
+              <Txt muted size={10}>
+                {label}
+              </Txt>
+            </RowView>
+          ))}
+        </RowView>
+        <Txt muted size={10} style={{ textAlign: "center" }}>
+          DraBornStyle · v{appVersion}
+        </Txt>
+      </Page>
+    </View>
   );
 }
 

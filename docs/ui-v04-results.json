@@ -1,7 +1,7 @@
 {
   "version": "0.4.0",
   "versionCode": 1,
-  "date": "2026-10-11T18:45:31.984Z",
+  "date": "2026-10-12T09:13:17.161Z",
   "passed": [
     "Login logo, adjacent equal tabs and no horizontal overflow at 320 px",
     "Login logo, adjacent equal tabs and no horizontal overflow at 360 px",
@@ -23,7 +23,11 @@
     "Notification action gives the web fallback without a native module error",
     "Reported payment card renders with a pending claim fixture; no payment action invoked",
     "Work area switches to customer and remains selected",
-    "Logout returns to login and clears the simulated account session"
+    "Logout returns to login and clears the simulated account session",
+    "Restored salon backdrop is visible only on login; signup, welcome and profile stay plain",
+    "Normal account sees organic directory and no Admin demo controls",
+    "Booking automatically opens location consent; Later dismisses it and manual action reopens it",
+    "Location is sent only after approval using simulated browser geolocation"
   ],
   "errors": [],
   "blockedWrites": [],

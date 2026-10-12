@@ -5,9 +5,11 @@ import { colors } from "../theme";
 export function Brand({
   large = false,
   compact = false,
+  login = false,
 }: {
   large?: boolean;
   compact?: boolean;
+  login?: boolean;
 }) {
   const { width } = useWindowDimensions();
   const narrow = compact && width < 360;
@@ -28,8 +30,28 @@ export function Brand({
           source={require("../../assets/art/neon-logo.webp")}
           resizeMode="contain"
           style={{
-            width: large ? 82 : narrow ? 22 : medium ? 26 : compact ? 28 : 35,
-            height: large ? 88 : narrow ? 27 : medium ? 30 : compact ? 32 : 41,
+            width: large
+              ? login
+                ? 120
+                : 82
+              : narrow
+                ? 22
+                : medium
+                  ? 26
+                  : compact
+                    ? 28
+                    : 35,
+            height: large
+              ? login
+                ? 120
+                : 88
+              : narrow
+                ? 27
+                : medium
+                  ? 30
+                  : compact
+                    ? 32
+                    : 41,
           }}
         />
         <Text
@@ -50,6 +72,7 @@ export function Brand({
             color: "#fff",
             textShadowColor: "#000",
             textShadowRadius: 12,
+            ...(large && login ? { marginTop: -18, lineHeight: 68 } : {}),
           }}
         >
           DraBorn

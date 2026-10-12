@@ -7,12 +7,20 @@ export function useData<T = any>(
   filters: Row = {},
   enabled = true,
 ) {
-  const { revision } = useApp();
+  const { revision, session, boot } = useApp();
+  const [dataIdentity, setDataIdentity] = useState("");
   const [data, setData] = useState<T | null>(null),
     [loading, setLoading] = useState(true),
     [error, setError] = useState<string | null>(null),
     [retry, setRetry] = useState(0);
   const serialized = JSON.stringify(filters);
+  const identity = JSON.stringify([
+    resource,
+    serialized,
+    session?.user.id,
+    boot?.is_admin,
+    boot?.demo_batches.map((batch) => batch.id),
+  ]);
   useEffect(() => {
     let active = true;
     if (!enabled) {
@@ -23,7 +31,10 @@ export function useData<T = any>(
     setError(null);
     query<T>(resource, JSON.parse(serialized))
       .then((d) => {
-        if (active) setData(d);
+        if (active) {
+          setData(d);
+          setDataIdentity(identity);
+        }
       })
       .catch((e) => {
         if (active) setError(e.message);
@@ -34,9 +45,9 @@ export function useData<T = any>(
     return () => {
       active = false;
     };
-  }, [resource, serialized, enabled, revision, retry]);
+  }, [identity, enabled, revision, retry]);
   return {
-    data,
+    data: enabled && dataIdentity === identity ? data : null,
     loading,
     error,
     reload: useCallback(() => setRetry((v) => v + 1), []),

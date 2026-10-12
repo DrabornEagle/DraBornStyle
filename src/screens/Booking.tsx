@@ -140,7 +140,8 @@ export function BookingScreen() {
       },
       p.appointment ? "Randevunuz değiştirildi." : "Randevunuz oluşturuldu.",
     );
-    if (result) app.nav("appointment", { id: result.id });
+    if (result)
+      app.nav("appointment", { id: result.id, locationPrompt: !p.appointment });
     else app.refresh();
   }
   const pickedStaff = b?.staff.find((s) => s.id === staff),

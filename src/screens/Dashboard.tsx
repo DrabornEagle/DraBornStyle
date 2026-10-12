@@ -830,22 +830,25 @@ export function DashboardScreen() {
         <Card tone="gold">
           <Section title="Platform Araçları" icon="settings-outline" />
           <Txt muted size={12}>
-            Demo verileriyle müşteri, usta ve işletme akışlarını deneyebilirsin.
+            Demo modu yalnızca Admin hesabında çalışır. Normal kullanıcılar
+            gerçek işletmeleri ve kendi kayıtlarını görür.
           </Txt>
           <Btn
             title={
               app.boot?.demo_batches.length
-                ? "Demo Verileri Kaldır"
-                : "Demo Verileri Yükle"
+                ? "Demo Modunu Kapat"
+                : "Demo Modunu Aç"
             }
             tone={app.boot?.demo_batches.length ? "red" : "pink"}
             onPress={() =>
               app.run(
-                app.boot?.demo_batches.length ? "demo_remove" : "demo_load",
+                app.boot?.demo_batches.length
+                  ? "dkd_demo_disable"
+                  : "demo_load",
                 {},
                 app.boot?.demo_batches.length
-                  ? "Demo verileri kaldırıldı."
-                  : "Demo verileri yüklendi.",
+                  ? "Demo modu kapatıldı. Gerçek veriler gösteriliyor."
+                  : "Admin demo modu açıldı.",
               )
             }
           />

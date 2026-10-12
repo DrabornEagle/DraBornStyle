@@ -1,10 +1,20 @@
 # DraBornStyle v0.4.0 doğrulama raporu
 
-11 Ekim 2026 · Mevcut Supabase projesi: `xpdiwyxnnrmyvpcqwuyb` (DraBorn-Park-Garage-Series).
+12 Ekim 2026 · Mevcut Supabase projesi: `xpdiwyxnnrmyvpcqwuyb` (DraBorn-Park-Garage-Series).
 
 Bu rapor gerçek veritabanı, HTTP API, web arayüzü ve paket üretimini birbirinden ayırır. Web ekran testleri fiziksel Android / Expo Go testi değildir. Demo içindeki finans verileri açıkça örnek olarak etiketlenir; gerçek ödeme tahsilatı yapılmadı.
 
-## v0.4.0 / version code 1 · Sadeleştirme
+## 12 Ekim 2026 · Login, otomatik konum onayı ve organik veriler
+
+- Sürüm `0.4.0`, Android version code `1` olarak kaldı. Login'de eski salon arka planı, aşağı alınmış marka yazısı ve büyütülmüş logo; diğer ekranlarda sade zemin kullanılır.
+- TypeScript, 19 regresyon testi, 25 yerel Chromium kontrolü, Android Hermes/Web paketleri ve çevrimdışı Expo paket kontrolü geçti. Konum onayı randevu oluşturulunca açılır; Daha Sonra/manuel tekrar açma ve simüle tarayıcı GPS'iyle onaydan sonra paylaşım doğrulandı. Fiziksel Android GPS/izin testi yapılmadı.
+- Supabase migration `20261012085802_db_style_dkd_demo_visibility` uygulandı. 37 kısıtlayıcı erişim politikası eklendi. Normal/anon hesaplar demo işletmeleri ve bağlı kayıtları göremez; Admin yalnızca demo modunu açınca görür. Doğrudan fiyat, saat ve randevu RPC'leri de aynı görünürlük sınırını uygular. Demo varsayılan kapalı; önceden kalan demo kayıtları silinmedi.
+- `tests/demo-isolation.sql` gerçek PostgreSQL üzerinde geçti: yalnızca sentetik Auth kimlikleri ve uygulama fixture'ları, Admin aç/kapat, normal kullanıcı/ziyaretçi sorguları, doğrudan RPC engelleri ve gerçek işletme için fiyat/randevu akışı. Sonunda bütün fixture değişiklikleri ROLLBACK ile geri alındı; özel bir kullanıcının hesabına giriş yapılmadı.
+- Son durum: 0 etkin demo grubu, 0 gerçek işletme. Kullanıcı gerçek işletmesini eklediğinde normal keşif ekranında listelenebilir. Test kayıtları bırakılmadı.
+- Güvenlik danışmanı taramasında `db_style` kapsamına ait bulgu yok. Ortak projenin diğer uygulamalarına ait nesneler değiştirilmedi.
+- Kanıt: `docs/ui-v04-results.json`, `docs/screens/v04-*.png`, `tests/location-consent.test.mjs` ve `tests/demo-isolation.sql`.
+
+## 11 Ekim 2026 · v0.4.0 / version code 1 · Sadeleştirme
 
 - Expo yapılandırması `version: 0.4.0`, `android.versionCode: 1`; paket ve kilit dosyası sürümleri de `0.4.0`.
 - TypeScript, 16 birim/regresyon testi, yerel çevrimdışı Expo bağımlılık kontrolü, Android Hermes ve Web paket üretimi geçti. Çevrimdışı bağımlılık kontrolü uzak manifest doğrulaması değildir; CI çevrimiçi kontrol çalıştırır.

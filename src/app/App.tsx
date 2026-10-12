@@ -7,10 +7,8 @@ import {
   ActivityIndicator,
   BackHandler,
   StyleSheet,
-  Image,
   Modal,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { useFonts } from "expo-font";
 import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -194,23 +192,6 @@ function Shell() {
     >
       <StatusBar barStyle="light-content" />
       <View style={styles.frame}>
-        <Image
-          source={require("../../assets/art/miami-calm-v04.webp")}
-          resizeMode="cover"
-          accessible={false}
-          style={{
-            position: "absolute",
-            top: 0,
-            width: "100%",
-            height: 320,
-            opacity: 0.7,
-          }}
-        />
-        <LinearGradient
-          colors={["#040b1830", "#040b18b0", colors.bg]}
-          style={{ position: "absolute", top: 0, width: "100%", height: 340 }}
-          pointerEvents="none"
-        />
         {!authView && (
           <View style={styles.header}>
             <RowView style={{ gap: 6, flexShrink: 1 }}>
@@ -274,7 +255,7 @@ function Shell() {
             </RowView>
           </View>
         )}
-        {app.boot?.demo_batches.length ? (
+        {app.boot?.is_admin && app.boot.demo_batches.length ? (
           <View
             style={{
               backgroundColor: "#362230",

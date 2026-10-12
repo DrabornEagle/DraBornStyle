@@ -744,7 +744,7 @@ export function Badge({ state }: { state: string }) {
 export function Avatar({
   url,
   size = 46,
-  fallback = "ahmet",
+  fallback,
 }: {
   url?: string;
   size?: number;
@@ -755,16 +755,34 @@ export function Avatar({
       colors={[colors.cyan, colors.pink]}
       style={{ width: size, height: size, borderRadius: size / 2, padding: 2 }}
     >
-      <Image
-        source={imageSource(url, fallback)}
-        style={{
-          width: "100%",
-          height: "100%",
-          borderRadius: size / 2,
-          borderWidth: 2,
-          borderColor: colors.bg,
-        }}
-      />
+      {url || fallback ? (
+        <Image
+          source={imageSource(url, fallback)}
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius: size / 2,
+            borderWidth: 2,
+            borderColor: colors.bg,
+          }}
+        />
+      ) : (
+        <View
+          style={{
+            flex: 1,
+            borderRadius: size / 2,
+            backgroundColor: colors.bg,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Icon
+            name="person-outline"
+            tone="purple"
+            size={Math.round(size * 0.48)}
+          />
+        </View>
+      )}
     </LinearGradient>
   );
 }

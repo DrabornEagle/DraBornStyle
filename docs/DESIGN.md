@@ -1,6 +1,13 @@
 # DraBornStyle v0.4.0 · Okunaklı giriş ve sade profil
 
-## v0.4.0 / sürüm kodu 1
+## 12 Ekim 2026 · Login ve gerçek veri düzenlemesi
+
+- `neon-salon.webp` geri getirildi ve yalnız Login modunda tam ekran kullanılır. Karşılama, kayıt, şifre sıfırlama ve uygulama ekranları düz koyu zemindir; işletmenin kendi kapak fotoğrafı içerik olarak korunur.
+- Login marka üst boşluğu 70 piksel; logo 120 × 120 piksel. Marka yazısının üst boşluğu azaltılarak logo hemen yazının üstüne yerleştirildi.
+- Yeni müşteri randevusu, detay verisi geldikten sonra konum onay penceresini bir kez otomatik açar. Manuel düğme yeniden açabilir. Gelecekteki/bitmiş/iptal randevu ve işletmenin eksik konumu açıklanır; açık onay verilmeden GPS veya paylaşım başlatılmaz.
+- Normal hesaplar ve ziyaretçiler yalnız gerçek kayıtları görür. Admin demo modu varsayılan kapalıdır ve panelden açılıp kapanır. Fotoğrafı olmayan kayıtlar kişi ikonu kullanır.
+
+## 11 Ekim 2026 · v0.4.0 / sürüm kodu 1
 
 - Girişte marka üst boşluğu 40 piksele çıkarıldı. Karşılama/giriş/kayıt/sıfırlama arasında geçişte sayfa yeniden başlar; önceki kaydırma konumu logoyu üstten kesmez.
 - Giriş ve Hesap Oluştur, aynı koyu zemin üzerinde eşit genişlikli ve 4 piksel aralıklı seçimlerdir. Karşılama ekranının ana iki düğmesi de tek grup içinde 8 piksel aralıkla durur.
