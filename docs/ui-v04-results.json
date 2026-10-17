@@ -1,7 +1,7 @@
 {
   "version": "0.4.0",
   "versionCode": 1,
-  "date": "2026-10-12T09:13:17.161Z",
+  "date": "2026-10-17T10:08:54.624Z",
   "passed": [
     "Login logo, adjacent equal tabs and no horizontal overflow at 320 px",
     "Login logo, adjacent equal tabs and no horizontal overflow at 360 px",
@@ -27,10 +27,13 @@
     "Restored salon backdrop is visible only on login; signup, welcome and profile stay plain",
     "Normal account sees organic directory and no Admin demo controls",
     "Booking automatically opens location consent; Later dismisses it and manual action reopens it",
-    "Location is sent only after approval using simulated browser geolocation"
+    "Location is sent only after approval using simulated browser geolocation",
+    "Interactive web map loads inside the Android-sized map card",
+    "A write in one browser updates the other browser's open appointment via a simulated Supabase Realtime message, without navigation or reload"
   ],
   "errors": [],
   "blockedWrites": [],
   "scope": "Local exported web UI with simulated account and API fixtures; all external HTTP and WebSocket requests intercepted. No live account access, no physical Android test.",
-  "liveLogin": "Not verified; automatic approval review rejected real-account access because task authorization was not established."
+  "liveLogin": "Fixture accounts only; no private account access or live writes.",
+  "basePath": "/DraBornStyle"
 }

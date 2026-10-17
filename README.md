@@ -12,7 +12,7 @@ Keşfet, yönetici/işletme/usta panelleri, aylık randevu takvimi, çalışan z
 
 ## Çalıştırma
 
-Node.js 24 ve npm kullanın. Android cihazdaki **Expo Go 58.0.2**, Expo SDK 58 ile eşleştirilmiştir. Exact sürümler `package.json` ve `package-lock.json` içindedir. Resmî sürüm kontrolü `docs/expo-compatibility.json` dosyasındadır.
+Node.js 24 ve npm kullanın. Android cihazdaki **Expo Go 58.0.4**, Expo SDK 58 ile eşleştirilmiştir. Exact sürümler `package.json` ve `package-lock.json` içindedir. Resmî sürüm kontrolü `docs/expo-compatibility.json` dosyasındadır.
 
 ```bash
 git clone https://github.com/DrabornEagle/DraBornStyle.git
@@ -43,7 +43,7 @@ npm run start:termux
 
 `start:termux`, SDK 58'in headless seçeneğiyle Android/Termux için bulunmayan masaüstü DevTools kurulumunu atlar; bağımlılık ve mimari kontrolleri açık kalır. Metro geliştirme modu ve uygulama hata bildirimleri çalışmaya devam eder. IPv4 önceliği, aynı telefon bağlantısını `127.0.0.1` adresinde tutar.
 
-Termux'u açık bırakın. Expo Go **58.0.2** içinden `exp://127.0.0.1:8081` adresini açın; aynı telefon için QR okutmanız gerekmez. Terminalde sunucu hazır olmadan Expo Go'yu açmayın. Daha sonra yeniden başlatmak için:
+Termux'u açık bırakın. Expo Go **58.0.4** içinden `exp://127.0.0.1:8081` adresini açın; aynı telefon için QR okutmanız gerekmez. Terminalde sunucu hazır olmadan Expo Go'yu açmayın. Daha sonra yeniden başlatmak için:
 
 ```bash
 cd "$HOME/DraBornStyle-v0.4.0/DraBornStyle-main"
