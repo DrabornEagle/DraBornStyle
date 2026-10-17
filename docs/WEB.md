@@ -19,7 +19,7 @@ Bu klasör aynı React Native / Expo kaynaklarından üretilir. Ekranlar, marka 
 
 Mobilde Android düzeni, masaüstünde aynı ekranların en fazla 1120 piksel genişliği kullanılır. Tarayıcıda harita Leaflet/OpenStreetMap, yol tarifi Google Maps ile açılır; işletme ve izinle paylaşılan müşteri konumları birlikte gösterilir. Fotoğraf ve dekontlar tarayıcının dosya seçicisiyle yüklenir. HTTPS ve konum izni gerekir. Uygulama içi bildirimler ortaktır. Kapalı sekmede Android arka plan konumu veya Android push servisi çalışmaz.
 
-E-posta doğrulama ve şifre sıfırlama bağlantıları webde `/DraBornStyle/` ve `/DraBornStyle/reset/` adreslerine döner. Supabase Auth URL izin listesinde bu üretim adresleri (veya `https://www.draborneagle.com/**`) bulunmalıdır. Mevcut Android `drabornstyle://` bağlantıları korunur. Gizli / service-role anahtarı istemciye konmaz.
+E-posta doğrulama ve şifre sıfırlama bağlantıları webde `/DraBornStyle/` ve `/DraBornStyle/reset/` adreslerine döner. Ortak kaynak reposundaki mevcut deployment CI, `scripts/dkd-configure-web-auth.mjs` ile yalnızca bu iki üretim adresini Supabase Auth izin listesine ekler ve yeniden okuyarak doğrular. Önceden izinli adresler, Android bağlantıları ve ortak projenin varsayılan Site URL ayarı korunur. Deployment erişim anahtarı yalnızca mevcut CI secret'ından okunur; Auth config içeriği veya gizli anahtarlar günlüğe ya da web dosyalarına yazılmaz.
 
 ## Yeniden üretme
 
