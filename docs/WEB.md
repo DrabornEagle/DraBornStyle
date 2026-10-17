@@ -21,6 +21,10 @@ Mobilde Android düzeni, masaüstünde aynı ekranların en fazla 1120 piksel ge
 
 E-posta doğrulama ve şifre sıfırlama bağlantıları webde `/DraBornStyle/` ve `/DraBornStyle/reset/` adreslerine döner. Supabase Authentication → URL Configuration → Redirect URLs listesinde `https://www.draborneagle.com/DraBornStyle/` ve `https://www.draborneagle.com/DraBornStyle/reset/` adresleri izinli olmalıdır. Önceden izinli adresler, Android bağlantıları ve ortak projenin Site URL ayarı korunmalıdır.
 
+**17 Ekim 2026 doğrulaması:** Her iki DraBornStyle üretim adresi Supabase panelinde kaydedildi. Sayfa yeniden yüklenerek sunucuda kalıcı oldukları doğrulandı. Var olan DraBornSeries yönlendirmeleri ve ortak projenin Site URL ayarı korundu. Bu yayın için bekleyen Auth URL yapılandırması kalmadı. E-posta gönderimi ve gerçek kullanıcı hesabıyla şifre değiştirme bu kontrolde yapılmadı.
+
+Şifre sıfırlama sayfası, oturum yazı tipleri yüklenmeden önce açılmış olsa da `/reset/` dönüş yolunu tanır. Sayfa yenilendiğinde şifre formu korunur; başarılı değişiklikten sonra dönüş yolu temizlenir.
+
 Mevcut veritabanı deployment anahtarı Auth ayar API'sinde HTTP 403 döndürdüğünden, bu ayar ayrı yönetilir. Auth ayar yetkisi olan bir CI anahtarı yapılandırıldığında `DKD_STYLE_CONFIGURE_WEB_AUTH=true` repository variable'ı, `scripts/dkd-configure-web-auth.mjs` yardımcısını etkinleştirir. Yardımcı sadece bu iki adresi ekler ve yeniden okuyarak doğrular; mevcut adresleri silmez, Site URL'yi değiştirmez, Auth config içeriği veya gizli anahtarları günlüğe ya da web dosyalarına yazmaz. Anahtarları sohbet veya istemci kodunda paylaşmayın.
 
 ## Yeniden üretme

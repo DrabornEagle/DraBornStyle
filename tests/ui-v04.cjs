@@ -663,6 +663,36 @@ const bootstrap = {
     );
     await secondDevice.close();
     await organic.close();
+    if (base) {
+      // Simulate an already-consumed Auth callback: the session is restored,
+      // but PASSWORD_RECOVERY fired before the UI subscribed. No live account.
+      await context.addInitScript((session) => {
+        localStorage.setItem("db_style_auth_v01", JSON.stringify(session));
+      }, session);
+      const recovery = await context.newPage();
+      await recovery.routeWebSocket("**/*", (ws) => ws.close());
+      recovery.on("pageerror", (e) => errors.push(e.message));
+      await recovery.goto(localUrl + base + "/reset/");
+      const password = recovery.getByLabel("Yeni şifre (en az 8 karakter)", {
+        exact: true,
+      });
+      await password.waitFor();
+      await recovery.reload();
+      await password.fill("fixture-new-password");
+      await recovery
+        .getByRole("button", { name: "Şifremi Değiştir", exact: true })
+        .click();
+      await recovery.waitForURL(localUrl + base + "/");
+      await recovery.reload();
+      await recovery
+        .getByRole("button", { name: "Profil", exact: true })
+        .waitFor();
+      if (await password.count()) throw Error("Recovery reopens after completion");
+      passed.push(
+        "Recovery opens after a consumed Auth callback and reload; a simulated password update clears the callback URL and stays completed after reload",
+      );
+      await recovery.close();
+    }
     if (errors.length) throw Error(errors.join("; "));
     const report = {
       version: "0.4.0",

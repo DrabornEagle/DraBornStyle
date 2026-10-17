@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
 import { authRedirect } from "../services/authRedirect";
-import { View, Image, StyleSheet } from "react-native";
+import { View, Image, StyleSheet, Platform } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Brand } from "../components/Brand";
 import { supabase } from "../lib/supabase";
@@ -393,6 +393,8 @@ export function ResetPasswordScreen() {
     try {
       const result = await supabase.auth.updateUser({ password });
       if (result.error) throw result.error;
+      if (Platform.OS === "web" && typeof window !== "undefined")
+        window.history.replaceState(window.history.state, "", authRedirect());
       toast("Şifreniz değiştirildi.");
       nav("home");
     } catch (e) {

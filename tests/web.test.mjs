@@ -1,10 +1,28 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { webAuthRedirect } from "../src/utils/authRedirect.ts";
+import { isWebRecoveryUrl, webAuthRedirect } from "../src/utils/authRedirect.ts";
 import {
   configureWebAuth,
   redirects,
 } from "../scripts/dkd-configure-web-auth.mjs";
+
+test("Recovery survives a consumed fragment and a callback page reload", () => {
+  for (const value of [
+    "https://www.draborneagle.com/DraBornStyle/reset/",
+    "https://preview.example.test/DraBornStyle/reset",
+    "http://localhost:8081/reset/?code=fixture",
+    "https://www.draborneagle.com/DraBornStyle/#type=recovery",
+  ])
+    assert.equal(isWebRecoveryUrl(value), true, value);
+  for (const value of [
+    "https://www.draborneagle.com/DraBornStyle/",
+    "https://www.draborneagle.com/DraBornStyle/#type=signup",
+    "https://www.draborneagle.com/DraBornStyle/resetting/",
+    "drabornstyle://reset",
+    "invalid",
+  ])
+    assert.equal(isWebRecoveryUrl(value), false, value);
+});
 
 test("Auth URL deployment preserves other apps and native links, and is idempotent", async () => {
   let config = {

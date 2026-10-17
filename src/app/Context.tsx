@@ -12,6 +12,7 @@ import { Session } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
 import { query, command } from "../services/api";
 import { flushLocationRevocation } from "../services/location";
+import { isWebRecoveryUrl } from "../utils/authRedirect";
 import { Bootstrap, Route, Role, Row } from "../types";
 type AppContextType = {
   session: Session | null;
@@ -53,7 +54,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     [message, setMessage] = useState<{ text: string; error: boolean } | null>(
       null,
     );
-  const recoveryRequested = useRef(false);
+  const recoveryRequested = useRef(
+    Platform.OS === "web" &&
+      typeof window !== "undefined" &&
+      isWebRecoveryUrl(window.location.href),
+  );
   const currentUser = useRef(session?.user.id);
   currentUser.current = session?.user.id;
   const locationPrompts = useRef(new Set<string>());
