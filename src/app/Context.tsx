@@ -54,6 +54,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       null,
     );
   const recoveryRequested = useRef(false);
+  const currentUser = useRef(session?.user.id);
+  currentUser.current = session?.user.id;
   const locationPrompts = useRef(new Set<string>());
   const claimLocationPrompt = useCallback(
     (appointmentId: string) => {
@@ -148,7 +150,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     const b = await query<Bootstrap>("bootstrap");
-    setBoot(b);
+    if (currentUser.current === session.user.id) setBoot(b);
   }, [session?.user.id]);
   useEffect(() => {
     let live = true;
@@ -204,6 +206,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ? liveRoute.params?.business_id ||
         (liveRoute.name === "business" ? liveRoute.params?.id : null)
       : businessId;
+  // Catch up after a lost socket or a suspended browser tab. Profile and role
+  // tables are deliberately not public subscriptions; bootstrap applies RLS.
+  useEffect(() => {
+    if (!online || !session) return;
+    const catchUp = () => {
+      if (AppState.currentState && AppState.currentState !== "active") return;
+      refresh();
+      reloadBoot().catch(() => {});
+    };
+    const interval = setInterval(catchUp, 45000);
+    catchUp();
+    return () => clearInterval(interval);
+  }, [online, session?.user.id, refresh, reloadBoot]);
   useEffect(() => {
     if (!session) return;
     const change = () => {
@@ -290,6 +305,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         );
     }
     channel.subscribe((status) => {
+      if (status === "SUBSCRIBED") {
+        refresh();
+        reloadBoot().catch(() => {});
+      }
       if (status === "CHANNEL_ERROR" || status === "TIMED_OUT")
         toast(
           "Canlı bağlantı yeniden kuruluyor. Ekranı tekrar açarak güncel kayıtları görebilirsiniz.",
@@ -300,6 +319,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (state === "active") {
         supabase.auth.startAutoRefresh();
         refresh();
+        reloadBoot().catch(() => {});
       } else if (Platform.OS !== "web") supabase.auth.stopAutoRefresh();
     });
     return () => {
@@ -307,7 +327,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       sub.remove();
       if (timer.current) clearTimeout(timer.current);
     };
-  }, [session?.user.id, liveBusiness, role, refresh]);
+  }, [session?.user.id, liveBusiness, role, refresh, reloadBoot]);
   const nav = useCallback(
     (name: string, params?: Row) => setHistory((h) => [...h, { name, params }]),
     [],

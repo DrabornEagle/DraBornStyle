@@ -2,7 +2,11 @@ const fs = require("node:fs"),
   path = require("node:path"),
   http = require("node:http");
 const { chromium } = require("playwright");
-const root = path.resolve(__dirname, "../dist-web");
+const root = path.resolve(
+  __dirname,
+  process.env.DB_STYLE_WEB_ROOT || "../dist-web",
+);
+const base = process.env.DB_STYLE_WEB_BASE || "";
 const shots = path.resolve(__dirname, "../docs/screens");
 // Entirely local fixtures. No real credentials or account sessions are used.
 const login = { email: "tasarim@example.test", password: "fixture-only" };
@@ -46,7 +50,14 @@ const bootstrap = {
     errors = [],
     blockedWrites = [];
   const server = http.createServer((req, res) => {
-    const name = (req.url || "/").split("?")[0];
+    const urlPath = (req.url || "/").split("?")[0];
+    if (base && !urlPath.startsWith(base + "/")) {
+      res.writeHead(404);
+      res.end();
+      return;
+    }
+    let name = urlPath.slice(base.length) || "/";
+    if (name.endsWith("/")) name += "index.html";
     const file = path.join(
       root,
       name === "/" ? "index.html" : decodeURIComponent(name),
@@ -69,6 +80,7 @@ const bootstrap = {
           ".js": "application/javascript",
           ".css": "text/css",
           ".webp": "image/webp",
+          ".png": "image/png",
           ".ttf": "font/ttf",
           ".json": "application/json",
         }[path.extname(file)] || "application/octet-stream",
@@ -136,7 +148,7 @@ const bootstrap = {
     const page = await context.newPage();
     await page.routeWebSocket("**/*", (ws) => ws.close());
     page.on("pageerror", (e) => errors.push(e.message));
-    await page.goto("http://127.0.0.1:" + server.address().port);
+    await page.goto(localUrl + base + "/");
     const btn = (text) => page.getByRole("button", { name: text, exact: true });
     async function ready() {
       await page.evaluate(async () => {
@@ -424,6 +436,76 @@ const bootstrap = {
       location: null,
     };
     const organicCommands = [];
+    const sockets = new Set();
+    async function realtime(page) {
+      await page.routeWebSocket("**/*", (ws) => {
+        let channel;
+        ws.onClose(() => {
+          if (channel) sockets.delete(channel);
+        });
+        ws.onMessage((raw) => {
+          const value = JSON.parse(String(raw));
+          const array = Array.isArray(value);
+          const [join, ref, topic, event, payload] = array
+            ? value
+            : [
+                value.join_ref,
+                value.ref,
+                value.topic,
+                value.event,
+                value.payload,
+              ];
+          const send = (event, payload, reply = ref) =>
+            ws.send(
+              JSON.stringify(
+                array
+                  ? [join, reply, topic, event, payload]
+                  : { join_ref: join, ref: reply, topic, event, payload },
+              ),
+            );
+          if (event === "phx_join") {
+            const filters = (payload.config?.postgres_changes || []).map(
+              (filter, i) => ({ ...filter, id: i + 1 }),
+            );
+            channel = { filters, send };
+            sockets.add(channel);
+            send("phx_reply", {
+              status: "ok",
+              response: { postgres_changes: filters },
+            });
+          } else if (event === "phx_leave") {
+            sockets.delete(channel);
+            send("phx_reply", { status: "ok", response: {} });
+          } else if (event === "heartbeat")
+            send("phx_reply", { status: "ok", response: {} });
+        });
+      });
+    }
+    function changedAppointment() {
+      for (const channel of sockets) {
+        const ids = channel.filters
+          .filter((f) => f.table === "db_style_appointments")
+          .map((f) => f.id);
+        if (ids.length)
+          channel.send(
+            "postgres_changes",
+            {
+              ids,
+              data: {
+                schema: "db_style",
+                table: "db_style_appointments",
+                type: "UPDATE",
+                commit_timestamp: new Date().toISOString(),
+                columns: [],
+                record: appointment,
+                old_record: { id: appointment.id },
+                errors: null,
+              },
+            },
+            null,
+          );
+      }
+    }
     await organic.route("**/*", (route) => {
       const request = route.request(),
         url = request.url();
@@ -466,6 +548,10 @@ const bootstrap = {
         data = { id: appointment.id };
         if (command.dkd_action === "location_update")
           appointment.location = { ...command.dkd_payload };
+        if (command.dkd_action === "arrived") {
+          appointment.status = "arrived";
+          changedAppointment();
+        }
       } else return route.abort();
       return route.fulfill({
         status: 200,
@@ -474,9 +560,9 @@ const bootstrap = {
       });
     });
     const customer = await organic.newPage();
-    await customer.routeWebSocket("**/*", (ws) => ws.close());
+    await realtime(customer);
     customer.on("pageerror", (e) => errors.push(e.message));
-    await customer.goto(localUrl);
+    await customer.goto(localUrl + base + "/");
     const customerButton = (title) =>
       customer.getByRole("button", { name: title, exact: true });
     await customerButton("Giriş Yap").click();
@@ -548,6 +634,34 @@ const bootstrap = {
     passed.push(
       "Location is sent only after approval using simulated browser geolocation",
     );
+    await customer
+      .getByRole("region", {
+        name: "İşletme ve paylaşılan müşteri konumu",
+        exact: true,
+      })
+      .locator(".leaflet-control-zoom-in")
+      .waitFor();
+    passed.push("Interactive web map loads inside the Android-sized map card");
+    const secondDevice = await organic.newPage();
+    await realtime(secondDevice);
+    secondDevice.on("pageerror", (e) => errors.push(e.message));
+    await secondDevice.goto(localUrl + base + "/");
+    await secondDevice.getByRole("button", { name: "Hemen Randevu Al", exact: true }).first().waitFor();
+    await secondDevice
+      .getByRole("button", { name: "Randevular", exact: true })
+      .click();
+    await secondDevice
+      .getByRole("button", { name: "Randevu Detayları", exact: true })
+      .click();
+    await secondDevice.getByText("Onaylandı", { exact: true }).waitFor();
+    await customerButton("İşletmeye Geldim").click();
+    await secondDevice
+      .getByText("Müşteri geldi", { exact: true })
+      .waitFor({ timeout: 8000 });
+    passed.push(
+      "A write in one browser updates the other browser's open appointment via a simulated Supabase Realtime message, without navigation or reload",
+    );
+    await secondDevice.close();
     await organic.close();
     if (errors.length) throw Error(errors.join("; "));
     const report = {
@@ -560,7 +674,8 @@ const bootstrap = {
       scope:
         "Local exported web UI with simulated account and API fixtures; all external HTTP and WebSocket requests intercepted. No live account access, no physical Android test.",
       liveLogin:
-        "Not verified; automatic approval review rejected real-account access because task authorization was not established.",
+        "Fixture accounts only; no private account access or live writes.",
+      basePath: base,
     };
     fs.writeFileSync(
       path.resolve(__dirname, "../docs/ui-v04-results.json"),

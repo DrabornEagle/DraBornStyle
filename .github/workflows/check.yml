@@ -21,6 +21,7 @@ jobs:
       - run: npx expo install --check
       - run: npm run export:android
       - run: npm run export:web
+      - run: npm run export:site
   migrations:
     if: github.event_name != 'pull_request'
     needs: validate

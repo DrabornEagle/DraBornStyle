@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import * as AppLinking from "expo-linking";
+import { authRedirect } from "../services/authRedirect";
 import { View, Image, StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { Brand } from "../components/Brand";
@@ -60,11 +60,12 @@ export function AuthScreen() {
               password,
               options: {
                 data: { display_name: name.trim() || address.split("@")[0] },
+                emailRedirectTo: authRedirect(),
               },
             })
           : mode === "reset"
             ? await supabase.auth.resetPasswordForEmail(address, {
-                redirectTo: AppLinking.createURL("reset"),
+                redirectTo: authRedirect(true),
               })
             : await supabase.auth.signInWithPassword({
                 email: address,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Modal, ScrollView } from "react-native";
+import { View, Modal, ScrollView, Platform } from "react-native";
 import { useApp } from "../app/Context";
 import { useData } from "../hooks/useData";
 import { Row } from "../types";
@@ -298,7 +298,7 @@ export function AppointmentScreen() {
                         }
                       }}
                     />
-                    {sharing && (
+                    {sharing && Platform.OS !== "web" && (
                       <Btn
                         title="Arka plan paylaşımını etkinleştir"
                         small

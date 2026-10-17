@@ -13,6 +13,7 @@
     "test:ui:v04": "npm run export:web && node tests/ui-v04.cjs",
     "export:android": "expo export --platform android --output-dir dist-android",
     "export:web": "expo export --platform web --output-dir dist-web",
+    "export:site": "node scripts/dkd-export-site.mjs",
     "check": "npm run typecheck && npm test && expo install --check"
   },
   "dependencies": {
@@ -35,6 +36,7 @@
     "expo-notifications": "58.1.2",
     "expo-secure-store": "58.0.2",
     "expo-task-manager": "58.0.11",
+    "leaflet": "1.9.4",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-native": "0.88.0-rc.4",
@@ -44,6 +46,7 @@
     "react-native-web": "0.21.4"
   },
   "devDependencies": {
+    "@types/leaflet": "1.9.21",
     "@types/react": "19.3.0",
     "playwright": "1.64.0",
     "prettier": "3.8.3",
