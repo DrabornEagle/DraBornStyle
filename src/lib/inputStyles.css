@@ -1,0 +1,26 @@
+[data-testid="field-control"] {
+  --db-style-field-fill: #0b1225;
+}
+
+[data-testid="field-control"]:focus-within {
+  --db-style-field-fill: #17132e;
+}
+
+/* Field's surrounding control provides the visible pink keyboard focus ring. */
+[data-testid="field-control"] [data-testid="text-field"],
+[data-testid="field-control"] [data-testid="text-field"]:focus,
+[data-testid="field-control"] [data-testid="text-field"]:focus-visible {
+  outline: none;
+  border: 0;
+  background-color: transparent;
+  box-shadow: none;
+  caret-color: #fff;
+}
+
+/* Keep saved email/password suggestions without Chrome's bright autofill box. */
+[data-testid="field-control"]
+  [data-testid="text-field"]:is(:-webkit-autofill, :autofill) {
+  -webkit-text-fill-color: #fff;
+  -webkit-box-shadow: 0 0 0 1000px var(--db-style-field-fill) inset;
+  box-shadow: 0 0 0 1000px var(--db-style-field-fill) inset;
+}

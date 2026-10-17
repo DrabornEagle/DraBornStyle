@@ -133,7 +133,18 @@ const bootstrap = {
           };
         else if (resource === "requests")
           data = { extra: [], waitlists: [], queue: [] };
-        else if (resource === "stats" || resource === "business") data = null;
+        else if (resource === "stats")
+          data = {
+            business_count: 0,
+            staff_count: 0,
+            completed: 0,
+            fee_cents: 0,
+            collected_cents: 0,
+            service_cents: 0,
+            businesses: [],
+            daily: [],
+          };
+        else if (resource === "business") data = null;
         else data = [];
       } else if (url.includes("/rest/v1/rpc/db_style_command")) {
         blockedWrites.push(request.postDataJSON().dkd_action);
@@ -183,19 +194,18 @@ const bootstrap = {
       )
         throw Error(label + ": error boundary");
     }
-    await btn("Giriş Yap").waitFor();
-    if (await page.getByTestId("login-background").count())
-      throw Error("Welcome has login backdrop");
-    await ready();
-    const welcomeLogin = await btn("Giriş Yap").boundingBox(),
-      welcomeSignup = await btn("Hesap Oluştur").boundingBox();
-    if (welcomeSignup.y - welcomeLogin.y - welcomeLogin.height > 9)
-      throw Error("Welcome buttons too far apart");
-    await page.screenshot({ path: path.join(shots, "v04-welcome.png") });
-    await btn("Giriş Yap").click();
+    await page.getByLabel("E-posta", { exact: true }).waitFor();
+    await page.getByTestId("login-background").waitFor();
+    if (await btn("Karşılama Ekranı").count())
+      throw Error("Removed welcome screen is still linked");
+    await page.reload();
     await page.getByLabel("E-posta", { exact: true }).waitFor();
     await page.getByTestId("login-background").waitFor();
     await ready();
+    await page.screenshot({ path: path.join(shots, "v04-entry.png") });
+    passed.push(
+      "First visit and page reload open the salon login form directly, with no intermediate welcome screen",
+    );
     for (const width of [320, 360, 414, 1120]) {
       await page.setViewportSize({ width, height: width > 600 ? 960 : 896 });
       await scroll(0);
@@ -230,6 +240,43 @@ const bootstrap = {
       );
     }
     await page.setViewportSize({ width: 414, height: 896 });
+    for (const [label, value] of [
+      ["E-posta", login.email],
+      ["Şifre", login.password],
+    ]) {
+      const input = page.getByLabel(label, { exact: true });
+      await input.fill(value);
+      const focus = await input.evaluate((el) => {
+        const style = getComputedStyle(el);
+        const parent = getComputedStyle(
+          el.closest('[data-testid="field-control"]'),
+        );
+        return {
+          outline: style.outlineStyle,
+          outlineWidth: style.outlineWidth,
+          border: style.borderWidth,
+          background: style.backgroundColor,
+          parentBorder: parent.borderColor,
+        };
+      });
+      if (
+        focus.outline !== "none" ||
+        focus.outlineWidth !== "0px" ||
+        focus.border !== "0px" ||
+        focus.background !== "rgba(0, 0, 0, 0)" ||
+        focus.parentBorder !== "rgb(255, 57, 208)"
+      )
+        throw Error(
+          "Native browser input box or missing outer focus indicator: " +
+            JSON.stringify(focus),
+        );
+    }
+    await page.screenshot({
+      path: path.join(shots, "v04-login-input-414.png"),
+    });
+    passed.push(
+      "Typing in email and password keeps the themed outer focus border, with no browser inner outline, border or background box",
+    );
     await scroll(180);
     await page
       .getByLabel("Giriş veya hesap oluştur", { exact: true })
@@ -260,12 +307,20 @@ const bootstrap = {
     passed.push(
       "Mode switch resets scroll, signup name field works, validation and simulated login navigate correctly",
     );
+    await page.getByTestId("home-background").waitFor();
+    await page.getByText("Toplam İşletme", { exact: true }).waitFor();
+    await ready();
+    await page.screenshot({ path: path.join(shots, "v04-home-414.png") });
+    passed.push(
+      "Admin home has the Miami barber and palm backdrop; controls remain clickable",
+    );
     const dismiss = btn("Bildirimi kapat");
     if (await dismiss.isVisible()) await dismiss.click();
     await page.getByLabel("Profil ve roller", { exact: true }).click();
     await page.getByText("Profil ve ayarlar", { exact: true }).waitFor();
     if (
       (await page.getByTestId("login-background").count()) ||
+      (await page.getByTestId("home-background").count()) ||
       (await page.locator('img[src*="miami-calm"]').count())
     )
       throw Error("Profile has decorative background");
@@ -365,7 +420,7 @@ const bootstrap = {
       "Logout returns to login and clears the simulated account session",
     );
     passed.push(
-      "Restored salon backdrop is visible only on login; signup, welcome and profile stay plain",
+      "Salon login backdrop stays off signup and profile; home uses its own quiet corner artwork",
     );
 
     const organic = await browser.newContext({
@@ -565,11 +620,11 @@ const bootstrap = {
     await customer.goto(localUrl + base + "/");
     const customerButton = (title) =>
       customer.getByRole("button", { name: title, exact: true });
-    await customerButton("Giriş Yap").click();
     await customer.getByLabel("E-posta", { exact: true }).fill(login.email);
     await customer.getByLabel("Şifre", { exact: true }).fill(login.password);
     await customerButton("Giriş Yap").click();
     await customerButton("Hemen Randevu Al").first().waitFor();
+    await customer.getByTestId("home-background").waitFor();
     if (
       (await customer.getByText(/DEMO VERİLER ETKİN/).count()) ||
       (await customer.getByText("Demo Modunu Aç", { exact: true }).count())
@@ -646,7 +701,10 @@ const bootstrap = {
     await realtime(secondDevice);
     secondDevice.on("pageerror", (e) => errors.push(e.message));
     await secondDevice.goto(localUrl + base + "/");
-    await secondDevice.getByRole("button", { name: "Hemen Randevu Al", exact: true }).first().waitFor();
+    await secondDevice
+      .getByRole("button", { name: "Hemen Randevu Al", exact: true })
+      .first()
+      .waitFor();
     await secondDevice
       .getByRole("button", { name: "Randevular", exact: true })
       .click();
@@ -687,7 +745,8 @@ const bootstrap = {
       await recovery
         .getByRole("button", { name: "Profil", exact: true })
         .waitFor();
-      if (await password.count()) throw Error("Recovery reopens after completion");
+      if (await password.count())
+        throw Error("Recovery reopens after completion");
       passed.push(
         "Recovery opens after a consumed Auth callback and reload; a simulated password update clears the callback URL and stays completed after reload",
       );

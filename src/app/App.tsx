@@ -18,6 +18,8 @@ import { colors } from "../theme";
 import { Row } from "../types";
 import { Txt, RowView, Btn, Card } from "../components/ui";
 import { Brand } from "../components/Brand";
+import { HomeBackdrop } from "../components/HomeBackdrop";
+import "../lib/inputStyles";
 import { MotionProvider } from "../components/motion";
 import { AuthScreen, ResetPasswordScreen } from "../screens/Auth";
 import {
@@ -192,6 +194,9 @@ function Shell() {
     >
       <StatusBar barStyle="light-content" />
       <View style={styles.frame}>
+        {Screen === DashboardScreen || Screen === DiscoverScreen ? (
+          <HomeBackdrop />
+        ) : null}
         {!authView && (
           <View style={styles.header}>
             <RowView style={{ gap: 6, flexShrink: 1 }}>

@@ -1,5 +1,16 @@
 # DraBornStyle v0.4.0 · Okunaklı giriş ve sade profil
 
+## 17 Ekim 2026 · Doğrudan giriş, form odağı ve Miami ana sayfa
+
+- Görselsiz karşılama ekranı ve ona dönüş düğmesi kaldırıldı. İlk ziyaret, sayfa yenileme ve çıkış sonrası doğrudan salon görselli giriş formu açılır.
+- Ortak Field bileşeninde web odak çerçevesi ve parlak otomatik doldurma zemini kaldırıldı. Çevreleyen kontrolün pembe odak çerçevesi ve tarayıcının kayıtlı e-posta/şifre doldurma işlevi korunur. CSS yalnız web paketinde yüklenir.
+- Admin, işletme, usta ana sayfaları ve müşteri/ziyaretçi Keşfet ekranında sabit, etkileşimi engellemeyen Miami çerçevesi bulunur. Profil ve ayrıntı ekranları sade kalır. Görseldeki örnek şehir/berber dekoru veri olarak kullanılmaz.
+- Nihai proje varlığı: `assets/art/miami-home-v04.webp`, 768 × 1152, yaklaşık 61 KB. Yerleşik imagegen aracıyla üretildi; PNG çıktısı ImageMagick ile boyutlandırılıp WebP'ye dönüştürüldü. CLI/API görsel üretimi veya API anahtarı kullanılmadı.
+
+Kullanılan üretim yönergesi:
+
+> Use case: stylized-concept. Asset type: finished portrait 2:3 raster background for the DraBornStyle barber management app home page, not a UI mockup. Create a polished cinematic photoreal Miami waterfront barbershop at dusk. Composition: a clean uninterrupted deep midnight-navy central 65 percent of the image, almost uniform #040b18 with only a very subtle blue-magenta ambient glow, suitable for white headings and dashboard cards. Rich detailed tropical palm fronds frame the upper left and upper right corners, with restrained palm silhouettes at the lower corners, confined to the outer edges and corners. At the extreme lower right, a partially cropped elegant black leather barber chair and a faint magenta reflection; a discreet cyan-and-pink lit barber pole at the extreme left edge. Far edge glimpses of the Miami bay, pastel sunset and distant skyline, fading smoothly into the dark center. Dark luxury salon mood, purple, pink and cyan accents, natural detailed materials, attractive and visibly tropical but calm and readable. The palms must be recognizable in the corners without any foliage crossing the center. Do not put a bright horizon, chair, windows, furnishings or any busy texture in the central reading area. No people, no letters, no words, no logo, no watermark, no UI controls. Opaque background.
+
 ## 12 Ekim 2026 · Login ve gerçek veri düzenlemesi
 
 - `neon-salon.webp` geri getirildi ve yalnız Login modunda tam ekran kullanılır. Karşılama, kayıt, şifre sıfırlama ve uygulama ekranları düz koyu zemindir; işletmenin kendi kapak fotoğrafı içerik olarak korunur.

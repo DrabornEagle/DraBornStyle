@@ -7,6 +7,8 @@ Yayın klasörü: https://github.com/DrabornEagle/DrabornEagle_Web/tree/main/Dra
 
 Bu klasör aynı React Native / Expo kaynaklarından üretilir. Ekranlar, marka görselleri, müşteri/usta/işletme/admin rolleri, fiyat hesaplama ve doğrulamalar Android ile ortaktır. Ayrı bir web veritabanı veya örnek kullanıcı oluşturulmaz.
 
+İlk ziyaret ve çıkış sonrası doğrudan berber görselli giriş formu açılır; aradaki karşılama ekranı kaldırılmıştır. Chrome'da yazarken görünen iç odak çerçevesi kaldırılır, erişilebilir renkli dış odak çerçevesi korunur. Kaydedilmiş e-posta/şifre doldurma işlevi çalışmaya devam eder ve koyu tema kullanır. Ana sayfa ve Keşfet, ortası sakin bırakılmış Miami berber/palmiye arka planını kullanır; profil ve ayrıntı ekranları sade kalır.
+
 ## Ortak veriler ve yetkiler
 
 - İki cihazda aynı hesabınızla giriş yapın. Randevular, çalışma saatleri, hizmet/fiyatlar, sohbet, favoriler, profil, bildirimler ve ödeme kayıtları aynı `xpdiwyxnnrmyvpcqwuyb` Supabase projesinde tutulur.

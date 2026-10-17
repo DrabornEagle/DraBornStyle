@@ -504,6 +504,7 @@ export function Field({
         </Txt>
       )}
       <View
+        testID="field-control"
         style={[
           styles.inputBox,
           {
@@ -519,7 +520,9 @@ export function Field({
           </View>
         )}
         <TextInput
+          testID="text-field"
           accessibilityLabel={label}
+          underlineColorAndroid="transparent"
           style={[
             styles.input,
             multiline && {
@@ -1139,6 +1142,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     color: colors.text,
     fontSize: 15,
+    borderWidth: 0,
+    backgroundColor: "transparent",
   },
   stat: {
     flex: 1,

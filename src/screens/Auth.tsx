@@ -20,10 +20,8 @@ import { appVersion, colors } from "../theme";
 import { authErrorMessage, normalizeEmail, validEmail } from "../utils/auth";
 
 export function AuthScreen() {
-  const { nav, toast, route } = useApp();
-  const [mode, setMode] = useState<"welcome" | "login" | "signup" | "reset">(
-    route.name === "auth" ? "login" : "welcome",
-  );
+  const { nav, toast } = useApp();
+  const [mode, setMode] = useState<"login" | "signup" | "reset">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -94,111 +92,7 @@ export function AuthScreen() {
       setPending(false);
     }
   }
-  if (mode === "welcome")
-    return (
-      <Page key={mode}>
-        <View style={{ height: 340, margin: -14, marginBottom: -8 }}>
-          <View
-            style={{
-              position: "absolute",
-              bottom: 10,
-              left: 0,
-              right: 0,
-              alignItems: "center",
-            }}
-          >
-            <Brand large />
-          </View>
-        </View>
-        <Txt muted size={14} style={{ textAlign: "center" }}>
-          Akıllı Berber ve Kuaför Yönetim Platformu
-        </Txt>
-        <RowView style={{ gap: 8, alignItems: "stretch" }}>
-          {[
-            ["people", "Müşteri", "Randevu al", "cyan"],
-            ["cut", "Usta / Çalışan", "İşini yönet", "purple"],
-            ["storefront-outline", "İşletme", "Ekibini yönet", "gold"],
-          ].map(([icon, title, subtitle, tone]) => (
-            <Card
-              key={title}
-              tone={tone as any}
-              style={{
-                flex: 1,
-                padding: 10,
-                gap: 6,
-                alignItems: "center",
-                borderRadius: 14,
-              }}
-            >
-              <Icon name={icon} tone={tone as any} size={26} />
-              <Txt bold size={11} style={{ textAlign: "center" }}>
-                {title}
-              </Txt>
-              <Txt muted size={10} style={{ textAlign: "center" }}>
-                {subtitle}
-              </Txt>
-            </Card>
-          ))}
-        </RowView>
-        <View style={{ gap: 8 }}>
-          <Btn
-            title="Giriş Yap"
-            icon="log-in-outline"
-            onPress={() => switchMode("login")}
-          />
-          <Btn
-            title="Hesap Oluştur"
-            icon="person-add-outline"
-            outline
-            onPress={() => switchMode("signup")}
-          />
-        </View>
-        <RowView
-          style={{ justifyContent: "center", flexWrap: "wrap", gap: 12 }}
-        >
-          <Btn
-            title="Şifremi Unuttum"
-            icon="lock-closed-outline"
-            outline
-            small
-            tone="purple"
-            onPress={() => switchMode("reset")}
-          />
-          <Btn
-            title="Misafir Olarak Keşfet"
-            icon="eye-outline"
-            outline
-            small
-            onPress={() => nav("discover")}
-          />
-        </RowView>
-        <RowView style={{ justifyContent: "space-around", marginTop: 8 }}>
-          {[
-            ["calendar-outline", "Randevu"],
-            ["chatbubble-outline", "Sohbet"],
-            ["card-outline", "Finans"],
-            ["bar-chart-outline", "Yönetim"],
-          ].map(([icon, label]) => (
-            <View key={label} style={{ alignItems: "center", gap: 7 }}>
-              <Icon name={icon} />
-              <Txt muted size={10}>
-                {label}
-              </Txt>
-            </View>
-          ))}
-        </RowView>
-        <Txt
-          muted
-          size={9}
-          style={{ textAlign: "center", letterSpacing: 1.2, marginTop: 12 }}
-        >
-          DAHA GÜZEL İNSANLAR, DAHA GÜÇLÜ İŞLETMELER
-        </Txt>
-        <Txt muted size={9} style={{ textAlign: "center" }}>
-          v{appVersion}
-        </Txt>
-      </Page>
-    );
+
   return (
     <View style={{ flex: 1 }}>
       {mode === "login" && (
@@ -340,14 +234,6 @@ export function AuthScreen() {
             />
           )}
         </Card>
-        <Btn
-          title="Karşılama Ekranı"
-          outline
-          small
-          tone="purple"
-          icon="chevron-back"
-          onPress={() => switchMode("welcome")}
-        />
         <Btn
           title="Misafir Olarak Keşfet"
           outline
