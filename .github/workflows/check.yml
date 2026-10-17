@@ -40,8 +40,8 @@ jobs:
       - name: Apply app migrations when deployment credential exists
         if: env.SUPABASE_ACCESS_TOKEN != ''
         run: node scripts/apply-migrations.mjs
-      - name: Configure and verify only DraBornStyle web Auth redirects
-        if: env.SUPABASE_ACCESS_TOKEN != ''
+      - name: Configure web Auth redirects only with an Auth-scoped deployment credential
+        if: env.SUPABASE_ACCESS_TOKEN != '' && vars.DKD_STYLE_CONFIGURE_WEB_AUTH == 'true'
         run: node scripts/dkd-configure-web-auth.mjs
       - name: Document missing deployment credential
         if: env.SUPABASE_ACCESS_TOKEN == ''

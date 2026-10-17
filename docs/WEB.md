@@ -19,7 +19,9 @@ Bu klasör aynı React Native / Expo kaynaklarından üretilir. Ekranlar, marka 
 
 Mobilde Android düzeni, masaüstünde aynı ekranların en fazla 1120 piksel genişliği kullanılır. Tarayıcıda harita Leaflet/OpenStreetMap, yol tarifi Google Maps ile açılır; işletme ve izinle paylaşılan müşteri konumları birlikte gösterilir. Fotoğraf ve dekontlar tarayıcının dosya seçicisiyle yüklenir. HTTPS ve konum izni gerekir. Uygulama içi bildirimler ortaktır. Kapalı sekmede Android arka plan konumu veya Android push servisi çalışmaz.
 
-E-posta doğrulama ve şifre sıfırlama bağlantıları webde `/DraBornStyle/` ve `/DraBornStyle/reset/` adreslerine döner. Ortak kaynak reposundaki mevcut deployment CI, `scripts/dkd-configure-web-auth.mjs` ile yalnızca bu iki üretim adresini Supabase Auth izin listesine ekler ve yeniden okuyarak doğrular. Önceden izinli adresler, Android bağlantıları ve ortak projenin varsayılan Site URL ayarı korunur. Deployment erişim anahtarı yalnızca mevcut CI secret'ından okunur; Auth config içeriği veya gizli anahtarlar günlüğe ya da web dosyalarına yazılmaz.
+E-posta doğrulama ve şifre sıfırlama bağlantıları webde `/DraBornStyle/` ve `/DraBornStyle/reset/` adreslerine döner. Supabase Authentication → URL Configuration → Redirect URLs listesinde `https://www.draborneagle.com/DraBornStyle/` ve `https://www.draborneagle.com/DraBornStyle/reset/` adresleri izinli olmalıdır. Önceden izinli adresler, Android bağlantıları ve ortak projenin Site URL ayarı korunmalıdır.
+
+Mevcut veritabanı deployment anahtarı Auth ayar API'sinde HTTP 403 döndürdüğünden, bu ayar ayrı yönetilir. Auth ayar yetkisi olan bir CI anahtarı yapılandırıldığında `DKD_STYLE_CONFIGURE_WEB_AUTH=true` repository variable'ı, `scripts/dkd-configure-web-auth.mjs` yardımcısını etkinleştirir. Yardımcı sadece bu iki adresi ekler ve yeniden okuyarak doğrular; mevcut adresleri silmez, Site URL'yi değiştirmez, Auth config içeriği veya gizli anahtarları günlüğe ya da web dosyalarına yazmaz. Anahtarları sohbet veya istemci kodunda paylaşmayın.
 
 ## Yeniden üretme
 
