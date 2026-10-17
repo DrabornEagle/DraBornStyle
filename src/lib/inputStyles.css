@@ -10,7 +10,7 @@
 [data-testid="field-control"] [data-testid="text-field"],
 [data-testid="field-control"] [data-testid="text-field"]:focus,
 [data-testid="field-control"] [data-testid="text-field"]:focus-visible {
-  outline: none;
+  outline: 0;
   border: 0;
   background-color: transparent;
   box-shadow: none;
